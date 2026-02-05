@@ -5,7 +5,7 @@ export const AREAS_FAZENDAS: Record<string, number> = {
   "São Luiz": 676, 
   "Castanhal": 600, 
   "Romancini": 435, 
-  "Estrelinha": 225 
+  "Estrelinha": 240 // Atualizado de 225 para 240
 };
 
 export const CORES_FAZENDAS: Record<string, string> = {
