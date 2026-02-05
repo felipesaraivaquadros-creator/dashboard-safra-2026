@@ -53,8 +53,8 @@ export default function ContractSection({ contratosProcessados }: ContractSectio
               className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${isEx ? 'border-purple-500 bg-purple-50 shadow-sm' : 'border-white bg-white hover:border-slate-100'}`}
             >
               <div className="flex justify-between items-start mb-2">
-                <div className="flex-1">
-                  <p className={`text-xs font-black uppercase tracking-tight ${isEx ? 'text-purple-700' : 'text-slate-700'}`}>{c.nome}</p>
+                <div className="flex-1 min-w-0"> {/* Adicionado min-w-0 para evitar estouro em nomes longos */}
+                  <p className={`text-xs font-black uppercase tracking-tight truncate ${isEx ? 'text-purple-700' : 'text-slate-700'}`}>{c.nome}</p>
                   <span className="text-[9px] font-bold text-slate-300">ID: {c.id}</span>
                 </div>
                 {isEx ? <ChevronUp size={16} className="text-purple-400" /> : <ChevronDown size={16} className="text-slate-300" />}
@@ -75,17 +75,19 @@ export default function ContractSection({ contratosProcessados }: ContractSectio
               {isEx && (
                 <div className="mt-4 pt-4 border-t border-purple-200 grid grid-cols-1 gap-1.5 animate-in slide-in-from-top-1">
                   
-                  {/* NOVO CAMPO: SALDO CUMPRIDO */}
+                  {/* SALDO CUMPRIDO (Verde) */}
                   <div className="flex justify-between items-center bg-green-50 p-2 rounded">
                     <span className="text-[9px] font-bold text-green-600 uppercase">Saldo Cumprido</span>
                     <span className="text-xs font-black text-green-700">{c.cumprido.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                   </div>
 
+                  {/* TOTAL CONTRATO (Neutro) */}
                   <div className="flex justify-between items-center bg-white/50 p-2 rounded">
                     <span className="text-[9px] font-bold text-slate-400 uppercase">Total Contrato</span>
                     <span className="text-xs font-black text-slate-700">{c.contratado.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                   </div>
                   
+                  {/* SALDO RESTANTE (Laranja) */}
                   <div className="flex justify-between items-center bg-orange-50 p-2 rounded">
                     <span className="text-[9px] font-bold text-orange-600 uppercase">Saldo Restante</span>
                     <span className="text-xs font-black text-orange-700">{c.aCumprir.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>

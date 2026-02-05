@@ -24,8 +24,8 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
       </div>
 
       <div 
-        onClick={() => setShowModalProd(true)} 
-        className={`bg-white p-5 rounded-xl border-2 transition-all cursor-pointer shadow-sm flex items-center justify-between group ${fazendaFiltro ? 'border-purple-400 hover:border-purple-500' : 'border-transparent hover:border-slate-300'}`}
+        onClick={() => fazendaFiltro && setShowModalProd(true)} 
+        className={`bg-white p-5 rounded-xl border-2 transition-all cursor-pointer shadow-sm flex items-center justify-between group ${fazendaFiltro ? 'border-purple-400 hover:border-purple-500' : 'border-transparent hover:border-slate-300 cursor-default'}`}
       >
         <div className="flex items-center gap-4">
           <div className={`p-3 rounded-lg transition-colors ${prodColor} group-hover:bg-purple-600 group-hover:text-white`}>
