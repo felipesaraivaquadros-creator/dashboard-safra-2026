@@ -73,6 +73,9 @@ export const useDataProcessing = (): DataContextType => {
       const aCumprir = Math.max(c.total - cumprido, 0);
       const perc = c.total > 0 ? (cumprido / c.total) * 100 : (cumprido > 0 ? 100 : 0);
       
+      // Lógica atualizada: Considera concluído se o saldo a cumprir for menor que 1 saca.
+      const isConcluido = aCumprir < 1; 
+      
       return { 
         id, 
         nome: c.nome, 
@@ -80,7 +83,7 @@ export const useDataProcessing = (): DataContextType => {
         cumprido: parseFloat(cumprido.toFixed(2)), 
         aCumprir: parseFloat(aCumprir.toFixed(2)), 
         porcentagem: Math.min(perc, 100).toFixed(1), 
-        isConcluido: perc >= 100 
+        isConcluido: isConcluido 
       };
     });
 
