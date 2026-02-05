@@ -6,6 +6,7 @@ import KpiSection, { ProductivityModal } from '../src/components/KpiSection';
 import ChartSection from '../src/components/ChartSection';
 import ContractSection from '../src/components/ContractSection';
 import UpdateDataButton from '../src/components/UpdateDataButton';
+import Link from 'next/link'; // Importando Link
 
 export default function Dashboard() {
   const {
@@ -59,6 +60,15 @@ export default function Dashboard() {
         </div>
         <div className="flex gap-4 items-center">
           <UpdateDataButton />
+          
+          {/* Novo Botão Saldos */}
+          <Link 
+            href="/saldos" 
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md"
+          >
+            Saldos
+          </Link>
+
           <button onClick={handleClearFilters} className="text-xs font-black text-slate-300 hover:text-red-500 uppercase transition-colors">Limpar Global</button>
         </div>
       </header>
