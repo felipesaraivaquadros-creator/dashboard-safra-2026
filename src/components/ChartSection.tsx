@@ -60,6 +60,8 @@ export default function ChartSection({
               <Tooltip cursor={{fill: 'transparent'}} formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} />
               <Bar dataKey="sacas" radius={[4, 4, 0, 0]} cursor="pointer" onClick={(data) => handleBarClick(data, true)}>
                 {chartFazendas.map((entry, index) => {
+                  // Se não houver filtro, ou se esta for a fazenda selecionada, usa a cor da fazenda.
+                  // Caso contrário, usa a cor cinza (defaultColor).
                   const isSelected = !fazendaFiltro || fazendaFiltro === entry.name;
                   return <Cell key={`cell-fazenda-${index}`} fill={isSelected ? getCorFazenda(entry.name) : defaultColor} />;
                 })}
@@ -81,6 +83,8 @@ export default function ChartSection({
               <Tooltip cursor={{fill: 'transparent'}} formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} />
               <Bar dataKey="sacas" radius={[0, 4, 4, 0]} cursor="pointer" onClick={(data) => handleBarClick(data, false)}>
                 {chartArmazens.map((entry, index) => {
+                  // Se não houver filtro, ou se este for o armazém selecionado, usa a cor do armazém.
+                  // Caso contrário, usa a cor cinza (defaultColor).
                   const isSelected = !armazemFiltro || armazemFiltro === entry.name;
                   return <Cell key={`cell-armazem-${index}`} fill={isSelected ? getCorArmazem(entry.name) : defaultColor} />;
                 })}
@@ -105,7 +109,22 @@ export default function ChartSection({
                 onClick={(e) => handleBarClick(e, true)} 
                 cursor="pointer"
               >
-                {chartFazendas.map((entry, i) => <Cell key={`cell-pie-${i}`} fill={getCorFazenda(entry.name)} />)}
+                {chartFazendas.map((entry, i) => {
+                  // A lógica de cor para o PieChart deve ser a mesma, mas o PieChart só mostra dados > 0.
+                  // Se o filtro de fazenda estiver ativo, o PieChart deve mostrar apenas a fazenda selecionada.
+                  // Como o PieChart usa chartFazendas, e chartFazendas agora contém todos os volumes (filtrados por armazém),
+                  // se o fazendaFiltro estiver ativo, o PieChart deve ser filtrado para mostrar apenas a fazenda selecionada.
+                  
+                  // Para o PieChart, vamos usar a lógica original: se o filtro de fazenda está ativo, 
+                  // ele só deve mostrar a fatia selecionada (se o volume for > 0).
+                  // Se o fazendaFiltro está ativo, o chartFazendas contém o volume total da fazenda selecionada (filtrado por armazém).
+                  // Se o fazendaFiltro NÃO está ativo, ele mostra todas as fatias.
+                  
+                  // Para manter a consistência visual, vamos usar a cor da fazenda, mas o PieChart não suporta "barras cinzas" para itens não selecionados.
+                  // Ele só renderiza fatias com volume > 0.
+                  
+                  return <Cell key={`cell-pie-${i}`} fill={getCorFazenda(entry.name)} />
+                })}
               </Pie>
               <Tooltip formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} />
               <Legend verticalAlign="bottom" height={36}/>

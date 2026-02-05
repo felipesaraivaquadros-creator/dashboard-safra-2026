@@ -14,7 +14,6 @@ export const useDataProcessing = (): DataContextType => {
   // Auxiliares de Cor
   const getCorFazenda = (nome: string): string => CORES_FAZENDAS[nome] || CORES_FAZENDAS["Outros"];
   const getCorArmazem = (nome: string): string => {
-    // Tenta encontrar a cor exata, se não, tenta encontrar a cor base (ex: 'SIPAL LRV' -> 'Sipal')
     const exactMatch = CORES_ARMAZENS[nome];
     if (exactMatch) return exactMatch;
 
@@ -27,7 +26,7 @@ export const useDataProcessing = (): DataContextType => {
     return CORES_ARMAZENS["Outros"];
   };
 
-  // 1. FILTRAGEM
+  // 1. FILTRAGEM GLOBAL (Usada para KPIs e Contratos)
   const dadosFiltrados = useMemo(() => {
     return typedDadosOriginal.filter(d => {
       const matchFazenda = !fazendaFiltro || d.fazenda === fazendaFiltro;
@@ -39,16 +38,16 @@ export const useDataProcessing = (): DataContextType => {
   // Contagem de Romaneios (Cargas)
   const romaneiosCount = useMemo(() => dadosFiltrados.length, [dadosFiltrados]);
 
-  // 2. KPIS
+  // 2. KPIS (Depende de dadosFiltrados)
   const stats: KpiStats = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
     const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
     
     const area = fazendaFiltro ? AREAS_FAZENDAS[fazendaFiltro] || 0 : 
-      Object.values(AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0); // Soma todas as áreas se não houver filtro
+      Object.values(AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
 
     const somaUmid = dadosFiltrados.reduce((acc, d) => acc + (Number(d.umidade) || 0), 0);
-    const umidMed = dadosFiltrados.length > 0 ? (somaUmid / dadosFiltrados.length / 100).toFixed(1) : '0.0'; // Umidade é em centésimos
+    const umidMed = dadosFiltrados.length > 0 ? (somaUmid / dadosFiltrados.length / 100).toFixed(1) : '0.0';
 
     return {
       totalLiq: liq,
@@ -60,7 +59,7 @@ export const useDataProcessing = (): DataContextType => {
     };
   }, [dadosFiltrados, fazendaFiltro]);
 
-  // 3. CONTRATOS
+  // 3. CONTRATOS (Mantido inalterado)
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};
     typedDadosOriginal.forEach(d => {
@@ -76,7 +75,6 @@ export const useDataProcessing = (): DataContextType => {
       const aCumprir = Math.max(c.total - cumprido, 0);
       const perc = c.total > 0 ? (cumprido / c.total) * 100 : (cumprido > 0 ? 100 : 0);
       
-      // Lógica atualizada: Considera concluído se o saldo a cumprir for menor que 1 saca.
       const isConcluido = aCumprir < 1; 
       
       return { 
@@ -97,21 +95,50 @@ export const useDataProcessing = (): DataContextType => {
   }, []);
 
   // 4. GRÁFICOS
-  const chartFazendas: ChartData[] = useMemo(() => {
-    const g: Record<string, number> = {};
-    dadosFiltrados.forEach(d => { 
-      if(d.fazenda) g[d.fazenda] = (g[d.fazenda] || 0) + (Number(d.sacasLiquida) || 0); 
+  
+  // Função auxiliar para calcular totais de sacas líquidas para um conjunto de dados
+  const calculateChartData = (data: Romaneio[], key: keyof Romaneio, allKeys: string[]): ChartData[] => {
+    const totals: Record<string, number> = {};
+    
+    // Inicializa todos os grupos com 0
+    allKeys.forEach(k => totals[k] = 0);
+
+    // Soma os volumes
+    data.forEach(d => {
+      const groupName = d[key] as string;
+      if (groupName) {
+        totals[groupName] = (totals[groupName] || 0) + (Number(d.sacasLiquida) || 0);
+      }
     });
-    return Object.keys(g).map(name => ({ name, sacas: g[name] })).sort((a,b) => b.sacas - a.sacas);
-  }, [dadosFiltrados]);
+    
+    return Object.keys(totals)
+      .map(name => ({ name, sacas: totals[name] }))
+      .filter(d => d.sacas > 0 || allKeys.includes(d.name)) // Garante que todos os nomes originais estejam presentes
+      .sort((a,b) => b.sacas - a.sacas);
+  };
+
+  // Obtém todos os nomes únicos de fazendas e armazéns dos dados originais
+  const allFazendas = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.fazenda).filter(Boolean) as string[])), []);
+  const allArmazens = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.armazem).filter(Boolean) as string[])), []);
+
+  // Dados para o Gráfico de Fazendas: Filtrado apenas por Armazém (se houver)
+  const dadosParaChartFazendas = useMemo(() => {
+    return typedDadosOriginal.filter(d => !armazemFiltro || d.armazem === armazemFiltro);
+  }, [armazemFiltro]);
+
+  const chartFazendas: ChartData[] = useMemo(() => {
+    return calculateChartData(dadosParaChartFazendas, 'fazenda', allFazendas);
+  }, [dadosParaChartFazendas, allFazendas]);
+
+  // Dados para o Gráfico de Armazéns: Filtrado apenas por Fazenda (se houver)
+  const dadosParaChartArmazens = useMemo(() => {
+    return typedDadosOriginal.filter(d => !fazendaFiltro || d.fazenda === fazendaFiltro);
+  }, [fazendaFiltro]);
 
   const chartArmazens: ChartData[] = useMemo(() => {
-    const g: Record<string, number> = {};
-    dadosFiltrados.forEach(d => { 
-      if(d.armazem) g[d.armazem] = (g[d.armazem] || 0) + (Number(d.sacasLiquida) || 0); 
-    });
-    return Object.keys(g).map(name => ({ name, sacas: g[name] })).sort((a,b) => b.sacas - a.sacas);
-  }, [dadosFiltrados]);
+    return calculateChartData(dadosParaChartArmazens, 'armazem', allArmazens);
+  }, [dadosParaChartArmazens, allArmazens]);
+
 
   return {
     fazendaFiltro,
@@ -119,7 +146,7 @@ export const useDataProcessing = (): DataContextType => {
     setFazendaFiltro,
     setArmazemFiltro,
     stats,
-    romaneiosCount, // Expondo a contagem de romaneios
+    romaneiosCount, 
     contratosProcessados,
     chartFazendas,
     chartArmazens,
