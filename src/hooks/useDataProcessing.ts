@@ -54,7 +54,8 @@ export const useDataProcessing = (): DataContextType => {
       totalBruta: bruta,
       areaHa: area,
       prodLiq: area > 0 ? (liq / area).toFixed(1) : '0.0',
-      prodBruta: area > 0 ? (bruta / area).toFixed(1) : '0.0',
+      // ALTERADO: prodBruta agora usa toFixed(2)
+      prodBruta: area > 0 ? (bruta / area).toFixed(2) : '0.00',
       umidade: umidMed
     };
   }, [dadosFiltrados, fazendaFiltro]);
@@ -113,7 +114,7 @@ export const useDataProcessing = (): DataContextType => {
     
     return Object.keys(totals)
       .map(name => ({ name, sacas: totals[name] }))
-      .filter(d => d.sacas > 0 || allKeys.includes(d.name)) // Garante que todos os nomes originais estejam presentes
+      .filter(d => d.sacas > 0 || allKeys.includes(d.name))
       .sort((a,b) => b.sacas - a.sacas);
   };
 

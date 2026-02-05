@@ -50,7 +50,8 @@ export default function Dashboard() {
     <main className="min-h-screen p-4 bg-slate-100 font-sans text-slate-900 relative">
       <header className="max-w-[1400px] mx-auto mb-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">Logística Safra 25/26</h1>
+          {/* Título alterado */}
+          <h1 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">Painel Soja - Safra 25/26</h1>
           <div className="flex gap-2 mt-1">
             {fazendaFiltro && <span style={{backgroundColor: getCorFazenda(fazendaFiltro)}} className="text-[10px] text-white px-2 py-0.5 rounded font-bold uppercase">{fazendaFiltro}</span>}
             {armazemFiltro && <span style={{backgroundColor: getCorArmazem(armazemFiltro)}} className="text-[10px] text-white px-2 py-0.5 rounded font-bold uppercase">{armazemFiltro}</span>}

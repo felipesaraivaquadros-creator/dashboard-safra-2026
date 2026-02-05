@@ -779,7 +779,7 @@
   {
     "data": "2026-01-16",
     "contrato": "Arrendamento SL",
-    "ncontrato": "01soja25-26",
+    "ncontrato": "ARR-SLZ-COFCO",
     "tipoNF": "VEN",
     "nfe": 432,
     "cidadeEntrega": "NOVA STA HELENA",
@@ -800,7 +800,7 @@
   {
     "data": "2026-01-17",
     "contrato": "Arrendamento SL",
-    "ncontrato": "01soja25-26",
+    "ncontrato": "ARR-SLZ-COFCO",
     "tipoNF": "VEN",
     "nfe": 435,
     "cidadeEntrega": "NOVA STA HELENA",
@@ -821,7 +821,7 @@
   {
     "data": "2026-01-17",
     "contrato": "Arrendamento SL",
-    "ncontrato": "01soja25-26",
+    "ncontrato": "ARR-SLZ-COFCO",
     "tipoNF": "VEN",
     "nfe": 436,
     "cidadeEntrega": "NOVA STA HELENA",
@@ -989,7 +989,7 @@
   {
     "data": "2026-01-18",
     "contrato": "Arrendamento SL",
-    "ncontrato": "01soja25-26",
+    "ncontrato": "ARR-SLZ-COFCO",
     "tipoNF": "VEN",
     "nfe": 437,
     "cidadeEntrega": "NOVA STA HELENA",
@@ -1010,7 +1010,7 @@
   {
     "data": "2026-01-20",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 164,
     "cidadeEntrega": "MATUPÁ",
@@ -1031,7 +1031,7 @@
   {
     "data": "2026-01-21",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 165,
     "cidadeEntrega": "MATUPÁ",
@@ -1052,7 +1052,7 @@
   {
     "data": "2026-01-21",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 166,
     "cidadeEntrega": "MATUPÁ",
@@ -1073,7 +1073,7 @@
   {
     "data": "2026-01-21",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 167,
     "cidadeEntrega": "MATUPÁ",
@@ -1094,7 +1094,7 @@
   {
     "data": "2026-01-23",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 170,
     "cidadeEntrega": "MATUPÁ",
@@ -1115,7 +1115,7 @@
   {
     "data": "2026-01-23",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 168,
     "cidadeEntrega": "MATUPÁ",
@@ -1136,7 +1136,7 @@
   {
     "data": "2026-01-25",
     "contrato": "Arrendamento SL",
-    "ncontrato": "01soja25-26",
+    "ncontrato": "ARR-SLZ-COFCO",
     "tipoNF": "VEN",
     "nfe": 458,
     "cidadeEntrega": "NOVA STA HELENA",
@@ -1199,7 +1199,7 @@
   {
     "data": "2026-01-25",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 173,
     "cidadeEntrega": "MATUPÁ",
@@ -1220,7 +1220,7 @@
   {
     "data": "2026-01-25",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 172,
     "cidadeEntrega": "MATUPÁ",
@@ -1241,7 +1241,7 @@
   {
     "data": "2026-01-25",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 171,
     "cidadeEntrega": "MATUPÁ",
@@ -1325,7 +1325,7 @@
   {
     "data": "2026-01-27",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 174,
     "cidadeEntrega": "MATUPÁ",
@@ -1388,7 +1388,7 @@
   {
     "data": "2026-01-28",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 553,
     "cidadeEntrega": "CLÁUDIA",
@@ -1409,7 +1409,7 @@
   {
     "data": "2026-01-28",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 554,
     "cidadeEntrega": "CLÁUDIA",
@@ -1430,7 +1430,7 @@
   {
     "data": "2026-01-28",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 555,
     "cidadeEntrega": "CLÁUDIA",
@@ -1451,7 +1451,7 @@
   {
     "data": "2026-01-28",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 176,
     "cidadeEntrega": "MATUPÁ",
@@ -1472,7 +1472,7 @@
   {
     "data": "2026-01-28",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 175,
     "cidadeEntrega": "MATUPÁ",
@@ -1493,7 +1493,7 @@
   {
     "data": "2026-01-29",
     "contrato": "DEP",
-    "ncontrato": "02DEPSOJA",
+    "ncontrato": "DEP-MAT-AMAGGI",
     "tipoNF": "DEP",
     "nfe": 177,
     "cidadeEntrega": "MATUPÁ",
@@ -1514,7 +1514,7 @@
   {
     "data": "2026-01-29",
     "contrato": "DEP",
-    "ncontrato": "02DEPSOJA",
+    "ncontrato": "DEP-MAT-AMAGGI",
     "tipoNF": "DEP",
     "nfe": 178,
     "cidadeEntrega": "MATUPÁ",
@@ -1535,7 +1535,7 @@
   {
     "data": "2026-01-29",
     "contrato": "DEP",
-    "ncontrato": "02DEPSOJA",
+    "ncontrato": "DEP-MAT-AMAGGI",
     "tipoNF": "DEP",
     "nfe": 179,
     "cidadeEntrega": "MATUPÁ",
@@ -1556,7 +1556,7 @@
   {
     "data": "2026-01-30",
     "contrato": "DEP",
-    "ncontrato": "02DEPSOJA",
+    "ncontrato": "DEP-MAT-AMAGGI",
     "tipoNF": "DEP",
     "nfe": 180,
     "cidadeEntrega": "MATUPÁ",
@@ -1577,7 +1577,7 @@
   {
     "data": "2026-01-30",
     "contrato": "DEP",
-    "ncontrato": "02DEPSOJA",
+    "ncontrato": "DEP-MAT-AMAGGI",
     "tipoNF": "DEP",
     "nfe": 181,
     "cidadeEntrega": "MATUPÁ",
@@ -1598,7 +1598,7 @@
   {
     "data": "2026-01-30",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 556,
     "cidadeEntrega": "CLÁUDIA",
@@ -1619,7 +1619,7 @@
   {
     "data": "2026-01-30",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 557,
     "cidadeEntrega": "CLÁUDIA",
@@ -1640,7 +1640,7 @@
   {
     "data": "2026-01-30",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 558,
     "cidadeEntrega": "CLÁUDIA",
@@ -1661,7 +1661,7 @@
   {
     "data": "2026-01-30",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 559,
     "cidadeEntrega": "CLÁUDIA",
@@ -1682,7 +1682,7 @@
   {
     "data": "2026-01-30",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 560,
     "cidadeEntrega": "CLÁUDIA",
@@ -1703,7 +1703,7 @@
   {
     "data": "2026-01-30",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 561,
     "cidadeEntrega": "CLÁUDIA",
@@ -1724,7 +1724,7 @@
   {
     "data": "2026-01-30",
     "contrato": "Arrendamento CT",
-    "ncontrato": "02soja25-26",
+    "ncontrato": "ARR-CST-USIMAT",
     "tipoNF": "DEP",
     "nfe": 562,
     "cidadeEntrega": "CLÁUDIA",
@@ -1745,7 +1745,7 @@
   {
     "data": "2026-01-30",
     "contrato": "DEP",
-    "ncontrato": "02DEPSOJA",
+    "ncontrato": "DEP-MAT-AMAGGI",
     "tipoNF": "DEP",
     "nfe": 182,
     "cidadeEntrega": "MATUPÁ",
@@ -1766,7 +1766,7 @@
   {
     "data": "2026-01-31",
     "contrato": "DEP",
-    "ncontrato": "01DEPSOJA",
+    "ncontrato": "DEP-MAT-SIPAL",
     "tipoNF": "DEP",
     "nfe": 183,
     "cidadeEntrega": "MATUPÁ",
@@ -1787,11 +1787,11 @@
   {
     "data": "2026-01-31",
     "contrato": "DEP",
-    "ncontrato": "03DEPSOJA",
+    "ncontrato": "DEP-CAST-USIMAT-CLAUDIA",
     "tipoNF": "DEP",
     "nfe": 1,
-    "cidadeEntrega": "CAMPOS DE JULIO",
-    "armazem": "SIPAL CAMPOS DE JULIO",
+    "cidadeEntrega": "CLÁUDIA",
+    "armazem": "SIPAL CLÁUDIA",
     "safra": "Soja25/26",
     "fazenda": "Castanhal",
     "talhao": "CST01",
@@ -1808,7 +1808,7 @@
   {
     "data": "2026-02-01",
     "contrato": "DEP",
-    "ncontrato": "02DEPSOJA",
+    "ncontrato": "DEP-MAT-AMAGGI",
     "tipoNF": "DEP",
     "nfe": 185,
     "cidadeEntrega": "MATUPÁ",
@@ -1829,7 +1829,7 @@
   {
     "data": "2026-02-01",
     "contrato": "DEP",
-    "ncontrato": "02DEPSOJA",
+    "ncontrato": "DEP-MAT-AMAGGI",
     "tipoNF": "DEP",
     "nfe": 186,
     "cidadeEntrega": "MATUPÁ",
@@ -1849,8 +1849,8 @@
   },
   {
     "data": "2026-02-01",
-    "contrato": "S/C",
-    "ncontrato": "04DEPSOJA",
+    "contrato": "DEP",
+    "ncontrato": "DEP-LRV-SIPAL",
     "tipoNF": "DEP",
     "nfe": 956,
     "cidadeEntrega": "LRV",
@@ -1866,6 +1866,69 @@
     "impureza": 176,
     "ardido": 0,
     "avariados": 308,
+    "quebrados": 0
+  },
+  {
+    "data": "2026-02-04",
+    "contrato": "DEP",
+    "ncontrato": "DEP-MAT-AMAGGI",
+    "tipoNF": "DEP",
+    "nfe": 187,
+    "cidadeEntrega": "MATUPÁ",
+    "armazem": "AMAGGI MATUPÁ",
+    "safra": "Soja25/26",
+    "fazenda": "Estrelinha",
+    "talhao": "EST02",
+    "pesoLiquidoKg": 36302,
+    "pesoBrutoKg": 45750,
+    "sacasLiquida": 605.0333333333333,
+    "sacasBruto": 762.5,
+    "umidade": 3157,
+    "impureza": 0,
+    "ardido": 0,
+    "avariados": 6291,
+    "quebrados": 0
+  },
+  {
+    "data": "2026-02-04",
+    "contrato": "DEP",
+    "ncontrato": "DEP-MAT-AMAGGI",
+    "tipoNF": "DEP",
+    "nfe": 188,
+    "cidadeEntrega": "MATUPÁ",
+    "armazem": "AMAGGI MATUPÁ",
+    "safra": "Soja25/26",
+    "fazenda": "Estrelinha",
+    "talhao": "EST02",
+    "pesoLiquidoKg": 49022,
+    "pesoBrutoKg": 53140,
+    "sacasLiquida": 817.0333333333333,
+    "sacasBruto": 885.6666666666666,
+    "umidade": 1488,
+    "impureza": 0,
+    "ardido": 0,
+    "avariados": 2630,
+    "quebrados": 0
+  },
+  {
+    "data": "2026-02-04",
+    "contrato": "DEP",
+    "ncontrato": "DEP-LRV-SIPAL",
+    "tipoNF": "DEP",
+    "nfe": 957,
+    "cidadeEntrega": "LRV",
+    "armazem": "SIPAL LRV",
+    "safra": "Soja25/26",
+    "fazenda": "Romancini",
+    "talhao": "RMC01",
+    "pesoLiquidoKg": 31255,
+    "pesoBrutoKg": 39040,
+    "sacasLiquida": 520.9166666666666,
+    "sacasBruto": 650.6666666666666,
+    "umidade": 3256,
+    "impureza": 0,
+    "ardido": 0,
+    "avariados": 2030,
     "quebrados": 0
   }
 ]

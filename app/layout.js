@@ -2,7 +2,7 @@ import './globals.css'
 import ToastProvider from '../src/components/ToastProvider'
 
 export const metadata = {
-  title: 'Dashboard de Safra 25/26',
+  title: 'Painel Soja - Safra 25/26',
   description: 'Acompanhamento de Romaneios de Soja',
 }
 
