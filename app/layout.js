@@ -1,4 +1,5 @@
 import './globals.css'
+import ToastProvider from '../src/components/ToastProvider'
 
 export const metadata = {
   title: 'Dashboard de Safra 25/26',
@@ -8,7 +9,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-br">
-      <body>{children}</body>
+      <body>
+        <ToastProvider />
+        {children}
+      </body>
     </html>
   )
 }
