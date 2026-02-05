@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 function exportar() {
+  // NOTE: This path is hardcoded and must be adjusted by the user locally.
   const excelPath = path.join(
     'C:',
     'Users',
