@@ -1,4 +1,5 @@
 import './globals.css'
+import React from 'react'
 import ToastProvider from '../src/components/ToastProvider'
 
 export const metadata = {
@@ -6,7 +7,11 @@ export const metadata = {
   description: 'Acompanhamento de Romaneios de Soja',
 }
 
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="pt-br">
       <body>
