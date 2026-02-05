@@ -27,14 +27,20 @@ export default function SaldoPage() {
           <Warehouse size={14} /> Entregas Ildo Romancini por Armazém
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {data.kpisArmazem.map((kpi, i) => (
-            <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <p className="text-[9px] font-black text-slate-400 uppercase truncate mb-1">{kpi.nome}</p>
-              <h4 className="text-sm font-black text-slate-800">
-                {kpi.total.toLocaleString('pt-BR')} <span className="text-[10px] text-slate-400 font-bold">sc</span>
-              </h4>
+          {data.kpisArmazem.length > 0 ? (
+            data.kpisArmazem.map((kpi, i) => (
+              <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <p className="text-[9px] font-black text-slate-400 uppercase truncate mb-1">{kpi.nome}</p>
+                <h4 className="text-sm font-black text-slate-800">
+                  {kpi.total.toLocaleString('pt-BR')} <span className="text-[10px] text-slate-400 font-bold">sc</span>
+                </h4>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full py-6 text-center text-slate-400 text-[10px] font-bold uppercase italic border-2 border-dashed border-slate-200 rounded-2xl">
+              Nenhuma entrega encontrada para Ildo Romancini nos dados atuais.
             </div>
-          ))}
+          )}
         </div>
       </div>
 
