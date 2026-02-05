@@ -1,22 +1,22 @@
-# AI Rules & Tech Stack
+# Regras de IA e Stack Tecnológica
 
-## Tech Stack
-- **Next.js 14**: Modern React framework using the App Router for simplified routing and server-side capabilities.
-- **TypeScript**: Used for all new components and logic to ensure type safety and better developer experience.
-- **Tailwind CSS**: Utility-first CSS framework for all styling, ensuring a consistent and responsive design.
-- **shadcn/ui**: High-quality UI components built on top of Radix UI primitives for accessibility and customization.
-- **Lucide React**: Comprehensive icon library for consistent visual language throughout the application.
-- **Recharts**: Powerful charting library for data visualization and dashboards.
-- **React Hooks**: Efficient state and lifecycle management using standard hooks (`useState`, `useMemo`, `useEffect`).
+## Stack Tecnológica
+- **Next.js 14**: Framework React moderno utilizando o App Router para roteamento simplificado e capacidades server-side.
+- **TypeScript**: Utilizado para todos os novos componentes e lógica para garantir segurança de tipos e melhor experiência de desenvolvimento.
+- **Tailwind CSS**: Framework CSS utility-first para toda a estilização, garantindo um design consistente e responsivo.
+- **shadcn/ui**: Componentes de UI de alta qualidade construídos sobre os primitivos do Radix UI para acessibilidade e customização.
+- **Lucide React**: Biblioteca de ícones abrangente para uma linguagem visual consistente em toda a aplicação.
+- **Recharts**: Biblioteca de gráficos poderosa para visualização de dados e dashboards.
+- **React Hooks**: Gerenciamento eficiente de estado e ciclo de vida usando hooks padrão (`useState`, `useMemo`, `useEffect`).
 
-## Library Usage Rules
-- **Styling**: Always use Tailwind CSS classes. Do not create new CSS files or use inline styles unless strictly necessary for dynamic values.
-- **UI Components**: Check for existing shadcn/ui components before building from scratch. If a new component is needed, implement it following the shadcn/ui pattern.
-- **Icons**: Exclusively use `lucide-react`. Ensure icons are sized consistently (default `size={20}` or `size={24}`).
-- **Data Visualization**: Use `recharts` for all charts. Prefer `ResponsiveContainer` to ensure charts adapt to different screen sizes.
-- **State Management**: Use React's built-in hooks for local and shared state. For complex data transformations, always wrap them in `useMemo`.
-- **File Organization**:
-  - Keep routes in the `app/` directory (Next.js standard).
-  - Place reusable UI components in `/components`.
-  - Maintain data processing scripts (like `normalizar-romaneios.js`) in the root for transparency.
-- **Code Quality**: Use TypeScript for all new files. Aim for clean, readable code with descriptive variable names and minimal comments (prefer self-documenting code).
+## Regras de Uso de Bibliotecas
+- **Estilização**: Sempre use classes do Tailwind CSS. Não crie novos arquivos CSS ou use estilos inline, a menos que seja estritamente necessário para valores dinâmicos.
+- **Componentes de UI**: Verifique se existem componentes shadcn/ui antes de construir do zero. Se um novo componente for necessário, implemente-o seguindo o padrão shadcn/ui.
+- **Ícones**: Use exclusivamente `lucide-react`. Garanta que os ícones tenham tamanhos consistentes (padrão `size={20}` ou `size={24}`).
+- **Visualização de Dados**: Use `recharts` para todos os gráficos. Prefira o `ResponsiveContainer` para garantir que os gráficos se adaptem a diferentes tamanhos de tela.
+- **Gerenciamento de Estado**: Use os hooks nativos do React para estado local e compartilhado. Para transformações de dados complexas, sempre utilize `useMemo`.
+- **Organização de Arquivos**:
+  - Mantenha as rotas no diretório `app/` (padrão Next.js).
+  - Coloque componentes de UI reutilizáveis em `/components`.
+  - Mantenha scripts de processamento de dados (como `normalizar-romaneios.js`) na raiz para transparência.
+- **Qualidade de Código**: Use TypeScript para todos os novos arquivos. Busque um código limpo e legível com nomes de variáveis descritivos e comentários mínimos (prefira código autodocumentado).
