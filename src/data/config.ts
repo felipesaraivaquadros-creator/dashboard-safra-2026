@@ -32,5 +32,10 @@ export const VOLUMES_CONTRATADOS: Record<string, ContractVolume> = {
   "02soja25-26": { nome: "Arrendamento CT", total: 7200 },
   "PLCSRsoja25-26": { nome: "Plantadeira Cesar", total: 2000 },
   "01soja25-26": { nome: "Arrendamento SL", total: 4050 },
-  "Comissoes": { nome: "Venda 800 Sacas Comissão", total: 800 }
+  "Comissoes": { nome: "Venda 800 Sacas Comissão", total: 800 },
+  // Novos contratos de depósito encontrados nos dados:
+  "01DEPSOJA": { nome: "Depósito Sipal Matupá", total: 0 },
+  "02DEPSOJA": { nome: "Depósito Amaggi Matupá", total: 0 },
+  "03DEPSOJA": { nome: "Depósito Sipal Campos de Julio", total: 0 },
+  "04DEPSOJA": { nome: "Depósito Sipal LRV", total: 0 }
 };
