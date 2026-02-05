@@ -11,18 +11,6 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.18
         version: 4.1.18
-      '@types/node':
-        specifier: ^25.2.1
-        version: 25.2.1
-      '@types/react':
-        specifier: ^19.2.13
-        version: 19.2.13
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.13)
-      '@types/recharts':
-        specifier: ^2.0.1
-        version: 2.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       autoprefixer:
         specifier: ^10.4.18
         version: 10.4.24(postcss@8.5.6)
@@ -50,19 +38,31 @@ importers:
       tailwindcss:
         specifier: ^3.4.1
         version: 3.4.19
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
       xlsx:
         specifier: ^0.18.5
         version: 0.18.5
     devDependencies:
+      '@types/node':
+        specifier: ^20.11.24
+        version: 20.19.32
+      '@types/react':
+        specifier: ^18.2.61
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.2.19
+        version: 18.3.7(@types/react@18.3.28)
+      '@types/recharts':
+        specifier: ^1.8.29
+        version: 1.8.29
       eslint:
         specifier: ^8
         version: 8.57.1
       eslint-config-next:
         specifier: 14.1.0
         version: 14.1.0(eslint@8.57.1)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.9.3
 
 packages:
 
@@ -329,11 +329,17 @@ packages:
   '@types/d3-interpolate@3.0.4':
     resolution: {integrity: sha512-mgLPETlrpVV1YRJIglr4Ez47g7Yxjl1lj7YKsiMCb27VJH9W8NVM6Bb9d8kkpG/uAQS5AmbA48q2IAolKKo1MA==}
 
+  '@types/d3-path@1.0.11':
+    resolution: {integrity: sha512-4pQMp8ldf7UaB/gR8Fvvy69psNHkTpD/pVw3vmEi8iZAB9EPMBruB1JvHO4BIq9QkUUd2lV1F5YXpMNj7JPBpw==}
+
   '@types/d3-path@3.1.1':
     resolution: {integrity: sha512-VMZBYyQvbGmWyWVea0EHs/BwLgxc+MKi1zLDCONksozI4YJMcTt8ZEuIR4Sb1MMTE8MMW49v0IwI5+b7RmfWlg==}
 
   '@types/d3-scale@4.0.9':
     resolution: {integrity: sha512-dLmtwB8zkAeO/juAMfnV+sItKjlsw2lKdZVVy6LRr0cBmegxSABiLEpGVmSJJ8O08i4+sGR6qQtb6WtuwJdvVw==}
+
+  '@types/d3-shape@1.3.12':
+    resolution: {integrity: sha512-8oMzcd4+poSLGgV0R1Q1rOlx/xdmozS4Xab7np0eamFFUYq71AU9pOCJEFnkXW2aI/oXdVYJzw6pssbSut7Z9Q==}
 
   '@types/d3-shape@3.1.8':
     resolution: {integrity: sha512-lae0iWfcDeR7qt7rA88BNiqdvPS5pFVPpo5OfjElwNaT2yyekbM0C9vK+yqBqEmHr6lDkRnYNoTBYlAgJa7a4w==}
@@ -347,20 +353,22 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/node@25.2.1':
-    resolution: {integrity: sha512-CPrnr8voK8vC6eEtyRzvMpgp3VyVRhgclonE7qYi6P9sXwYb59ucfrnmFBTaP0yUi8Gk4yZg/LlTJULGxvTNsg==}
+  '@types/node@20.19.32':
+    resolution: {integrity: sha512-Ez8QE4DMfhjjTsES9K2dwfV258qBui7qxUsoaixZDiTzbde4U12e1pXGNu/ECsUIOi5/zoCxAQxIhQnaUQ2VvA==}
 
-  '@types/react-dom@19.2.3':
-    resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
+  '@types/prop-types@15.7.15':
+    resolution: {integrity: sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==}
+
+  '@types/react-dom@18.3.7':
+    resolution: {integrity: sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==}
     peerDependencies:
-      '@types/react': ^19.2.0
+      '@types/react': ^18.0.0
 
-  '@types/react@19.2.13':
-    resolution: {integrity: sha512-KkiJeU6VbYbUOp5ITMIc7kBfqlYkKA5KhEHVrGMmUUMt7NeaZg65ojdPk+FtNrBAOXNVM5QM72jnADjM+XVRAQ==}
+  '@types/react@18.3.28':
+    resolution: {integrity: sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw==}
 
-  '@types/recharts@2.0.1':
-    resolution: {integrity: sha512-/cFs7oiafzByUwBSWA1IzE6FW+ppPwQAWsDTadSgVOwzveY9MESpyLHyyHY0SfPPKLW4+4qVNYHPXd0rFiC8vg==}
-    deprecated: This is a stub types definition. recharts provides its own type definitions, so you do not need this installed.
+  '@types/recharts@1.8.29':
+    resolution: {integrity: sha512-ulKklaVsnFIIhTQsQw226TnOibrddW1qUQNFVhoQEyY1Z7FRQrNecFCGt7msRuJseudzE9czVawZb17dK/aPXw==}
 
   '@typescript-eslint/parser@6.21.0':
     resolution: {integrity: sha512-tbsV1jPne5CkFQCgPBcDOt30ItF7aJoZL997JSF7MhGQqOeT3svWRYxiqlfA5RUdlHN6Fi+EI9bxqbdyAUZjYQ==}
@@ -2030,8 +2038,8 @@ packages:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
 
-  undici-types@7.16.0:
-    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
+  undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
   unrs-resolver@1.11.1:
     resolution: {integrity: sha512-bSjt9pjaEBnNiGgc9rUiHGKv5l4/TGzDmYw3RhnkJGtLhbnnA/5qJj7x3dNDCRx/PJxu774LlH8lCOlB4hEfKg==}
@@ -2338,11 +2346,17 @@ snapshots:
     dependencies:
       '@types/d3-color': 3.1.3
 
+  '@types/d3-path@1.0.11': {}
+
   '@types/d3-path@3.1.1': {}
 
   '@types/d3-scale@4.0.9':
     dependencies:
       '@types/d3-time': 3.0.4
+
+  '@types/d3-shape@1.3.12':
+    dependencies:
+      '@types/d3-path': 1.0.11
 
   '@types/d3-shape@3.1.8':
     dependencies:
@@ -2354,24 +2368,25 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/node@25.2.1':
+  '@types/node@20.19.32':
     dependencies:
-      undici-types: 7.16.0
+      undici-types: 6.21.0
 
-  '@types/react-dom@19.2.3(@types/react@19.2.13)':
-    dependencies:
-      '@types/react': 19.2.13
+  '@types/prop-types@15.7.15': {}
 
-  '@types/react@19.2.13':
+  '@types/react-dom@18.3.7(@types/react@18.3.28)':
     dependencies:
+      '@types/react': 18.3.28
+
+  '@types/react@18.3.28':
+    dependencies:
+      '@types/prop-types': 15.7.15
       csstype: 3.2.3
 
-  '@types/recharts@2.0.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@types/recharts@1.8.29':
     dependencies:
-      recharts: 2.15.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-    transitivePeerDependencies:
-      - react
-      - react-dom
+      '@types/d3-shape': 1.3.12
+      '@types/react': 18.3.28
 
   '@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3)':
     dependencies:
@@ -4229,7 +4244,7 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
-  undici-types@7.16.0: {}
+  undici-types@6.21.0: {}
 
   unrs-resolver@1.11.1:
     dependencies:
