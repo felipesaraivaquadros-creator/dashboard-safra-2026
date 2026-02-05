@@ -55,10 +55,10 @@ interface ProductivityModalProps {
   setShowModalProd: (show: boolean) => void;
   fazendaFiltro: string | null;
   stats: KpiStats;
-  dadosFiltradosCount: number;
+  romaneiosCount: number; // Alterado para romaneiosCount
 }
 
-export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFiltro, stats, dadosFiltradosCount }: ProductivityModalProps) {
+export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFiltro, stats, romaneiosCount }: ProductivityModalProps) {
   if (!showModalProd) return null;
 
   return (
@@ -80,8 +80,8 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
                   <h4 className="text-xl font-black">{stats.areaHa} ha</h4>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-2xl text-center border border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase">Romaneios</p>
-                  <h4 className="text-xl font-black">{dadosFiltradosCount} un</h4>
+                  <p className="text-[10px] font-black text-slate-400 uppercase">Cargas (Romaneios)</p>
+                  <h4 className="text-xl font-black">{romaneiosCount} un</h4> {/* Usando romaneiosCount */}
                 </div>
               </div>
               <div className="p-5 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center">

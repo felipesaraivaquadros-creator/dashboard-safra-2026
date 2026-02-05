@@ -55,6 +55,7 @@ export interface DataContextType {
   setFazendaFiltro: (fazenda: string | null) => void;
   setArmazemFiltro: (armazem: string | null) => void;
   stats: KpiStats;
+  romaneiosCount: number; // Novo campo para a contagem de romaneios (cargas)
   contratosProcessados: {
     pendentes: ProcessedContract[];
     cumpridos: ProcessedContract[];

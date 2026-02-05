@@ -36,6 +36,9 @@ export const useDataProcessing = (): DataContextType => {
     });
   }, [fazendaFiltro, armazemFiltro]);
 
+  // Contagem de Romaneios (Cargas)
+  const romaneiosCount = useMemo(() => dadosFiltrados.length, [dadosFiltrados]);
+
   // 2. KPIS
   const stats: KpiStats = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
@@ -116,6 +119,7 @@ export const useDataProcessing = (): DataContextType => {
     setFazendaFiltro,
     setArmazemFiltro,
     stats,
+    romaneiosCount, // Expondo a contagem de romaneios
     contratosProcessados,
     chartFazendas,
     chartArmazens,

@@ -13,6 +13,7 @@ export default function Dashboard() {
     setFazendaFiltro,
     setArmazemFiltro,
     stats,
+    romaneiosCount, // Novo: Contagem de romaneios
     contratosProcessados,
     chartFazendas,
     chartArmazens,
@@ -68,7 +69,7 @@ export default function Dashboard() {
           />
         </div>
 
-        <ContractSection contratosProcessados={contratosProcessados} />
+        <ContractSection contratosProcessados={contratosProcessados} romaneiosCount={romaneiosCount} />
       </div>
 
       <ProductivityModal 
@@ -76,7 +77,7 @@ export default function Dashboard() {
         setShowModalProd={setShowModalProd} 
         fazendaFiltro={fazendaFiltro} 
         stats={stats} 
-        dadosFiltradosCount={chartFazendas.reduce((sum, d) => sum + d.sacas, 0)} // Usando a soma das sacas para contagem aproximada
+        romaneiosCount={romaneiosCount} // Passando a contagem correta
       />
     </main>
   );

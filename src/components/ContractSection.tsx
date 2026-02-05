@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, ChevronDown, ChevronUp, Truck } from 'lucide-react';
 import { ProcessedContract } from '../data/types';
 
 interface ContractSectionProps {
@@ -9,9 +9,10 @@ interface ContractSectionProps {
     pendentes: ProcessedContract[];
     cumpridos: ProcessedContract[];
   };
+  romaneiosCount: number; // Novo: Contagem total de romaneios
 }
 
-export default function ContractSection({ contratosProcessados }: ContractSectionProps) {
+export default function ContractSection({ contratosProcessados, romaneiosCount }: ContractSectionProps) {
   const [contratoExpandido, setContratoExpandido] = useState<string | null>(null);
   const [abaContratos, setAbaContratos] = useState<'pendentes' | 'cumpridos'>('pendentes');
 
@@ -24,7 +25,13 @@ export default function ContractSection({ contratosProcessados }: ContractSectio
   return (
     <div className="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-[850px] overflow-hidden">
       <div className="p-5 border-b">
-        <h2 className="text-sm font-black text-slate-700 uppercase flex items-center gap-2 mb-4"><FileText size={18} /> Contratos</h2>
+        <h2 className="text-sm font-black text-slate-700 uppercase flex items-center justify-between mb-4">
+          <span className="flex items-center gap-2"><FileText size={18} /> Contratos</span>
+          <span className="text-xs font-black text-slate-400 flex items-center gap-1">
+            <Truck size={14} className="text-slate-300" />
+            {romaneiosCount} Cargas
+          </span>
+        </h2>
         <div className="flex bg-slate-100 p-1 rounded-lg">
           <button 
             onClick={() => setAbaContratos('pendentes')} 
@@ -53,7 +60,7 @@ export default function ContractSection({ contratosProcessados }: ContractSectio
               className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${isEx ? 'border-purple-500 bg-purple-50 shadow-sm' : 'border-white bg-white hover:border-slate-100'}`}
             >
               <div className="flex justify-between items-start mb-2">
-                <div className="flex-1 min-w-0"> {/* Adicionado min-w-0 para evitar estouro em nomes longos */}
+                <div className="flex-1 min-w-0">
                   <p className={`text-xs font-black uppercase tracking-tight truncate ${isEx ? 'text-purple-700' : 'text-slate-700'}`}>{c.nome}</p>
                   <span className="text-[9px] font-bold text-slate-300">ID: {c.id}</span>
                 </div>
