@@ -2,10 +2,12 @@ export interface Romaneio {
   data: string | null;
   contrato: string;
   ncontrato: string;
+  emitente?: string | null; // Novo campo adicionado
   tipoNF: string | null;
   nfe: number | null;
   cidadeEntrega: string | null;
   armazem: string | null;
+  armazemsaldo?: string | null;
   safra: string | null;
   fazenda: string | null;
   talhao: string | null;
@@ -55,7 +57,7 @@ export interface DataContextType {
   setFazendaFiltro: (fazenda: string | null) => void;
   setArmazemFiltro: (armazem: string | null) => void;
   stats: KpiStats;
-  romaneiosCount: number; // Novo campo para a contagem de romaneios (cargas)
+  romaneiosCount: number;
   contratosProcessados: {
     pendentes: ProcessedContract[];
     cumpridos: ProcessedContract[];

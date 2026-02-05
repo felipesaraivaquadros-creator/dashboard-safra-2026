@@ -8,17 +8,15 @@ const outputPath = path.join(__dirname, 'romaneios_soja_25_26_normalizado.json')
 function parseNumero(valor) {
   if (valor === null || valor === undefined) return null;
 
-  // Se o valor for uma string, tenta limpar e converter
   if (typeof valor === 'string') {
     const cleanedValue = valor
-      .replace(/\./g, '')   // remove separador de milhar
-      .replace(',', '.');   // substitui vírgula decimal por ponto
+      .replace(/\./g, '')   
+      .replace(',', '.');   
     
     const num = Number(cleanedValue);
     return isNaN(num) ? null : num;
   }
 
-  // Se já for um número, retorna
   if (typeof valor === 'number') return valor;
 
   return null;
@@ -27,16 +25,12 @@ function parseNumero(valor) {
 function parseData(valor) {
   if (!valor) return null;
 
-  // Se já vier como Date (ISO string do JSON)
   if (typeof valor === 'string' && valor.includes('T')) {
     try {
       return new Date(valor).toISOString().split('T')[0];
-    } catch (e) {
-      // Fallback
-    }
+    } catch (e) {}
   }
 
-  // Formato DD/MM/YYYY
   if (typeof valor === 'string') {
     const partes = valor.split('/');
     if (partes.length === 3) {
@@ -58,12 +52,14 @@ const normalizado = rawData
     
     return {
       data: parseData(linha['Data']),
-      contrato: linha['Contrato'] || 'S/C', // Mantendo o campo original 'Contrato' para referência
+      contrato: linha['Contrato'] || 'S/C',
       ncontrato: String(linha['ncontrato'] || '').trim(),
+      emitente: linha['Emitente'] || null, // Incluindo Emitente
       tipoNF: linha['Tipo NF'] || null,
       nfe: parseNumero(linha['NFe']),
       cidadeEntrega: linha['Cidade de Entrega'] || null,
       armazem: linha['Armazem'] || null,
+      armazemsaldo: linha['armazemsaldo'] || null,
       safra: linha['Safra'] || null,
       fazenda: linha['Fazenda'] || null,
       talhao: linha['Talhão'] || null,
@@ -79,7 +75,7 @@ const normalizado = rawData
       quebrados: parseNumero(linha['Quebr'])
     };
   })
-  .filter(d => d.sacasLiquida > 0 || d.pesoLiquidoKg > 0); // Remove linhas vazias
+  .filter(d => d.sacasLiquida > 0 || d.pesoLiquidoKg > 0);
 
 fs.writeFileSync(
   outputPath,

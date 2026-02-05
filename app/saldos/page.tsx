@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { calculateSaldoDashboard } from '../../src/utils/saldoProcessing';
-import { ArrowLeft, Package, FileText, Scale, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Package, FileText, Scale, TrendingUp, Warehouse } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SaldoPage() {
@@ -21,6 +21,23 @@ export default function SaldoPage() {
         </Link>
       </header>
 
+      {/* SEÇÃO DE KPIS POR ARMAZÉM (ILDO ROMANCINI) */}
+      <div className="max-w-[1200px] mx-auto mb-10">
+        <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+          <Warehouse size={14} /> Entregas Ildo Romancini por Armazém
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {data.kpisArmazem.map((kpi, i) => (
+            <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+              <p className="text-[9px] font-black text-slate-400 uppercase truncate mb-1">{kpi.nome}</p>
+              <h4 className="text-sm font-black text-slate-800">
+                {kpi.total.toLocaleString('pt-BR')} <span className="text-[10px] text-slate-400 font-bold">sc</span>
+              </h4>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         
         {/* CARD 1: ESTOQUE LÍQUIDO */}
@@ -32,7 +49,7 @@ export default function SaldoPage() {
             <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Estoque Atual</span>
           </div>
           <div>
-            <p className="text-xs font-black text-slate-400 uppercase mb-1">Estoque Líquido (Entregue)</p>
+            <p className="text-xs font-black text-slate-400 uppercase mb-1">Estoque Líquido Total</p>
             <h2 className="text-4xl font-black text-slate-800">
               {data.estoqueTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} <span className="text-lg text-slate-400">sc</span>
             </h2>
