@@ -42,6 +42,8 @@ const rawData = JSON.parse(fs.readFileSync(inputPath, 'utf-8'));
 
 const normalizado = rawData.map(linha => ({
   data: parseData(linha['Data']),
+  contrato: linha['ncontrato'] || 'S/C', // ADICIONE ESTA LINHA
+  ncontrato: String(linha['ncontrato'] || '').trim(), // Mudamos para ncontrato
   tipoNF: linha['Tipo NF'] || null,
   nfe: linha['NFe'] || null,
   cidadeEntrega: linha['Cidade de Entrega'] || null,
@@ -52,7 +54,7 @@ const normalizado = rawData.map(linha => ({
 
   pesoLiquidoKg: parseNumero(linha['Peso Liquido']),
   pesoBrutoKg: parseNumero(linha['Peso Bruto']),
-  sacasLiquida: parseNumero(linha['Sacas Liquida']),
+  sacasLiquida: parseNumero(linha['Sacas Liquida']), // Garante que é número,
   sacasBruto: parseNumero(linha['Sacas Bruto']),
   umidade: parseNumero(linha['Umid']),
   impureza: parseNumero(linha['Impu']),

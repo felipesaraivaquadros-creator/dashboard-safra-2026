@@ -2,15 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #f8fafc;
-}
-
-/* O restante do seu CSS pode continuar abaixo se houver */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 15, 23, 42; /* slate-900 */
 }
 
 body {
