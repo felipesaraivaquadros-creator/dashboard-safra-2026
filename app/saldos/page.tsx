@@ -1,115 +1,105 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { calculateSaldos } from '../../src/utils/saldoProcessing';
-import { SaldoItem } from '../../src/data/saldoTypes';
-import { FileText, Warehouse, ArrowLeft, Package, MinusCircle } from 'lucide-react';
+import { calculateSaldoDashboard } from '../../src/utils/saldoProcessing';
+import { ArrowLeft, Package, FileText, Scale, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
-function SaldoCard({ item }: { item: SaldoItem }) {
-  const isNegative = item.saldo < 0;
-  const saldoText = item.saldo.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
-  
-  return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-lg font-black uppercase text-slate-800">{item.nome}</h3>
-        <Warehouse size={24} className="text-slate-400" />
-      </div>
-      
-      <div className="space-y-3">
-        {/* Estoque Líquido */}
-        <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
-          <span className="text-[10px] font-black text-slate-500 uppercase flex items-center gap-1"><Package size={14} /> Estoque Líquido (Entregue)</span>
-          <span className="text-base font-black text-slate-700">
-            {item.estoqueLiquido.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} sc
-          </span>
-        </div>
-
-        {/* Contratado Fixo */}
-        <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-100">
-          <span className="text-[10px] font-black text-orange-600 uppercase flex items-center gap-1"><MinusCircle size={14} /> Contratado Fixo</span>
-          <span className="text-base font-black text-orange-700">
-            {item.volumeContratado.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc
-          </span>
-        </div>
-
-        {/* Saldo Final */}
-        <div className={`flex justify-between items-center p-4 rounded-xl border-2 ${isNegative ? 'bg-red-50 border-red-300' : 'bg-green-50 border-green-300'}`}>
-          <span className={`text-sm font-black uppercase ${isNegative ? 'text-red-700' : 'text-green-700'}`}>Saldo Líquido</span>
-          <span className={`text-2xl font-black ${isNegative ? 'text-red-700' : 'text-green-700'}`}>
-            {saldoText} sc
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ContratoTable({ data }: { data: SaldoItem[] }) {
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-200 h-full lg:col-span-2">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-black text-slate-800 uppercase flex items-center gap-2">
-          <FileText size={20} className="text-purple-600" /> Contratos Fixos (Referência)
-        </h2>
-        <span className="text-[10px] font-black bg-purple-100 text-purple-600 px-3 py-1 rounded-full uppercase">Soma: 63.550 sc</span>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-black text-slate-500 uppercase tracking-wider w-1/2">Contrato</th>
-              <th className="px-4 py-3 text-right text-xs font-black text-slate-500 uppercase tracking-wider">Meta (Fixo)</th>
-              <th className="px-4 py-3 text-right text-xs font-black text-slate-500 uppercase tracking-wider">Entregue (Líquido)</th>
-              <th className="px-4 py-3 text-right text-xs font-black uppercase tracking-wider w-1/4">Saldo</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-slate-100">
-            {data.map((item) => (
-              <tr key={item.nome} className="hover:bg-slate-50 transition-colors">
-                <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900">{item.nome}</td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-slate-600">
-                  {item.volumeContratado.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-slate-600">
-                  {item.estoqueLiquido.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} sc
-                </td>
-                <td className={`px-4 py-3 whitespace-nowrap text-sm font-black text-right ${item.saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {item.saldo.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} sc
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
 export default function SaldoPage() {
-  const { saldosArmazem, saldosContrato } = useMemo(() => calculateSaldos(), []);
+  const data = useMemo(() => calculateSaldoDashboard(), []);
 
   return (
-    <main className="min-h-screen p-4 bg-slate-100 font-sans text-slate-900">
-      <header className="max-w-[1400px] mx-auto mb-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center">
-        <h1 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">Saldos de Estoque (Sacas Líquidas)</h1>
-        <Link href="/" className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors shadow-md">
+    <main className="min-h-screen p-4 md:p-8 bg-slate-50 font-sans text-slate-900">
+      <header className="max-w-[1200px] mx-auto mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">Resumo de Saldos</h1>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Safra 25/26 - Soja</p>
+        </div>
+        <Link href="/" className="flex items-center gap-2 px-4 py-2 text-xs font-black uppercase rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 transition-all shadow-sm">
           <ArrowLeft size={16} />
-          Voltar ao Dashboard
+          Dashboard
         </Link>
       </header>
 
-      <div className="max-w-[1400px] mx-auto space-y-6">
-        <h2 className="text-sm font-black text-slate-500 uppercase tracking-wider mt-8">Saldo Líquido por Destino (Líquido Entregue - Contratos Fixos)</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {saldosArmazem.map((item) => (
-            <SaldoCard key={item.nome} item={item} />
-          ))}
+      <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        {/* CARD 1: ESTOQUE LÍQUIDO */}
+        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col justify-between h-[300px]">
+          <div className="flex justify-between items-start">
+            <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
+              <Package size={32} />
+            </div>
+            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Estoque Atual</span>
+          </div>
+          <div>
+            <p className="text-xs font-black text-slate-400 uppercase mb-1">Estoque Líquido (Entregue)</p>
+            <h2 className="text-4xl font-black text-slate-800">
+              {data.estoqueTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} <span className="text-lg text-slate-400">sc</span>
+            </h2>
+          </div>
         </div>
 
-        <ContratoTable data={saldosContrato} />
+        {/* CARD 2: LISTA DE CONTRATOS */}
+        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col h-[300px]">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2">
+              <FileText size={16} className="text-purple-500" /> Contratos Fixados
+            </h3>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-4 custom-scrollbar">
+            {data.contratos.map((c, i) => (
+              <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 pb-2">
+                <span className="font-bold text-slate-600 uppercase truncate w-2/3">{c.nome}</span>
+                <span className="font-black text-slate-800">{c.total.toLocaleString('pt-BR')} sc</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-4 border-t-2 border-dashed border-slate-100 flex justify-between items-center">
+            <span className="text-xs font-black text-slate-800 uppercase italic">Volume Fixo Total</span>
+            <span className="text-xl font-black text-purple-600">{data.volumeFixoTotal.toLocaleString('pt-BR')} sc</span>
+          </div>
+        </div>
+
+        {/* CARD 3: SALDO LÍQUIDO */}
+        <div className="bg-green-100 p-8 rounded-[2rem] border border-green-200 shadow-md flex flex-col justify-between h-[300px] relative overflow-hidden group">
+          <div className="absolute -right-4 -top-4 text-green-200/50 rotate-12 transition-transform group-hover:scale-110">
+            <TrendingUp size={160} />
+          </div>
+          
+          <div className="flex justify-between items-start relative z-10">
+            <div className="p-4 bg-green-200 text-green-700 rounded-2xl">
+              <Scale size={32} />
+            </div>
+            <span className="text-[10px] font-black text-green-600/60 uppercase tracking-widest">Saldo de Safra</span>
+          </div>
+
+          <div className="relative z-10">
+            <p className="text-xs font-black text-green-700 uppercase mb-1">Saldo Líquido</p>
+            <h2 className="text-5xl font-black text-green-900 tracking-tighter">
+              {data.saldoLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} <span className="text-xl">sc</span>
+            </h2>
+            <p className="text-[10px] font-bold text-green-700/70 uppercase mt-4 flex items-center gap-1 italic">
+              * Estoque entregue menos contratos fixos
+            </p>
+          </div>
+        </div>
+
       </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+      `}</style>
     </main>
   );
 }
