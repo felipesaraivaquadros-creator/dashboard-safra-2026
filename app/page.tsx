@@ -32,16 +32,6 @@ export default function Dashboard() {
     setArmazemFiltro(null);
   };
 
-  // Lógica de toggle para Fazenda
-  const handleToggleFazenda = (name: string) => {
-    setFazendaFiltro(fazendaFiltro === name ? null : name);
-  };
-
-  // Lógica de toggle para Armazém
-  const handleToggleArmazem = (name: string) => {
-    setArmazemFiltro(armazemFiltro === name ? null : name);
-  };
-
   return (
     <main className="min-h-screen p-4 bg-slate-100 font-sans text-slate-900 relative">
       <header className="max-w-[1400px] mx-auto mb-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center">
@@ -71,8 +61,8 @@ export default function Dashboard() {
             chartArmazens={chartArmazens}
             fazendaFiltro={fazendaFiltro}
             armazemFiltro={armazemFiltro}
-            handleFiltroFazenda={handleToggleFazenda}
-            handleFiltroArmazem={handleToggleArmazem}
+            handleFiltroFazenda={setFazendaFiltro}
+            handleFiltroArmazem={setArmazemFiltro}
             getCorFazenda={getCorFazenda}
             getCorArmazem={getCorArmazem}
           />
