@@ -8,6 +8,14 @@ import Link from 'next/link';
 export default function SaldoPage() {
   const data = useMemo(() => calculateSaldoDashboard(), []);
 
+  // Definição das cores solicitadas para rotação
+  const colors = [
+    { bg: 'bg-yellow-50', text: 'text-yellow-900', border: 'border-yellow-200' }, // Amarelo
+    { bg: 'bg-[#fdf8f6]', text: 'text-[#4a3728]', border: 'border-[#e5d5c8]' }, // Marrom
+    { bg: 'bg-green-50', text: 'text-green-900', border: 'border-green-200' },  // Verde
+    { bg: 'bg-purple-50', text: 'text-purple-900', border: 'border-purple-200' } // Roxo
+  ];
+
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 font-sans text-slate-900">
       <header className="max-w-[1200px] mx-auto mb-8 flex justify-between items-center">
@@ -26,19 +34,22 @@ export default function SaldoPage() {
         <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
           <Warehouse size={14} /> Entregas Ildo Romancini por Armazém
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {data.kpisArmazem.length > 0 ? (
-            data.kpisArmazem.map((kpi, i) => (
-              <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                <p className="text-[9px] font-black text-slate-400 uppercase truncate mb-1">{kpi.nome}</p>
-                <h4 className="text-sm font-black text-slate-800">
-                  {kpi.total.toLocaleString('pt-BR')} <span className="text-[10px] text-slate-400 font-bold">sc</span>
-                </h4>
-              </div>
-            ))
+            data.kpisArmazem.map((kpi, i) => {
+              const color = colors[i % colors.length];
+              return (
+                <div key={i} className={`${color.bg} ${color.border} border-2 p-5 rounded-3xl shadow-sm transition-transform hover:scale-[1.02]`}>
+                  <p className={`text-[10px] font-black uppercase truncate mb-2 opacity-70 ${color.text}`}>{kpi.nome}</p>
+                  <h4 className={`text-xl font-black ${color.text}`}>
+                    {kpi.total.toLocaleString('pt-BR')} <span className="text-xs font-bold opacity-60">sc</span>
+                  </h4>
+                </div>
+              );
+            })
           ) : (
-            <div className="col-span-full py-6 text-center text-slate-400 text-[10px] font-bold uppercase italic border-2 border-dashed border-slate-200 rounded-2xl">
-              Nenhuma entrega encontrada para Ildo Romancini nos dados atuais.
+            <div className="col-span-full py-10 text-center text-slate-400 text-[10px] font-bold uppercase italic border-2 border-dashed border-slate-200 rounded-3xl">
+              Nenhuma carga encontrada para Ildo Romancini.
             </div>
           )}
         </div>
@@ -47,25 +58,25 @@ export default function SaldoPage() {
       <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         
         {/* CARD 1: ESTOQUE LÍQUIDO */}
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col justify-between h-[300px]">
+        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col justify-between h-[320px]">
           <div className="flex justify-between items-start">
             <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl">
               <Package size={32} />
             </div>
-            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Estoque Atual</span>
+            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Estoque Global</span>
           </div>
           <div>
-            <p className="text-xs font-black text-slate-400 uppercase mb-1">Estoque Líquido Total</p>
+            <p className="text-xs font-black text-slate-400 uppercase mb-1">Total Entregue (Líquido)</p>
             <h2 className="text-4xl font-black text-slate-800">
-              {data.estoqueTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} <span className="text-lg text-slate-400">sc</span>
+              {data.estoqueTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} <span className="text-lg text-slate-400 font-bold">sc</span>
             </h2>
           </div>
         </div>
 
         {/* CARD 2: LISTA DE CONTRATOS */}
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col h-[300px]">
+        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col h-[320px]">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2">
+            <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
               <FileText size={16} className="text-purple-500" /> Contratos Fixados
             </h3>
           </div>
@@ -80,22 +91,22 @@ export default function SaldoPage() {
           </div>
 
           <div className="pt-4 border-t-2 border-dashed border-slate-100 flex justify-between items-center">
-            <span className="text-xs font-black text-slate-800 uppercase italic">Volume Fixo Total</span>
+            <span className="text-xs font-black text-slate-800 uppercase italic">Volume Fixo</span>
             <span className="text-xl font-black text-purple-600">{data.volumeFixoTotal.toLocaleString('pt-BR')} sc</span>
           </div>
         </div>
 
         {/* CARD 3: SALDO LÍQUIDO */}
-        <div className="bg-green-100 p-8 rounded-[2rem] border border-green-200 shadow-md flex flex-col justify-between h-[300px] relative overflow-hidden group">
+        <div className="bg-green-100 p-8 rounded-[2.5rem] border border-green-200 shadow-lg flex flex-col justify-between h-[320px] relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 text-green-200/50 rotate-12 transition-transform group-hover:scale-110">
-            <TrendingUp size={160} />
+            <TrendingUp size={180} />
           </div>
           
           <div className="flex justify-between items-start relative z-10">
             <div className="p-4 bg-green-200 text-green-700 rounded-2xl">
               <Scale size={32} />
             </div>
-            <span className="text-[10px] font-black text-green-600/60 uppercase tracking-widest">Saldo de Safra</span>
+            <span className="text-[10px] font-black text-green-600/60 uppercase tracking-widest italic">Disponível</span>
           </div>
 
           <div className="relative z-10">
@@ -104,7 +115,7 @@ export default function SaldoPage() {
               {data.saldoLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} <span className="text-xl">sc</span>
             </h2>
             <p className="text-[10px] font-bold text-green-700/70 uppercase mt-4 flex items-center gap-1 italic">
-              * Estoque entregue menos contratos fixos
+              * Estoque entregue menos fixados
             </p>
           </div>
         </div>
