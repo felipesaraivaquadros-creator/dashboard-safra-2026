@@ -1,7 +1,7 @@
 export interface SaldoItem {
   nome: string;
   tipo: 'Armazem' | 'Contrato';
-  sacasBrutoEntregue: number;
+  estoqueLiquido: number; // Alterado de sacasBrutoEntregue para estoqueLiquido
   volumeContratado: number;
-  saldo: number; // sacasBrutoEntregue - volumeContratado
+  saldo: number; // estoqueLiquido - volumeContratado
 }
