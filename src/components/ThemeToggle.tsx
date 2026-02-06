@@ -31,11 +31,10 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(nextTheme)}
-      className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 transition-colors shadow-md"
+      className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 transition-colors shadow-md"
       aria-label={`Mudar para tema ${label}`}
     >
-      <Icon size={16} />
-      {label}
+      <Icon size={20} />
     </button>
   );
 }
