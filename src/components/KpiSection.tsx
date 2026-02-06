@@ -26,7 +26,7 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+      <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
         <div className="p-3 bg-green-100 rounded-lg text-green-600"><TrendingUp size={24}/></div>
         <div>
           <p className="text-[10px] font-bold text-slate-400 uppercase">Total Entregue</p>
@@ -36,7 +36,7 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
 
       <div 
         onClick={() => fazendaFiltro && setShowModalProd(true)} 
-        className={`bg-white p-5 rounded-xl border-2 transition-all cursor-pointer shadow-sm flex items-center justify-between group ${fazendaFiltro ? 'border-purple-400 hover:border-purple-500' : 'border-transparent hover:border-slate-300 cursor-default'}`}
+        className={`bg-white dark:bg-slate-800 p-5 rounded-xl border-2 transition-all cursor-pointer shadow-sm flex items-center justify-between group ${fazendaFiltro ? 'border-purple-400 hover:border-purple-500 dark:border-purple-600 dark:hover:border-purple-500' : 'border-transparent hover:border-slate-300 dark:hover:border-slate-700 cursor-default'}`}
       >
         <div className="flex items-center gap-4">
           <div className={`p-3 rounded-lg transition-colors ${prodColor} group-hover:bg-purple-600 group-hover:text-white`}>
@@ -51,7 +51,7 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
       </div>
 
       {/* KPI 3: Umidade Média (Atualizado) */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+      <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
         <div className="flex items-center gap-4">
           <div className={`p-3 rounded-lg ${umidadeBg} ${umidadeText}`}>
             <UmidadeIcon size={24}/>
@@ -63,7 +63,7 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
         </div>
         
         {/* Meta de Umidade */}
-        <div className="mt-3 pt-3 border-t border-slate-100">
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
           <p className="text-[10px] font-bold text-slate-400 uppercase flex justify-between items-center">
             Meta de Armazenagem
             <span className={`text-xs font-black ${umidadeText}`}>
@@ -89,7 +89,7 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all" onClick={() => setShowModalProd(false)}>
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
         <div className="bg-purple-600 p-6 text-white flex justify-between items-center">
           <div className="flex flex-col">
             <span className="text-[10px] font-black uppercase bg-purple-500 w-fit px-2 py-0.5 rounded-full mb-1">Fazenda</span>
@@ -101,11 +101,11 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
           {fazendaFiltro ? (
             <>
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-slate-50 rounded-2xl text-center border border-slate-100">
+                <div className="p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
                   <p className="text-[10px] font-black text-slate-400 uppercase">Área Total</p>
                   <h4 className="text-xl font-black">{stats.areaHa} ha</h4>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-2xl text-center border border-slate-100">
+                <div className="p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
                   <p className="text-[10px] font-black text-slate-400 uppercase">Cargas (Romaneios)</p>
                   <h4 className="text-xl font-black">{romaneiosCount} un</h4> {/* Usando romaneiosCount */}
                 </div>

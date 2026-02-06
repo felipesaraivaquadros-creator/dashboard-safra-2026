@@ -27,15 +27,10 @@ export const CORES_ARMAZENS: Record<string, string> = {
 };
 
 export const VOLUMES_CONTRATADOS: Record<string, ContractVolume> = {
-  "72208": { nome: "Venda 20 Mil Sacas", total: 20000 },
-  "290925M339": { nome: "Troca Adubo Sipal", total: 29500 },
-  "02soja25-26": { nome: "Arrendamento CT", total: 7200 },
-  "PLCSRsoja25-26": { nome: "Plantadeira Cesar", total: 2000 },
-  "01soja25-26": { nome: "Arrendamento SL", total: 4050 },
+  "72208": { nome: "Venda Sipal 20 Mil Sacas", total: 20000 },
+  "290925M339": { nome: "Troca Adubo Sipal 29.500 Sacas", total: 29500 },
+  "ARR-CST-USIMAT": { nome: "Arrendamento CT", total: 10000 },
+  "ARR-SLZ-COFCO": { nome: "Arrendamento SL", total: 4050 },
   "Comissoes": { nome: "Venda 800 Sacas Comissão", total: 800 },
-  // Novos contratos de depósito encontrados nos dados:
-  "01DEPSOJA": { nome: "Depósito Sipal Matupá", total: 0 },
-  "02DEPSOJA": { nome: "Depósito Amaggi Matupá", total: 0 },
-  "03DEPSOJA": { nome: "Depósito Sipal Campos de Julio", total: 0 },
-  "04DEPSOJA": { nome: "Depósito Sipal LRV", total: 0 }
+  
 };

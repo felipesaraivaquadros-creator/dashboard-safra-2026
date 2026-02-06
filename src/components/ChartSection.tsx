@@ -49,15 +49,15 @@ export default function ChartSection({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Gráfico de Fazendas */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
         <h2 className="text-[10px] font-black text-slate-400 uppercase mb-6 flex justify-between">Fazendas <span>(Filtro Ativo: {fazendaFiltro || 'Nenhum'})</span></h2>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartFazendas}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
-              <YAxis fontSize={10} axisLine={false} tickLine={false} tickFormatter={(value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} />
-              <Tooltip cursor={{fill: 'transparent'}} formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-700" />
+              <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} className="dark:text-slate-300" />
+              <YAxis fontSize={10} axisLine={false} tickLine={false} tickFormatter={(value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} className="dark:text-slate-300" />
+              <Tooltip cursor={{fill: 'transparent'}} formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} contentStyle={{ backgroundColor: 'var(--bg-tooltip, #fff)', border: '1px solid var(--border-tooltip, #e2e8f0)', borderRadius: '8px' }} />
               <Bar dataKey="sacas" radius={[4, 4, 0, 0]} cursor="pointer" onClick={(data) => handleBarClick(data, true)}>
                 {chartFazendas.map((entry, index) => {
                   // Se não houver filtro, ou se esta for a fazenda selecionada, usa a cor da fazenda.
@@ -72,15 +72,15 @@ export default function ChartSection({
       </div>
 
       {/* Gráfico de Armazéns */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200">
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
         <h2 className="text-[10px] font-black text-slate-400 uppercase mb-6 flex justify-between">Armazéns <span>(Filtro Ativo: {armazemFiltro || 'Nenhum'})</span></h2>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartArmazens} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" className="dark:stroke-slate-700" />
               <XAxis type="number" hide />
-              <YAxis dataKey="name" type="category" fontSize={10} width={80} axisLine={false} tickLine={false} />
-              <Tooltip cursor={{fill: 'transparent'}} formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} />
+              <YAxis dataKey="name" type="category" fontSize={10} width={80} axisLine={false} tickLine={false} className="dark:text-slate-300" />
+              <Tooltip cursor={{fill: 'transparent'}} formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} contentStyle={{ backgroundColor: 'var(--bg-tooltip, #fff)', border: '1px solid var(--border-tooltip, #e2e8f0)', borderRadius: '8px' }} />
               <Bar dataKey="sacas" radius={[0, 4, 4, 0]} cursor="pointer" onClick={(data) => handleBarClick(data, false)}>
                 {chartArmazens.map((entry, index) => {
                   // Se não houver filtro, ou se este for o armazém selecionado, usa a cor do armazém.
@@ -95,7 +95,7 @@ export default function ChartSection({
       </div>
 
       {/* Gráfico de Pizza (Participação Global) */}
-      <div className="md:col-span-2 bg-white p-6 rounded-2xl border border-slate-200">
+      <div className="md:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700">
         <h2 className="text-xs font-black text-slate-400 uppercase mb-4 text-center">Participação Global por Fazenda</h2>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -110,28 +110,31 @@ export default function ChartSection({
                 cursor="pointer"
               >
                 {chartFazendas.map((entry, i) => {
-                  // A lógica de cor para o PieChart deve ser a mesma, mas o PieChart só mostra dados > 0.
-                  // Se o filtro de fazenda estiver ativo, o PieChart deve mostrar apenas a fazenda selecionada.
-                  // Como o PieChart usa chartFazendas, e chartFazendas agora contém todos os volumes (filtrados por armazém),
-                  // se o fazendaFiltro estiver ativo, o PieChart deve ser filtrado para mostrar apenas a fazenda selecionada.
-                  
-                  // Para o PieChart, vamos usar a lógica original: se o filtro de fazenda está ativo, 
-                  // ele só deve mostrar a fatia selecionada (se o volume for > 0).
-                  // Se o fazendaFiltro está ativo, o chartFazendas contém o volume total da fazenda selecionada (filtrado por armazém).
-                  // Se o fazendaFiltro NÃO está ativo, ele mostra todas as fatias.
-                  
-                  // Para manter a consistência visual, vamos usar a cor da fazenda, mas o PieChart não suporta "barras cinzas" para itens não selecionados.
-                  // Ele só renderiza fatias com volume > 0.
                   
                   return <Cell key={`cell-pie-${i}`} fill={getCorFazenda(entry.name)} />
                 })}
               </Pie>
-              <Tooltip formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} />
-              <Legend verticalAlign="bottom" height={36}/>
+              <Tooltip formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} contentStyle={{ backgroundColor: 'var(--bg-tooltip, #fff)', border: '1px solid var(--border-tooltip, #e2e8f0)', borderRadius: '8px' }} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: 'var(--text-color, #0f172a)' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
+      <style jsx global>{`
+        .dark .recharts-wrapper {
+          --bg-tooltip: #1e293b; /* slate-800 */
+          --border-tooltip: #475569; /* slate-600 */
+          --text-color: #f1f5f9; /* slate-100 */
+        }
+        .recharts-wrapper {
+          --bg-tooltip: #fff;
+          --border-tooltip: #e2e8f0;
+          --text-color: #0f172a;
+        }
+        .dark .recharts-text {
+          fill: #e2e8f0 !important; /* Garante que o texto do gráfico seja claro no modo escuro */
+        }
+      `}</style>
     </div>
   );
 }

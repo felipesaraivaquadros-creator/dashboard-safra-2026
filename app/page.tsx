@@ -6,7 +6,8 @@ import KpiSection, { ProductivityModal } from '../src/components/KpiSection';
 import ChartSection from '../src/components/ChartSection';
 import ContractSection from '../src/components/ContractSection';
 import UpdateDataButton from '../src/components/UpdateDataButton';
-import Link from 'next/link'; // Importando Link
+import { ThemeToggle } from '../src/components/ThemeToggle'; // Importando ThemeToggle
+import Link from 'next/link'; 
 
 export default function Dashboard() {
   const {
@@ -15,7 +16,7 @@ export default function Dashboard() {
     setFazendaFiltro,
     setArmazemFiltro,
     stats,
-    romaneiosCount, // Novo: Contagem de romaneios
+    romaneiosCount,
     contratosProcessados,
     chartFazendas,
     chartArmazens,
@@ -35,24 +36,14 @@ export default function Dashboard() {
     setArmazemFiltro(null);
   };
 
-  // Função para lidar com a atualização de dados (simulação)
-  const handleDataUpdate = () => {
-    // Esta função é chamada pelo UpdateDataButton.
-    // Como estamos em um ambiente simulado, instruímos o usuário e forçamos o refresh.
-    // O componente UpdateDataButton já exibe o toast.
-    
-    // Força o refresh do preview para carregar o novo JSON
-    // Nota: O comando dyad-command deve ser emitido aqui para ser executado no ambiente Dyad.
-    // No entanto, como o botão está em um componente separado, vou emitir a instrução de refresh
-    // para o usuário após o toast ser exibido.
-  };
+  // A função handleDataUpdate foi removida pois o botão já lida com a simulação.
 
   return (
-    <main className="min-h-screen p-4 bg-slate-100 font-sans text-slate-900 relative">
-      <header className="max-w-[1400px] mx-auto mb-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex justify-between items-center">
+    <main className="min-h-screen p-4 bg-slate-100 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 relative">
+      <header className="max-w-[1400px] mx-auto mb-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex justify-between items-center">
         <div>
           {/* Título alterado */}
-          <h1 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">Painel Soja - Safra 25/26</h1>
+          <h1 className="text-2xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter">Painel Soja - Safra 25/26</h1>
           <div className="flex gap-2 mt-1">
             {fazendaFiltro && <span style={{backgroundColor: getCorFazenda(fazendaFiltro)}} className="text-[10px] text-white px-2 py-0.5 rounded font-bold uppercase">{fazendaFiltro}</span>}
             {armazemFiltro && <span style={{backgroundColor: getCorArmazem(armazemFiltro)}} className="text-[10px] text-white px-2 py-0.5 rounded font-bold uppercase">{armazemFiltro}</span>}
@@ -68,8 +59,11 @@ export default function Dashboard() {
           >
             Saldos
           </Link>
+          
+          {/* Toggle de Tema */}
+          <ThemeToggle />
 
-          <button onClick={handleClearFilters} className="text-xs font-black text-slate-300 hover:text-red-500 uppercase transition-colors">Limpar Global</button>
+          <button onClick={handleClearFilters} className="text-xs font-black text-slate-300 hover:text-red-500 uppercase transition-colors dark:text-slate-500 dark:hover:text-red-400">Limpar Global</button>
         </div>
       </header>
 
