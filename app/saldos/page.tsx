@@ -2,8 +2,20 @@
 
 import React, { useMemo } from 'react';
 import { calculateSaldoDashboard } from '../../src/utils/saldoProcessing';
-import { ArrowLeft, Package, FileText, Scale, TrendingUp, Warehouse, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Package, FileText, Scale, TrendingUp, Warehouse, AlertTriangle, CheckCircle, LucideIcon } from 'lucide-react';
 import Link from 'next/link';
+
+// Definindo a interface para as configurações do card de saldo
+interface SaldoCardConfig {
+  title: string;
+  icon: LucideIcon;
+  bg: string;
+  border: string;
+  text: string;
+  subText: string;
+  iconBg: string;
+  trendingIcon: LucideIcon;
+}
 
 export default function SaldoPage() {
   const data = useMemo(() => calculateSaldoDashboard(), []);
@@ -21,7 +33,7 @@ export default function SaldoPage() {
   ];
 
   // Configurações dinâmicas para o Saldo Final
-  const saldoCardConfig = isExcedente ? {
+  const saldoCardConfig: SaldoCardConfig = isExcedente ? {
     title: "Saldo Excedente",
     icon: CheckCircle,
     bg: "bg-green-100 dark:bg-green-900/30",
@@ -40,6 +52,10 @@ export default function SaldoPage() {
     iconBg: "bg-red-200 text-red-700 dark:bg-red-700 dark:text-white",
     trendingIcon: Scale,
   };
+  
+  // Desestruturação dos componentes de ícone
+  const IconComponent = saldoCardConfig.icon;
+  const TrendingIconComponent = saldoCardConfig.trendingIcon;
 
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
@@ -104,12 +120,12 @@ export default function SaldoPage() {
           {/* CARD 1.3: SALDO FINAL (DINÂMICO) */}
           <div className={`${saldoCardConfig.bg} ${saldoCardConfig.border} border-2 p-6 rounded-3xl shadow-lg flex flex-col justify-between relative overflow-hidden group`}>
             <div className={`absolute -right-4 -top-4 ${saldoCardConfig.text}/50 rotate-12 transition-transform group-hover:scale-110`}>
-              <saldoCardConfig.trendingIcon size={120} />
+              <TrendingIconComponent size={120} />
             </div>
             
             <div className="flex justify-between items-start relative z-10">
               <div className={`p-3 rounded-xl ${saldoCardConfig.iconBg}`}>
-                <saldoCardConfig.icon size={24} />
+                <IconComponent size={24} />
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest italic" style={{ color: saldoCardConfig.subText.split(' ')[0] }}>{saldoCardConfig.title}</span>
             </div>
