@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { TrendingUp, Droplets, Target, Info, X } from 'lucide-react';
+import { TrendingUp, Target, Info, X, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { KpiStats } from '../data/types';
 
 interface KpiSectionProps {
@@ -13,6 +13,17 @@ interface KpiSectionProps {
 }
 
 export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, setShowModalProd }: KpiSectionProps) {
+  
+  const UMIDADE_META = 14.0;
+  const currentUmidade = parseFloat(stats.umidade);
+  
+  // Umidade é considerada 'boa' se estiver ABAIXO da meta (14.0%)
+  const isUmidadeGood = currentUmidade < UMIDADE_META;
+
+  const UmidadeIcon = isUmidadeGood ? ArrowUpRight : ArrowDownRight;
+  const umidadeBg = isUmidadeGood ? 'bg-green-100' : 'bg-red-100';
+  const umidadeText = isUmidadeGood ? 'text-green-600' : 'text-red-600';
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
@@ -39,11 +50,26 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
         <Info size={16} className="text-slate-300" />
       </div>
 
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-        <div className="p-3 bg-blue-100 rounded-lg text-blue-600"><Droplets size={24}/></div>
-        <div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase">Umidade Média</p>
-          <h3 className="text-xl font-black">{stats.umidade}%</h3>
+      {/* KPI 3: Umidade Média (Atualizado) */}
+      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div className="flex items-center gap-4">
+          <div className={`p-3 rounded-lg ${umidadeBg} ${umidadeText}`}>
+            <UmidadeIcon size={24}/>
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Umidade Média</p>
+            <h3 className="text-xl font-black">{stats.umidade}%</h3>
+          </div>
+        </div>
+        
+        {/* Meta de Umidade */}
+        <div className="mt-3 pt-3 border-t border-slate-100">
+          <p className="text-[10px] font-bold text-slate-400 uppercase flex justify-between items-center">
+            Meta de Armazenagem
+            <span className={`text-xs font-black ${umidadeText}`}>
+              {UMIDADE_META.toFixed(1)}%
+            </span>
+          </p>
         </div>
       </div>
     </div>
