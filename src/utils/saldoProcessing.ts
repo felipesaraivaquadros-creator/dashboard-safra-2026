@@ -4,45 +4,58 @@ import dadosOriginal from '../../romaneios_soja_25_26_normalizado.json';
 
 const typedDadosOriginal: Romaneio[] = dadosOriginal as Romaneio[];
 
-const CONTRATOS_FIXOS = Object.keys(VOLUMES_CONTRATADOS)
-  .filter(id => VOLUMES_CONTRATADOS[id].total > 0)
+// IDs dos contratos fixos que devem ser pagos pelo estoque da COFCO NSH e SIPAL MATUPÁ
+const CONTRATOS_FIXOS_IDS = ["72208", "290925M339"];
+const ARMAZENS_CONTRATOS_FIXOS = ["COFCO NSH", "SIPAL MATUPÁ"];
+
+const CONTRATOS_FIXOS = CONTRATOS_FIXOS_IDS
   .map(id => ({
+    id,
     nome: VOLUMES_CONTRATADOS[id].nome,
     total: VOLUMES_CONTRATADOS[id].total,
   }));
 
 export function calculateSaldoDashboard() {
-  // 1. Estoque Líquido Global (Tudo que foi entregue)
-  const estoqueTotal = typedDadosOriginal.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
+  
+  let estoqueTotalContratosFixos = 0;
+  let estoqueTotalOutrosArmazens = 0;
 
-  // 2. Volume Fixo Global
+  // 1. Volume Fixo Global (Apenas os dois contratos específicos)
   const volumeFixoTotal = CONTRATOS_FIXOS.reduce((acc, c) => acc + c.total, 0);
 
-  // 3. Saldo Líquido Global
-  const saldoLiquido = estoqueTotal - volumeFixoTotal;
-
-  // 4. KPI de cada Armazém (Somente Ildo Romancini)
-  const kpisArmazemMap: Record<string, number> = {};
+  // 2. Calcular estoque entregue para contratos fixos e para outros armazéns (apenas Ildo Romancini)
+  const kpisArmazemOutrosMap: Record<string, number> = {};
   
   typedDadosOriginal.forEach(d => {
-    // Filtragem solicitada: Emitente == "Ildo Romancini"
-    // Nota: Como o arquivo normalizado foi atualizado, d.emitente deve estar presente.
-    // Se não estiver, verificamos o raw data ou assumimos que o script foi rodado.
+    // Filtra apenas entregas de Ildo Romancini
     if (d.emitente === "Ildo Romancini") {
+      const sacas = Number(d.sacasLiquida) || 0;
       const armazem = d.armazem || "Outros";
-      kpisArmazemMap[armazem] = (kpisArmazemMap[armazem] || 0) + (Number(d.sacasLiquida) || 0);
+
+      if (ARMAZENS_CONTRATOS_FIXOS.includes(armazem)) {
+        estoqueTotalContratosFixos += sacas;
+      } else {
+        // Armazéns que não são COFCO NSH ou SIPAL MATUPÁ
+        estoqueTotalOutrosArmazens += sacas;
+        kpisArmazemOutrosMap[armazem] = (kpisArmazemOutrosMap[armazem] || 0) + sacas;
+      }
     }
   });
 
-  const kpisArmazem = Object.entries(kpisArmazemMap)
+  // 3. Saldo Líquido para Contratos Fixos (Estoque - Contratado)
+  const saldoContratosFixos = estoqueTotalContratosFixos - volumeFixoTotal;
+
+  // 4. KPIs de Armazéns (Excluindo os de contratos fixos)
+  const kpisArmazemOutros = Object.entries(kpisArmazemOutrosMap)
     .map(([nome, total]) => ({ nome, total: parseFloat(total.toFixed(2)) }))
     .sort((a, b) => b.total - a.total);
 
   return {
-    estoqueTotal: parseFloat(estoqueTotal.toFixed(2)),
+    estoqueTotalContratosFixos: parseFloat(estoqueTotalContratosFixos.toFixed(2)),
     volumeFixoTotal,
-    saldoLiquido: parseFloat(saldoLiquido.toFixed(2)),
-    contratos: CONTRATOS_FIXOS,
-    kpisArmazem
+    saldoContratosFixos: parseFloat(saldoContratosFixos.toFixed(2)),
+    contratosFixos: CONTRATOS_FIXOS,
+    estoqueTotalOutrosArmazens: parseFloat(estoqueTotalOutrosArmazens.toFixed(2)),
+    kpisArmazemOutros
   };
 }

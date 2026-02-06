@@ -2,11 +2,15 @@
 
 import React, { useMemo } from 'react';
 import { calculateSaldoDashboard } from '../../src/utils/saldoProcessing';
-import { ArrowLeft, Package, FileText, Scale, TrendingUp, Warehouse } from 'lucide-react';
+import { ArrowLeft, Package, FileText, Scale, TrendingUp, Warehouse, AlertTriangle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SaldoPage() {
   const data = useMemo(() => calculateSaldoDashboard(), []);
+  
+  const saldo = data.saldoContratosFixos;
+  const isExcedente = saldo >= 0;
+  const saldoAbsoluto = Math.abs(saldo);
 
   // Definição das cores solicitadas para rotação, incluindo suporte a dark mode
   const colors = [
@@ -15,6 +19,27 @@ export default function SaldoPage() {
     { bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-900 dark:text-green-300', border: 'border-green-200 dark:border-green-800' },  // Verde
     { bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-900 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800' } // Roxo
   ];
+
+  // Configurações dinâmicas para o Saldo Final
+  const saldoCardConfig = isExcedente ? {
+    title: "Saldo Excedente",
+    icon: CheckCircle,
+    bg: "bg-green-100 dark:bg-green-900/30",
+    border: "border-green-200 dark:border-green-800",
+    text: "text-green-900 dark:text-green-200",
+    subText: "text-green-700/70 dark:text-green-400/70",
+    iconBg: "bg-green-200 text-green-700 dark:bg-green-700 dark:text-white",
+    trendingIcon: TrendingUp,
+  } : {
+    title: "Déficit a Cumprir",
+    icon: AlertTriangle,
+    bg: "bg-red-100 dark:bg-red-900/30",
+    border: "border-red-200 dark:border-red-800",
+    text: "text-red-900 dark:text-red-200",
+    subText: "text-red-700/70 dark:text-red-400/70",
+    iconBg: "bg-red-200 text-red-700 dark:bg-red-700 dark:text-white",
+    trendingIcon: Scale,
+  };
 
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
@@ -29,14 +54,87 @@ export default function SaldoPage() {
         </Link>
       </header>
 
-      {/* SEÇÃO DE KPIS POR ARMAZÉM (ILDO ROMANCINI) */}
+      {/* SEÇÃO 1: CUMPRIMENTO DE CONTRATOS FIXOS (COFCO NSH + SIPAL MATUPÁ) */}
+      <div className="max-w-[1200px] mx-auto mb-10">
+        <h2 className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+          <FileText size={14} /> Contratos Fixos (Venda 20K + Troca 29.5K)
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* CARD 1.1: ESTOQUE DESTINADO */}
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div className="flex justify-between items-start">
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl dark:bg-blue-900/30 dark:text-blue-400">
+                <Package size={24} />
+              </div>
+              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Estoque Entregue</span>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-black text-slate-400 uppercase mb-1">COFCO NSH + SIPAL MATUPÁ</p>
+              <h2 className="text-3xl font-black text-slate-800 dark:text-white">
+                {data.estoqueTotalContratosFixos.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} <span className="text-lg text-slate-400 font-bold">sc</span>
+              </h2>
+            </div>
+          </div>
+
+          {/* CARD 1.2: CONTRATOS FIXOS */}
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
+                <FileText size={16} className="text-purple-500" /> Volume Contratado
+              </h3>
+            </div>
+            
+            <div className="flex-1 space-y-2 mb-4">
+              {data.contratosFixos.map((c, i) => (
+                <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 dark:border-slate-700 pb-1">
+                  <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{c.nome}</span>
+                  <span className="font-black text-purple-600 dark:text-purple-400">{c.total.toLocaleString('pt-BR')} sc</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-center">
+              <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Total Fixo</span>
+              <span className="text-xl font-black text-purple-600">{data.volumeFixoTotal.toLocaleString('pt-BR')} sc</span>
+            </div>
+          </div>
+
+          {/* CARD 1.3: SALDO FINAL (DINÂMICO) */}
+          <div className={`${saldoCardConfig.bg} ${saldoCardConfig.border} border-2 p-6 rounded-3xl shadow-lg flex flex-col justify-between relative overflow-hidden group`}>
+            <div className={`absolute -right-4 -top-4 ${saldoCardConfig.text}/50 rotate-12 transition-transform group-hover:scale-110`}>
+              <saldoCardConfig.trendingIcon size={120} />
+            </div>
+            
+            <div className="flex justify-between items-start relative z-10">
+              <div className={`p-3 rounded-xl ${saldoCardConfig.iconBg}`}>
+                <saldoCardConfig.icon size={24} />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-widest italic" style={{ color: saldoCardConfig.subText.split(' ')[0] }}>{saldoCardConfig.title}</span>
+            </div>
+
+            <div className="relative z-10 mt-4">
+              <p className="text-xs font-black uppercase mb-1" style={{ color: saldoCardConfig.subText.split(' ')[0] }}>{isExcedente ? 'Volume Disponível' : 'Volume Pendente'}</p>
+              <h2 className={`text-4xl font-black tracking-tighter ${saldoCardConfig.text}`}>
+                {saldoAbsoluto.toLocaleString('pt-BR', { minimumFractionDigits: 0 })} <span className="text-lg">sc</span>
+              </h2>
+              <p className={`text-[10px] font-bold uppercase mt-4 flex items-center gap-1 italic ${saldoCardConfig.subText}`}>
+                * Cálculo: Entregue - Contratado
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SEÇÃO 2: KPIS DE OUTROS ARMAZÉNS (SALDO DISPONÍVEL) */}
       <div className="max-w-[1200px] mx-auto mb-10">
         <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-          <Warehouse size={14} /> Entregas Ildo Romancini por Armazém
+          <Warehouse size={14} /> Saldo em Outros Armazéns (Total: {data.estoqueTotalOutrosArmazens.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc)
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {data.kpisArmazem.length > 0 ? (
-            data.kpisArmazem.map((kpi, i) => {
+          {data.kpisArmazemOutros.length > 0 ? (
+            data.kpisArmazemOutros.map((kpi, i) => {
               const color = colors[i % colors.length];
               return (
                 <div key={i} className={`${color.bg} ${color.border} border-2 p-5 rounded-3xl shadow-sm transition-transform hover:scale-[1.02]`}>
@@ -49,77 +147,10 @@ export default function SaldoPage() {
             })
           ) : (
             <div className="col-span-full py-10 text-center text-slate-400 text-[10px] font-bold uppercase italic border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl">
-              Nenhuma carga encontrada para Ildo Romancini.
+              Nenhuma carga encontrada em outros armazéns.
             </div>
           )}
         </div>
-      </div>
-
-      <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        {/* CARD 1: ESTOQUE LÍQUIDO */}
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between h-[320px]">
-          <div className="flex justify-between items-start">
-            <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl dark:bg-blue-900/30 dark:text-blue-400">
-              <Package size={32} />
-            </div>
-            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Estoque Global</span>
-          </div>
-          <div>
-            <p className="text-xs font-black text-slate-400 uppercase mb-1">Total Entregue (Líquido)</p>
-            <h2 className="text-4xl font-black text-slate-800 dark:text-white">
-              {data.estoqueTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} <span className="text-lg text-slate-400 font-bold">sc</span>
-            </h2>
-          </div>
-        </div>
-
-        {/* CARD 2: LISTA DE CONTRATOS */}
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-[320px]">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
-              <FileText size={16} className="text-purple-500" /> Contratos Fixados
-            </h3>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-4 custom-scrollbar">
-            {data.contratos.map((c, i) => (
-              <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 dark:border-slate-700 pb-2">
-                <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{c.nome}</span>
-                <span className="font-black text-slate-800 dark:text-white">{c.total.toLocaleString('pt-BR')} sc</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-4 border-t-2 border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Volume Fixo</span>
-            <span className="text-xl font-black text-purple-600">{data.volumeFixoTotal.toLocaleString('pt-BR')} sc</span>
-          </div>
-        </div>
-
-        {/* CARD 3: SALDO LÍQUIDO */}
-        <div className="bg-green-100 dark:bg-green-900/30 p-8 rounded-[2.5rem] border border-green-200 dark:border-green-800 shadow-lg flex flex-col justify-between h-[320px] relative overflow-hidden group">
-          <div className="absolute -right-4 -top-4 text-green-200/50 dark:text-green-900/50 rotate-12 transition-transform group-hover:scale-110">
-            <TrendingUp size={180} />
-          </div>
-          
-          <div className="flex justify-between items-start relative z-10">
-            <div className="p-4 bg-green-200 text-green-700 rounded-2xl dark:bg-green-700 dark:text-white">
-              <Scale size={32} />
-            </div>
-            <span className="text-[10px] font-black text-green-600/60 dark:text-green-400/60 uppercase tracking-widest italic">Disponível</span>
-          </div>
-
-          <div className="relative z-10">
-            <p className="text-xs font-black text-green-700 dark:text-green-300 uppercase mb-1">Saldo Líquido</p>
-            <h2 className="text-5xl font-black text-green-900 dark:text-green-200 tracking-tighter">
-              {data.saldoLiquido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} <span className="text-xl">sc</span>
-            </h2>
-            <p className="text-[10px] font-bold text-green-700/70 dark:text-green-400/70 uppercase mt-4 flex items-center gap-1 italic">
-              * Estoque entregue menos fixados
-            </p>
-          </div>
-        </div>
-
       </div>
 
       <style jsx global>{`
