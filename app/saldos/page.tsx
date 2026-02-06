@@ -78,23 +78,31 @@ export default function SaldoPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          {/* CARD 1.1: ESTOQUE DESTINADO */}
+          {/* CARD 1.1: ESTOQUE ENTREGUE (REESTRUTURADO) */}
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
-            <div className="flex justify-between items-start">
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl dark:bg-blue-900/30 dark:text-blue-400">
-                <Package size={24} />
-              </div>
-              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Estoque Entregue</span>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
+                <Package size={16} className="text-blue-500" /> Estoque Entregue
+              </h3>
             </div>
-            <div className="mt-4">
-              <p className="text-xs font-black text-slate-400 uppercase mb-1">COFCO NSH + SIPAL MATUPÁ</p>
-              <h2 className="text-3xl font-black text-slate-800 dark:text-white">
-                {data.estoqueTotalContratosFixos.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} <span className="text-lg text-slate-400 font-bold">sc</span>
-              </h2>
+            
+            <div className="flex-1 space-y-2 mb-4">
+              {data.estoqueArmazensFixos.map((kpi, i) => (
+                <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 dark:border-slate-700 pb-1">
+                  <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{kpi.nome}</span>
+                  {/* Cor azul para números de estoque */}
+                  <span className="font-black text-blue-600 dark:text-blue-400">{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-center">
+              <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Total Entregue</span>
+              <span className="text-xl font-black text-blue-600">{data.estoqueTotalContratosFixos.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
             </div>
           </div>
 
-          {/* CARD 1.2: CONTRATOS FIXOS */}
+          {/* CARD 1.2: CONTRATOS FIXOS (Ajustando a cor do número para roxo, conforme solicitado) */}
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
@@ -106,6 +114,7 @@ export default function SaldoPage() {
               {data.contratosFixos.map((c, i) => (
                 <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 dark:border-slate-700 pb-1">
                   <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{c.nome}</span>
+                  {/* Cor roxa para números de contrato */}
                   <span className="font-black text-purple-600 dark:text-purple-400">{c.total.toLocaleString('pt-BR')} sc</span>
                 </div>
               ))}

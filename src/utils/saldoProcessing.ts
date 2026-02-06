@@ -19,21 +19,29 @@ export function calculateSaldoDashboard() {
   
   let estoqueTotalContratosFixos = 0;
   let estoqueTotalOutrosArmazens = 0;
+  
+  // Novo mapa para armazenar o estoque por armazém para os contratos fixos
+  const estoqueArmazensFixosMap: Record<string, number> = {};
 
   // 1. Volume Fixo Global (Apenas os dois contratos específicos)
   const volumeFixoTotal = CONTRATOS_FIXOS.reduce((acc, c) => acc + c.total, 0);
 
-  // 2. Calcular estoque entregue para contratos fixos e para outros armazéns (apenas Ildo Romancini)
+  // 2. Calcular estoque entregue, filtrando por DEPÓSITO (DEP)
   const kpisArmazemOutrosMap: Record<string, number> = {};
   
   typedDadosOriginal.forEach(d => {
-    // Filtra apenas entregas de Ildo Romancini
+    // CORREÇÃO: Apenas romaneios de DEPÓSITO (DEP) devem ser considerados como estoque entregue.
+    if (d.tipoNF !== "DEP") return; 
+    
+    // Filtra apenas entregas de Ildo Romancini (mantendo a lógica existente para quem entrega)
     if (d.emitente === "Ildo Romancini") {
       const sacas = Number(d.sacasLiquida) || 0;
       const armazem = d.armazem || "Outros";
 
       if (ARMAZENS_CONTRATOS_FIXOS.includes(armazem)) {
         estoqueTotalContratosFixos += sacas;
+        // Armazena o estoque por armazém para a melhoria da UI
+        estoqueArmazensFixosMap[armazem] = (estoqueArmazensFixosMap[armazem] || 0) + sacas;
       } else {
         // Armazéns que não são COFCO NSH ou SIPAL MATUPÁ
         estoqueTotalOutrosArmazens += sacas;
@@ -49,6 +57,12 @@ export function calculateSaldoDashboard() {
   const kpisArmazemOutros = Object.entries(kpisArmazemOutrosMap)
     .map(([nome, total]) => ({ nome, total: parseFloat(total.toFixed(2)) }))
     .sort((a, b) => b.total - a.total);
+    
+  // 5. Estrutura de dados para o novo card de estoque fixo
+  const estoqueArmazensFixos = Object.entries(estoqueArmazensFixosMap)
+    .map(([nome, total]) => ({ nome, total: parseFloat(total.toFixed(2)) }))
+    .sort((a, b) => b.total - a.total);
+
 
   return {
     estoqueTotalContratosFixos: parseFloat(estoqueTotalContratosFixos.toFixed(2)),
@@ -56,6 +70,7 @@ export function calculateSaldoDashboard() {
     saldoContratosFixos: parseFloat(saldoContratosFixos.toFixed(2)),
     contratosFixos: CONTRATOS_FIXOS,
     estoqueTotalOutrosArmazens: parseFloat(estoqueTotalOutrosArmazens.toFixed(2)),
-    kpisArmazemOutros
+    kpisArmazemOutros,
+    estoqueArmazensFixos
   };
 }
