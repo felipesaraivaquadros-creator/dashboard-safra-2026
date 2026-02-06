@@ -53,8 +53,7 @@ export const useDataProcessing = (): DataContextType => {
       totalLiq: liq,
       totalBruta: bruta,
       areaHa: area,
-      prodLiq: area > 0 ? (liq / area).toFixed(1) : '0.0',
-      // ALTERADO: prodBruta agora usa toFixed(2)
+      prodLiq: area > 0 ? (liq / area).toFixed(2) : '0.00', // Alterado para toFixed(2)
       prodBruta: area > 0 ? (bruta / area).toFixed(2) : '0.00',
       umidade: umidMed
     };
