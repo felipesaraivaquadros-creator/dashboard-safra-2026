@@ -25,12 +25,8 @@ function loadSafraData(safraId: string): { dados: Romaneio[], config: ReturnType
     dados = [];
   }
   
-  // Remove o último registro se for o registro de 'Total' (data: null)
-  let romaneiosValidos = dados;
-  const ultimoRegistro = dados[dados.length - 1];
-  if (ultimoRegistro && ultimoRegistro.data === null) {
-    romaneiosValidos = dados.slice(0, -1);
-  }
+  // Filtra quaisquer registros inválidos que possam ter sobrado (como o antigo 'Total')
+  const romaneiosValidos = dados.filter(d => d.sacasLiquida > 0 && d.data !== null);
 
   return { dados: romaneiosValidos, config };
 }
