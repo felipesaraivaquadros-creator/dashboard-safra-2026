@@ -24,14 +24,6 @@ export default function SaldoPage() {
   const isExcedente = saldo >= 0;
   const saldoAbsoluto = Math.abs(saldo);
 
-  // Definição das cores solicitadas para rotação, incluindo suporte a dark mode
-  const colors = [
-    { bg: 'bg-yellow-50 dark:bg-yellow-900/20', text: 'text-yellow-900 dark:text-yellow-300', border: 'border-yellow-200 dark:border-yellow-800' }, // Amarelo
-    { bg: 'bg-[#fdf8f6] dark:bg-amber-900/20', text: 'text-[#4a3728] dark:text-amber-300', border: 'border-[#e5d5c8] dark:border-amber-800' }, // Marrom
-    { bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-900 dark:text-green-300', border: 'border-green-200 dark:border-green-800' },  // Verde
-    { bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-900 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800' } // Roxo
-  ];
-
   // Configurações dinâmicas para o Saldo Final
   const saldoCardConfig: SaldoCardConfig = isExcedente ? {
     title: "Saldo Excedente",
@@ -160,12 +152,18 @@ export default function SaldoPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {data.kpisArmazemOutros.length > 0 ? (
             data.kpisArmazemOutros.map((kpi, i) => {
-              const color = colors[i % colors.length];
+              // Novo visual minimalista e premium
               return (
-                <div key={i} className={`${color.bg} ${color.border} border-2 p-5 rounded-3xl shadow-sm transition-transform hover:scale-[1.02]`}>
-                  <p className={`text-[10px] font-black uppercase truncate mb-2 opacity-70 ${color.text}`}>{kpi.nome}</p>
-                  <h4 className={`text-xl font-black ${color.text}`}>
-                    {kpi.total.toLocaleString('pt-BR')} <span className="text-xs font-bold opacity-60">sc</span>
+                <div 
+                  key={i} 
+                  className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md transition-all hover:scale-[1.02] hover:border-blue-500 dark:hover:border-blue-500 cursor-default"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Warehouse size={16} className="text-blue-500 dark:text-blue-400" />
+                    <p className="text-[10px] font-black uppercase truncate text-slate-500 dark:text-slate-400">{kpi.nome}</p>
+                  </div>
+                  <h4 className="text-2xl font-black text-slate-800 dark:text-white">
+                    {kpi.total.toLocaleString('pt-BR')} <span className="text-sm font-bold text-slate-400">sc</span>
                   </h4>
                 </div>
               );
