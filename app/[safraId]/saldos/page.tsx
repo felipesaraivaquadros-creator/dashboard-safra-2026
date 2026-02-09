@@ -23,12 +23,33 @@ interface SaldoCardConfig {
 
 // Componente auxiliar para renderizar listas de KPIs
 function SaldoKpiList({ items, valueColor }: { items: SaldoKpi[], valueColor: string }) {
+  const isContractList = items.some(item => item.id);
+
   return (
     <div className="flex-1 space-y-2 mb-4 max-h-64 overflow-y-auto custom-scrollbar">
+      {/* Cabeçalho da lista de contratos */}
+      {isContractList && (
+        <div className="flex justify-between items-center text-[9px] font-black text-slate-400 uppercase border-b border-slate-200 dark:border-slate-700 pb-1 sticky top-0 bg-white dark:bg-slate-800 z-10">
+          <span className="w-1/3 truncate">Contrato</span>
+          <span className="w-1/3 truncate text-center">Nº Contrato</span>
+          <span className="w-1/3 truncate text-right">Sacas</span>
+        </div>
+      )}
+      
       {items.map((kpi, i) => (
         <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 dark:border-slate-700 pb-1">
-          <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{kpi.nome}</span>
-          <span className={`font-black ${valueColor}`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+          {isContractList ? (
+            <>
+              <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-1/3">{kpi.nome}</span>
+              <span className="font-medium text-slate-500 dark:text-slate-400 truncate w-1/3 text-center text-[10px]">{kpi.id || 'N/A'}</span>
+              <span className={`font-black ${valueColor} truncate w-1/3 text-right`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+            </>
+          ) : (
+            <>
+              <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{kpi.nome}</span>
+              <span className={`font-black ${valueColor} truncate w-1/3 text-right`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+            </>
+          )}
         </div>
       ))}
     </div>

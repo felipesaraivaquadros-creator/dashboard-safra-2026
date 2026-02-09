@@ -9,4 +9,5 @@ export interface SaldoItem {
 export interface SaldoKpi {
   nome: string;
   total: number;
+  id?: string; // Adicionado ID do contrato
 }
