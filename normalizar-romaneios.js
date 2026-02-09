@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const inputPath = path.join(__dirname, 'romaneios_soja_25_26.json');
-const outputPath = path.join(__dirname, 'src', 'data', 'romaneios_normalizados.json');
+// Caminho de saída atualizado para a pasta da safra
+const outputPath = path.join(__dirname, 'src', 'data', 'soja2526', 'romaneios_normalizados.json');
 
 // 🔧 Helpers
 function parseNumero(valor) {

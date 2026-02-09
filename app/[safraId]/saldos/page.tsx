@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { calculateSaldoDashboard } from '../../src/utils/saldoProcessing';
+import { calculateSaldoDashboard } from '../../../src/utils/saldoProcessing';
 import { ArrowLeft, Package, FileText, Scale, TrendingUp, Warehouse, AlertTriangle, CheckCircle, LucideIcon } from 'lucide-react';
 import Link from 'next/link';
-import { ThemeToggle } from '../../src/components/ThemeToggle'; // Importando ThemeToggle
+import { ThemeToggle } from '../../../src/components/ThemeToggle';
+import { useParams } from 'next/navigation';
+import { getSafraConfig } from '../../../src/data/safraConfig';
 
 // Definindo a interface para as configurações do card de saldo
 interface SaldoCardConfig {
@@ -19,7 +21,11 @@ interface SaldoCardConfig {
 }
 
 export default function SaldoPage() {
-  const data = useMemo(() => calculateSaldoDashboard(), []);
+  const params = useParams();
+  const safraId = params.safraId as string;
+  const safraConfig = getSafraConfig(safraId);
+
+  const data = useMemo(() => calculateSaldoDashboard(safraId), [safraId]);
   
   const saldo = data.saldoContratosFixos;
   const isExcedente = saldo >= 0;
@@ -55,11 +61,11 @@ export default function SaldoPage() {
       <header className="max-w-[1200px] mx-auto mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter">Resumo de Saldos</h1>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Safra 25/26 - Soja</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{safraConfig.nome} - {safraConfig.tipo}</p>
         </div>
-        <div className="flex items-center gap-4"> {/* Novo wrapper para os botões */}
-          <ThemeToggle /> {/* Adicionando o ThemeToggle aqui */}
-          <Link href="/" className="flex items-center gap-2 px-4 py-2 text-xs font-black uppercase rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-sm">
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <Link href={`/${safraId}`} className="flex items-center gap-2 px-4 py-2 text-xs font-black uppercase rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-sm">
             <ArrowLeft size={16} />
             Dashboard
           </Link>

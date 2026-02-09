@@ -1,17 +1,30 @@
 import { useMemo, useState } from 'react';
 import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType } from '../data/types';
-import { AREAS_FAZENDAS, CORES_FAZENDAS, CORES_ARMAZENS, VOLUMES_CONTRATADOS } from '../data/config';
+import { getSafraConfig, SafraConfig } from '../data/safraConfig';
+import { CORES_FAZENDAS, CORES_ARMAZENS } from '../data/sharedConfig';
 
-// Importa os dados normalizados
-import dadosOriginal from '../data/romaneios_normalizados.json';
+// Mapeamento para carregar os dados JSON dinamicamente
+const dataMap: Record<string, Romaneio[]> = {
+  'soja2526': require('../data/soja2526/romaneios_normalizados.json'),
+  'soja2425': require('../data/soja2425/romaneios_normalizados.json'),
+  'milho25': require('../data/milho25/romaneios_normalizados.json'),
+  'milho26': require('../data/milho26/romaneios_normalizados.json'),
+};
 
-const typedDadosOriginal: Romaneio[] = dadosOriginal as Romaneio[];
+// Função auxiliar para carregar dados e config
+function loadSafraData(safraId: string): { dados: Romaneio[], config: SafraConfig } {
+  const config = getSafraConfig(safraId);
+  const dados = dataMap[safraId] || [];
+  return { dados, config };
+}
 
-export const useDataProcessing = (): DataContextType => {
+export const useDataProcessing = (safraId: string): DataContextType => {
+  const { dados: typedDadosOriginal, config } = useMemo(() => loadSafraData(safraId), [safraId]);
+  
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
 
-  // Auxiliares de Cor
+  // Auxiliares de Cor (Usando sharedConfig)
   const getCorFazenda = (nome: string): string => CORES_FAZENDAS[nome] || CORES_FAZENDAS["Outros"];
   const getCorArmazem = (nome: string): string => {
     const exactMatch = CORES_ARMAZENS[nome];
@@ -33,7 +46,7 @@ export const useDataProcessing = (): DataContextType => {
       const matchArmazem = !armazemFiltro || d.armazem === armazemFiltro;
       return matchFazenda && matchArmazem;
     });
-  }, [fazendaFiltro, armazemFiltro]);
+  }, [typedDadosOriginal, fazendaFiltro, armazemFiltro]);
 
   // Contagem de Romaneios (Cargas)
   const romaneiosCount = useMemo(() => dadosFiltrados.length, [dadosFiltrados]);
@@ -43,23 +56,24 @@ export const useDataProcessing = (): DataContextType => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
     const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
     
-    const area = fazendaFiltro ? AREAS_FAZENDAS[fazendaFiltro] || 0 : 
-      Object.values(AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
+    const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
+      Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
 
     const somaUmid = dadosFiltrados.reduce((acc, d) => acc + (Number(d.umidade) || 0), 0);
+    // A umidade é armazenada como número inteiro (ex: 1400 para 14.0%), então dividimos por 10000 para obter a média percentual.
     const umidMed = dadosFiltrados.length > 0 ? (somaUmid / dadosFiltrados.length / 100).toFixed(1) : '0.0';
 
     return {
       totalLiq: liq,
       totalBruta: bruta,
       areaHa: area,
-      prodLiq: area > 0 ? (liq / area).toFixed(2) : '0.00', // Alterado para toFixed(2)
+      prodLiq: area > 0 ? (liq / area).toFixed(2) : '0.00', 
       prodBruta: area > 0 ? (bruta / area).toFixed(2) : '0.00',
       umidade: umidMed
     };
-  }, [dadosFiltrados, fazendaFiltro]);
+  }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
 
-  // 3. CONTRATOS (Mantido inalterado)
+  // 3. CONTRATOS
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};
     typedDadosOriginal.forEach(d => {
@@ -69,8 +83,24 @@ export const useDataProcessing = (): DataContextType => {
       }
     });
 
-    const todos: ProcessedContract[] = Object.keys(VOLUMES_CONTRATADOS).map(id => {
-      const c = VOLUMES_CONTRATADOS[id];
+    const todos: ProcessedContract[] = Object.keys(config.VOLUMES_CONTRATADOS).map(id => {
+      const c = config.VOLUMES_CONTRATADOS[id];
+      
+      // Se o volume total for 0, é um depósito/venda a fixar sem volume contratado fixo.
+      if (c.total === 0) {
+        const cumprido = entregasMap[id] || 0;
+        return {
+          id,
+          nome: c.nome,
+          contratado: 0,
+          cumprido: parseFloat(cumprido.toFixed(2)),
+          aCumprir: 0,
+          porcentagem: cumprido > 0 ? '100.0' : '0.0',
+          isConcluido: cumprido > 0,
+        };
+      }
+      
+      // Contratos com volume fixo
       const cumprido = entregasMap[id] || 0;
       const aCumprir = Math.max(c.total - cumprido, 0);
       const perc = c.total > 0 ? (cumprido / c.total) * 100 : (cumprido > 0 ? 100 : 0);
@@ -89,10 +119,10 @@ export const useDataProcessing = (): DataContextType => {
     });
 
     return {
-      pendentes: todos.filter(x => !x.isConcluido).sort((a,b) => b.cumprido - a.cumprido),
-      cumpridos: todos.filter(x => x.isConcluido).sort((a,b) => b.cumprido - a.cumprido)
+      pendentes: todos.filter(x => !x.isConcluido && x.contratado > 0).sort((a,b) => b.cumprido - a.cumprido),
+      cumpridos: todos.filter(x => x.isConcluido || x.contratado === 0).sort((a,b) => b.cumprido - a.cumprido)
     };
-  }, []);
+  }, [typedDadosOriginal, config.VOLUMES_CONTRATADOS]);
 
   // 4. GRÁFICOS
   
@@ -118,13 +148,13 @@ export const useDataProcessing = (): DataContextType => {
   };
 
   // Obtém todos os nomes únicos de fazendas e armazéns dos dados originais
-  const allFazendas = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.fazenda).filter(Boolean) as string[])), []);
-  const allArmazens = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.armazem).filter(Boolean) as string[])), []);
+  const allFazendas = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.fazenda).filter(Boolean) as string[])), [typedDadosOriginal]);
+  const allArmazens = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.armazem).filter(Boolean) as string[])), [typedDadosOriginal]);
 
   // Dados para o Gráfico de Fazendas: Filtrado apenas por Armazém (se houver)
   const dadosParaChartFazendas = useMemo(() => {
     return typedDadosOriginal.filter(d => !armazemFiltro || d.armazem === armazemFiltro);
-  }, [armazemFiltro]);
+  }, [typedDadosOriginal, armazemFiltro]);
 
   const chartFazendas: ChartData[] = useMemo(() => {
     return calculateChartData(dadosParaChartFazendas, 'fazenda', allFazendas);
@@ -133,7 +163,7 @@ export const useDataProcessing = (): DataContextType => {
   // Dados para o Gráfico de Armazéns: Filtrado apenas por Fazenda (se houver)
   const dadosParaChartArmazens = useMemo(() => {
     return typedDadosOriginal.filter(d => !fazendaFiltro || d.fazenda === fazendaFiltro);
-  }, [fazendaFiltro]);
+  }, [typedDadosOriginal, fazendaFiltro]);
 
   const chartArmazens: ChartData[] = useMemo(() => {
     return calculateChartData(dadosParaChartArmazens, 'armazem', allArmazens);
@@ -141,6 +171,7 @@ export const useDataProcessing = (): DataContextType => {
 
 
   return {
+    safraId,
     fazendaFiltro,
     armazemFiltro,
     setFazendaFiltro,

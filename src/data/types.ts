@@ -52,6 +52,7 @@ export interface ChartData {
 }
 
 export interface DataContextType {
+  safraId: string; // Novo: ID da safra atual
   fazendaFiltro: string | null;
   armazemFiltro: string | null;
   setFazendaFiltro: (fazenda: string | null) => void;

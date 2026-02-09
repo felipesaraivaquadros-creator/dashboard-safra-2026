@@ -1,105 +1,80 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useDataProcessing } from '../src/hooks/useDataProcessing';
-import KpiSection, { ProductivityModal } from '../src/components/KpiSection';
-import ChartSection from '../src/components/ChartSection';
-import ContractSection from '../src/components/ContractSection';
-import UpdateDataButton from '../src/components/UpdateDataButton';
-import { ThemeToggle } from '../src/components/ThemeToggle'; // Importando ThemeToggle
-import Link from 'next/link'; 
+import React from 'react';
+import Link from 'next/link';
+import { SAFRAS_DISPONIVEIS } from '../src/data/safraConfig';
+import { Leaf, Wheat, Clock, CheckCircle, ArrowRight } from 'lucide-react';
+import { ThemeToggle } from '../src/components/ThemeToggle';
 
-export default function Dashboard() {
-  const {
-    fazendaFiltro,
-    armazemFiltro,
-    setFazendaFiltro,
-    setArmazemFiltro,
-    stats,
-    romaneiosCount,
-    contratosProcessados,
-    chartFazendas,
-    chartArmazens,
-    getCorFazenda,
-    getCorArmazem,
-  } = useDataProcessing();
+// Mapeamento de ícones e cores para o tipo de safra
+const SafraIconMap: Record<string, { icon: React.ElementType, color: string }> = {
+  'Soja': { icon: Leaf, color: 'text-green-600' },
+  'Milho': { icon: Wheat, color: 'text-amber-500' },
+};
 
-  const [showModalProd, setShowModalProd] = useState(false);
+// Mapeamento de status para cores e textos
+const StatusMap: Record<string, { text: string, color: string, icon: React.ElementType }> = {
+  'Atual': { text: 'Safra Atual', color: 'bg-green-500', icon: CheckCircle },
+  'Passada': { text: 'Safra Passada', color: 'bg-blue-500', icon: CheckCircle },
+  'Futura': { text: 'Futura', color: 'bg-slate-400', icon: Clock },
+};
 
-  // Lógica para determinar a cor do KPI de Produtividade
-  const prodColor = fazendaFiltro ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-400';
-  const prodText = fazendaFiltro ? 'text-purple-600' : 'text-slate-400';
-
-  // Função para limpar todos os filtros
-  const handleClearFilters = () => {
-    setFazendaFiltro(null);
-    setArmazemFiltro(null);
-  };
-
-  // A função handleDataUpdate foi removida pois o botão já lida com a simulação.
-
+export default function SafraSelectorPage() {
   return (
-    <main className="min-h-screen p-4 bg-slate-100 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 relative">
-      <header className="max-w-[1400px] mx-auto mb-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex justify-between items-center">
-        <div>
-          {/* Título alterado */}
-          <h1 className="text-2xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter">Painel Soja - Safra 25/26</h1>
-          <div className="flex gap-2 mt-1">
-            {fazendaFiltro && <span style={{backgroundColor: getCorFazenda(fazendaFiltro)}} className="text-[10px] text-white px-2 py-0.5 rounded font-bold uppercase">{fazendaFiltro}</span>}
-            {armazemFiltro && <span style={{backgroundColor: getCorArmazem(armazemFiltro)}} className="text-[10px] text-white px-2 py-0.5 rounded font-bold uppercase">{armazemFiltro}</span>}
-          </div>
-        </div>
-        <div className="flex gap-4 items-center">
-          <UpdateDataButton />
-          
-          {/* Novo Botão Saldos */}
-          <Link 
-            href="/saldos" 
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md"
-          >
-            Saldos
-          </Link>
-          
-          {/* Toggle de Tema */}
-          <ThemeToggle />
-
-          <button onClick={handleClearFilters} className="text-xs font-black text-slate-300 hover:text-red-500 uppercase transition-colors dark:text-slate-500 dark:hover:text-red-400">Limpar Global</button>
-        </div>
+    <main className="min-h-screen p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
+      <header className="max-w-[1000px] mx-auto mb-12 flex justify-between items-center">
+        <h1 className="text-3xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter">
+          Selecione a Safra
+        </h1>
+        <ThemeToggle />
       </header>
 
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-8 space-y-6">
+      <div className="max-w-[1000px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {SAFRAS_DISPONIVEIS.map((safra) => {
+          const { icon: SafraIcon, color: safraColor } = SafraIconMap[safra.tipo] || { icon: Leaf, color: 'text-slate-500' };
+          const { text: statusText, color: statusColor, icon: StatusIcon } = StatusMap[safra.status] || StatusMap['Futura'];
           
-          <KpiSection 
-            stats={stats} 
-            fazendaFiltro={fazendaFiltro} 
-            prodColor={prodColor} 
-            prodText={prodText} 
-            setShowModalProd={setShowModalProd} 
-          />
+          const isDisabled = safra.status === 'Futura';
 
-          <ChartSection
-            chartFazendas={chartFazendas}
-            chartArmazens={chartArmazens}
-            fazendaFiltro={fazendaFiltro}
-            armazemFiltro={armazemFiltro}
-            handleFiltroFazenda={setFazendaFiltro}
-            handleFiltroArmazem={setArmazemFiltro}
-            getCorFazenda={getCorFazenda}
-            getCorArmazem={getCorArmazem}
-          />
-        </div>
+          return (
+            <Link 
+              key={safra.id} 
+              href={`/${safra.id}`} 
+              className={`
+                block p-6 rounded-2xl shadow-lg transition-all duration-300 
+                ${isDisabled 
+                  ? 'bg-slate-200/50 dark:bg-slate-800/50 cursor-not-allowed opacity-60' 
+                  : 'bg-white dark:bg-slate-800 hover:shadow-xl hover:scale-[1.02] border-2 border-transparent hover:border-purple-500 dark:hover:border-purple-500'
+                }
+              `}
+              aria-disabled={isDisabled}
+              onClick={(e) => { if (isDisabled) e.preventDefault(); }}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className={`p-3 rounded-xl ${safraColor} bg-opacity-10 dark:bg-opacity-20`}>
+                  <SafraIcon size={28} />
+                </div>
+                <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase text-white ${statusColor}`}>
+                  <div className="flex items-center gap-1">
+                    <StatusIcon size={12} />
+                    {statusText}
+                  </div>
+                </div>
+              </div>
+              
+              <h2 className="text-xl font-black uppercase tracking-tight mb-1 text-slate-800 dark:text-white">{safra.nome}</h2>
+              <p className="text-xs font-bold text-slate-400 uppercase">{safra.tipo}</p>
 
-        <ContractSection contratosProcessados={contratosProcessados} romaneiosCount={romaneiosCount} />
+              <div className={`mt-6 pt-4 border-t border-dashed ${isDisabled ? 'border-slate-300/50 dark:border-slate-700/50' : 'border-slate-200 dark:border-slate-700'} flex justify-between items-center`}>
+                <span className="text-xs font-black uppercase text-purple-600 dark:text-purple-400">
+                  {isDisabled ? 'Em Breve' : 'Acessar Painel'}
+                </span>
+                <ArrowRight size={16} className="text-purple-600 dark:text-purple-400" />
+              </div>
+            </Link>
+          );
+        })}
       </div>
-
-      <ProductivityModal 
-        showModalProd={showModalProd} 
-        setShowModalProd={setShowModalProd} 
-        fazendaFiltro={fazendaFiltro} 
-        stats={stats} 
-        romaneiosCount={romaneiosCount} // Passando a contagem correta
-      />
     </main>
   );
 }

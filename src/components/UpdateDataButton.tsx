@@ -3,27 +3,27 @@
 import React from 'react';
 import { RefreshCw } from 'lucide-react';
 import { showSuccess, showLoading, dismissToast } from '../utils/toast';
+import { useParams } from 'next/navigation'; // Importando useParams
 
 export default function UpdateDataButton() {
+  const params = useParams();
+  const safraId = params.safraId as string;
+
   const handleUpdate = async () => {
-    const toastId = showLoading("Executando script de exportação e normalização de dados...");
+    const toastId = showLoading(`Executando script de exportação e normalização de dados para ${safraId}...`);
     
     try {
       // Simula a execução do script de shell 'npm run exportar'
       // Nota: Em um ambiente real, isso seria uma chamada API para um endpoint server-side.
-      // Aqui, usamos o comando Dyad para simular a ação.
       
-      // 1. Executa o script de exportação (simulado)
-      // O Dyad não tem um comando direto para 'npm run', então vamos simular o processo:
-      // 1.1. Notifica o sucesso da execução (assumindo que o script local foi bem-sucedido)
+      // 1. Notifica o usuário sobre a ação manual necessária
       dismissToast(toastId);
-      showSuccess("Dados exportados e normalizados com sucesso! Recarregando o dashboard...");
+      showSuccess("Por favor, execute 'npm run exportar' localmente e clique em 'Refresh' para carregar os novos dados.");
       
       // 2. Força o refresh do app preview para carregar o novo JSON
       // Este comando recarrega o iframe do preview, lendo o novo JSON.
-      console.log("Forçando refresh do aplicativo para carregar novos dados.");
+      console.log("Solicitando refresh do aplicativo para carregar novos dados.");
       
-      // Emitindo o comando de refresh para o Dyad UI
       // O usuário deve clicar no botão Refresh que aparecerá.
       
     } catch (error) {

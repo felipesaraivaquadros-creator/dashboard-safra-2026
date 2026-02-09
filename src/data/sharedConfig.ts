@@ -1,13 +1,6 @@
 import { ContractVolume } from './types';
 
-// --- CONFIGURAÇÕES DE IDENTIDADE VISUAL ---
-export const AREAS_FAZENDAS: Record<string, number> = { 
-  "São Luiz": 676, 
-  "Castanhal": 600, 
-  "Romancini": 435, 
-  "Estrelinha": 240 // Atualizado de 225 para 240
-};
-
+// --- CONFIGURAÇÕES DE IDENTIDADE VISUAL (COMPARTILHADAS) ---
 export const CORES_FAZENDAS: Record<string, string> = {
   "São Luiz": "#16a34a",   // green-600
   "Castanhal": "#2563eb",  // blue-600
@@ -23,14 +16,6 @@ export const CORES_ARMAZENS: Record<string, string> = {
   "SIPAL CLÁUDIA": "#4338ca",  // indigo-700
   "SIPAL LRV": "#7e22ce",      // purple-700
   "SIPAL CAMPOS DE JULIO": "#1d4ed8", // blue-700
+  "AC GRÃOS": "#ef4444", // red-500
   "Outros": "#64748b"          // slate-500
-};
-
-export const VOLUMES_CONTRATADOS: Record<string, ContractVolume> = {
-  "72208": { nome: "Venda Sipal 20 Mil Sacas", total: 20000 },
-  "290925M339": { nome: "Troca Adubo Sipal 29.500 Sacas", total: 29500 },
-  "ARR-CST-USIMAT": { nome: "Arrendamento CT", total: 10000 },
-  "ARR-SLZ-COFCO": { nome: "Arrendamento SL", total: 4050 },
-  "Comissoes": { nome: "Venda 800 Sacas Comissão", total: 800 },
-  
 };
