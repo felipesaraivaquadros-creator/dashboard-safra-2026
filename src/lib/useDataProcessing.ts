@@ -90,29 +90,33 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       }
     });
 
+    // Define se a safra é uma safra passada onde os contratos são considerados cumpridos
+    const isSafraPassadaCumprida = safraId === 'soja2425' || safraId === 'milho25';
+
     const todos: ProcessedContract[] = Object.keys(config.VOLUMES_CONTRATADOS).map(id => {
       const c = config.VOLUMES_CONTRATADOS[id];
-      
-      // Se o volume total for 0, é um depósito/venda a fixar sem volume contratado fixo.
-      if (c.total === 0) {
-        const cumprido = entregasMap[id] || 0;
-        return {
-          id,
-          nome: c.nome,
-          contratado: 0,
-          cumprido: parseFloat(cumprido.toFixed(2)),
-          aCumprir: 0,
-          porcentagem: cumprido > 0 ? '100.0' : '0.0',
-          isConcluido: cumprido > 0,
-        };
-      }
-      
-      // Contratos com volume fixo
       const cumprido = entregasMap[id] || 0;
-      const aCumprir = Math.max(c.total - cumprido, 0);
-      const perc = c.total > 0 ? (cumprido / c.total) * 100 : (cumprido > 0 ? 100 : 0);
       
-      const isConcluido = aCumprir < 1; 
+      let isConcluido = false;
+      let aCumprir = 0;
+      let perc = 0;
+
+      if (isSafraPassadaCumprida) {
+        // Para safras passadas, consideramos todos os contratos como cumpridos
+        isConcluido = true;
+        aCumprir = 0;
+        perc = c.total > 0 ? 100 : (cumprido > 0 ? 100 : 0);
+      } else if (c.total === 0) {
+        // Contratos de depósito/venda a fixar (volume 0)
+        isConcluido = cumprido > 0;
+        aCumprir = 0;
+        perc = cumprido > 0 ? 100 : 0;
+      } else {
+        // Contratos com volume fixo (lógica normal)
+        aCumprir = Math.max(c.total - cumprido, 0);
+        perc = (cumprido / c.total) * 100;
+        isConcluido = aCumprir < 1; 
+      }
       
       return { 
         id, 
@@ -126,10 +130,11 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     });
 
     return {
-      pendentes: todos.filter(x => !x.isConcluido && x.contratado > 0).sort((a,b) => b.cumprido - a.cumprido),
-      cumpridos: todos.filter(x => x.isConcluido || x.contratado === 0).sort((a,b) => b.cumprido - a.cumprido)
+      // Se for safra passada, todos vão para cumpridos. Caso contrário, usa a lógica normal.
+      pendentes: isSafraPassadaCumprida ? [] : todos.filter(x => !x.isConcluido && x.contratado > 0).sort((a,b) => b.cumprido - a.cumprido),
+      cumpridos: isSafraPassadaCumprida ? todos.sort((a,b) => b.cumprido - a.cumprido) : todos.filter(x => x.isConcluido || x.contratado === 0).sort((a,b) => b.cumprido - a.cumprido)
     };
-  }, [typedDadosOriginal, config.VOLUMES_CONTRATADOS]);
+  }, [typedDadosOriginal, config.VOLUMES_CONTRATADOS, safraId]);
 
   // 4. GRÁFICOS
   
