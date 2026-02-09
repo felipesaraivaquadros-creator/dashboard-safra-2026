@@ -73,4 +73,4 @@ export function calculateSaldoDashboard() {
     kpisArmazemOutros,
     estoqueArmazensFixos
   };
-}
+} //atualização.
