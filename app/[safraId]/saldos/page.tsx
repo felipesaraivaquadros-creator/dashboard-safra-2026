@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../../src/data/safraConfig';
+import { SaldoKpi } from '../../../src/data/saldoTypes';
 
 // Definindo a interface para as configurações do card de saldo
 interface SaldoCardConfig {
@@ -20,6 +21,20 @@ interface SaldoCardConfig {
   trendingIcon: LucideIcon;
 }
 
+// Componente auxiliar para renderizar listas de KPIs
+function SaldoKpiList({ items, valueColor }: { items: SaldoKpi[], valueColor: string }) {
+  return (
+    <div className="flex-1 space-y-2 mb-4 max-h-64 overflow-y-auto custom-scrollbar">
+      {items.map((kpi, i) => (
+        <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 dark:border-slate-700 pb-1">
+          <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{kpi.nome}</span>
+          <span className={`font-black ${valueColor}`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function SaldoPage() {
   const params = useParams();
   const safraId = params.safraId as string;
@@ -30,6 +45,8 @@ export default function SaldoPage() {
   const saldo = data.saldoContratosFixos;
   const isExcedente = saldo >= 0;
   const saldoAbsoluto = Math.abs(saldo);
+  
+  const isSafraPassada = safraId === 'soja2425' || safraId === 'milho25';
 
   // Configurações dinâmicas para o Saldo Final
   const saldoCardConfig: SaldoCardConfig = isExcedente ? {
@@ -56,6 +73,11 @@ export default function SaldoPage() {
   const IconComponent = saldoCardConfig.icon;
   const TrendingIconComponent = saldoCardConfig.trendingIcon;
 
+  // Título da Seção 1
+  const section1Title = isSafraPassada 
+    ? "Resumo de Estoque e Contratos (Final de Safra)"
+    : "Saldos Sipal destinados para baixa e cumprimento de contratos fixados";
+
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
       <header className="max-w-[1200px] mx-auto mb-8 flex justify-between items-center">
@@ -72,15 +94,15 @@ export default function SaldoPage() {
         </div>
       </header>
 
-      {/* SEÇÃO 1: CUMPRIMENTO DE CONTRATOS FIXOS (COFCO NSH + SIPAL MATUPÁ) */}
+      {/* SEÇÃO 1: ESTOQUE E CONTRATOS FIXOS */}
       <div className="max-w-[1200px] mx-auto mb-10">
         <h2 className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-          <FileText size={14} /> Saldos Sipal destinados para baixa e cumprimento de contratos fixados)
+          <FileText size={14} /> {section1Title}
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          {/* CARD 1.1: ESTOQUE ENTREGUE (REESTRUTURADO) */}
+          {/* CARD 1.1: ESTOQUE ENTREGUE */}
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
@@ -88,15 +110,7 @@ export default function SaldoPage() {
               </h3>
             </div>
             
-            <div className="flex-1 space-y-2 mb-4">
-              {data.estoqueArmazensFixos.map((kpi, i) => (
-                <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 dark:border-slate-700 pb-1">
-                  <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{kpi.nome}</span>
-                  {/* Cor azul para números de estoque */}
-                  <span className="font-black text-blue-600 dark:text-blue-400">{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
-                </div>
-              ))}
-            </div>
+            <SaldoKpiList items={data.estoqueArmazensFixos} valueColor="text-blue-600 dark:text-blue-400" />
 
             <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-center">
               <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Total Entregue</span>
@@ -104,7 +118,7 @@ export default function SaldoPage() {
             </div>
           </div>
 
-          {/* CARD 1.2: CONTRATOS FIXOS (Ajustando a cor do número para roxo, conforme solicitado) */}
+          {/* CARD 1.2: CONTRATOS FIXOS */}
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
@@ -112,19 +126,11 @@ export default function SaldoPage() {
               </h3>
             </div>
             
-            <div className="flex-1 space-y-2 mb-4">
-              {data.contratosFixos.map((c, i) => (
-                <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 dark:border-slate-700 pb-1">
-                  <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{c.nome}</span>
-                  {/* Cor roxa para números de contrato */}
-                  <span className="font-black text-purple-600 dark:text-purple-400">{c.total.toLocaleString('pt-BR')} sc</span>
-                </div>
-              ))}
-            </div>
+            <SaldoKpiList items={data.contratosFixos} valueColor="text-purple-600 dark:text-purple-400" />
 
             <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-center">
-              <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Total Fixo</span>
-              <span className="text-xl font-black text-purple-600">{data.volumeFixoTotal.toLocaleString('pt-BR')} sc</span>
+              <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Total Contratado</span>
+              <span className="text-xl font-black text-purple-600">{data.volumeFixoTotal.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
             </div>
           </div>
 
@@ -154,37 +160,39 @@ export default function SaldoPage() {
         </div>
       </div>
 
-      {/* SEÇÃO 2: KPIS DE OUTROS ARMAZÉNS (SALDO DISPONÍVEL) */}
-      <div className="max-w-[1200px] mx-auto mb-10">
-        <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-          <Warehouse size={14} /> Saldo em Outros Armazéns (Total: {data.estoqueTotalOutrosArmazens.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc)
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {data.kpisArmazemOutros.length > 0 ? (
-            data.kpisArmazemOutros.map((kpi, i) => {
-              // Novo visual minimalista e premium
-              return (
-                <div 
-                  key={i} 
-                  className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md transition-all hover:scale-[1.02] hover:border-blue-500 dark:hover:border-blue-500 cursor-default"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <Warehouse size={16} className="text-blue-500 dark:text-blue-400" />
-                    <p className="text-[10px] font-black uppercase truncate text-slate-500 dark:text-slate-400">{kpi.nome}</p>
+      {/* SEÇÃO 2: KPIS DE OUTROS ARMAZÉNS (Oculta para safras passadas onde tudo está no Card 1) */}
+      {!isSafraPassada && (
+        <div className="max-w-[1200px] mx-auto mb-10">
+          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+            <Warehouse size={14} /> Saldo em Outros Armazéns (Total: {data.estoqueTotalOutrosArmazens.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc)
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {data.kpisArmazemOutros.length > 0 ? (
+              data.kpisArmazemOutros.map((kpi, i) => {
+                // Novo visual minimalista e premium
+                return (
+                  <div 
+                    key={i} 
+                    className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md transition-all hover:scale-[1.02] hover:border-blue-500 dark:hover:border-blue-500 cursor-default"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <Warehouse size={16} className="text-blue-500 dark:text-blue-400" />
+                      <p className="text-[10px] font-black uppercase truncate text-slate-500 dark:text-slate-400">{kpi.nome}</p>
+                    </div>
+                    <h4 className="text-2xl font-black text-slate-800 dark:text-white">
+                      {kpi.total.toLocaleString('pt-BR')} <span className="text-sm font-bold text-slate-400">sc</span>
+                    </h4>
                   </div>
-                  <h4 className="text-2xl font-black text-slate-800 dark:text-white">
-                    {kpi.total.toLocaleString('pt-BR')} <span className="text-sm font-bold text-slate-400">sc</span>
-                  </h4>
-                </div>
-              );
-            })
-          ) : (
-            <div className="col-span-full py-10 text-center text-slate-400 text-[10px] font-bold uppercase italic border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl">
-              Nenhuma carga encontrada em outros armazéns.
-            </div>
-          )}
+                );
+              })
+            ) : (
+              <div className="col-span-full py-10 text-center text-slate-400 text-[10px] font-bold uppercase italic border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl">
+                Nenhuma carga encontrada em outros armazéns.
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {

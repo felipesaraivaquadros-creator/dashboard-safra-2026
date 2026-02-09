@@ -1,5 +1,13 @@
 import { Romaneio } from '../data/types';
+import { SaldoKpi } from '../data/saldoTypes';
 import { getSafraConfig } from '../data/safraConfig';
+import { 
+  ESTOQUE_FINAL_SOJA2425, 
+  CONTRATOS_SOJA2425, 
+  ESTOQUE_TOTAL_SOJA2425, 
+  CONTRATO_TOTAL_SOJA2425, 
+  SALDO_FINAL_SOJA2425 
+} from '../data/soja2425/saldoConfig';
 
 // Mapeamento para carregar os dados JSON dinamicamente
 const dataMap: Record<string, Romaneio[]> = {
@@ -32,10 +40,48 @@ function loadSafraData(safraId: string): { dados: Romaneio[], config: ReturnType
 }
 
 export function calculateSaldoDashboard(safraId: string) {
+  
+  // --- Lógica Específica para Safra 24/25 (Dados Fixos) ---
+  if (safraId === 'soja2425') {
+    // Para a safra 24/25, usamos os dados fixos fornecidos pelo usuário
+    
+    // O estoque total é a soma de todos os armazéns
+    const estoqueTotal = ESTOQUE_TOTAL_SOJA2425;
+    
+    // O volume fixo total é a soma de todos os contratos
+    const volumeFixoTotal = CONTRATO_TOTAL_SOJA2425;
+    
+    // O saldo é a diferença
+    const saldoContratosFixos = SALDO_FINAL_SOJA2425;
+
+    // Os KPIs de armazéns são todos os itens de estoque
+    const kpisArmazemOutros: SaldoKpi[] = ESTOQUE_FINAL_SOJA2425.map(item => ({
+      nome: item.nome,
+      total: item.estoqueLiquido,
+    }));
+
+    // Os contratos fixos são todos os itens de contrato
+    const contratosFixos: SaldoKpi[] = CONTRATOS_SOJA2425.map(item => ({
+      nome: item.nome,
+      total: item.total,
+      id: item.id, // Incluindo ID para referência
+    }));
+
+    return {
+      estoqueTotalContratosFixos: estoqueTotal,
+      volumeFixoTotal,
+      saldoContratosFixos,
+      contratosFixos,
+      estoqueTotalOutrosArmazens: 0, // Não aplicável/usado neste contexto
+      kpisArmazemOutros: [], // Não aplicável/usado neste contexto
+      estoqueArmazensFixos: kpisArmazemOutros, // Usamos todos os armazéns como 'estoque fixo' para o Card 1
+    };
+  }
+  
+  // --- Lógica Padrão para Safra 25/26 (Cálculo Dinâmico) ---
+  
   const { dados: typedDadosOriginal, config } = loadSafraData(safraId);
   
-  // Define quais contratos são considerados 'fixos' para o cálculo de saldo.
-  // Apenas a safra Soja 25/26 tem contratos fixos definidos para este cálculo.
   const isSoja2526 = safraId === 'soja2526';
   const contratosFixosIds = isSoja2526 ? CONTRATOS_FIXOS_SOJA2526_IDS : [];
 
@@ -77,17 +123,17 @@ export function calculateSaldoDashboard(safraId: string) {
   const saldoContratosFixos = estoqueTotalContratosFixos - volumeFixoTotal;
 
   // 4. KPIs de Armazéns (Excluindo os de contratos fixos)
-  const kpisArmazemOutros = Object.entries(kpisArmazemOutrosMap)
+  const kpisArmazemOutros: SaldoKpi[] = Object.entries(kpisArmazemOutrosMap)
     .map(([nome, total]) => ({ nome, total: parseFloat(total.toFixed(2)) }))
     .sort((a, b) => b.total - a.total);
     
   // 5. Estrutura de dados para o novo card de estoque fixo
-  const estoqueArmazensFixos = Object.entries(estoqueArmazensFixosMap)
+  const estoqueArmazensFixos: SaldoKpi[] = Object.entries(estoqueArmazensFixosMap)
     .map(([nome, total]) => ({ nome, total: parseFloat(total.toFixed(2)) }))
     .sort((a, b) => b.total - a.total);
 
   // 6. Contratos Fixos detalhados
-  const contratosFixos = contratosFixosIds
+  const contratosFixos: SaldoKpi[] = contratosFixosIds
     .map(id => ({
       id,
       nome: config.VOLUMES_CONTRATADOS[id].nome,
