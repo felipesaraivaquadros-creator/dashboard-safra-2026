@@ -73,7 +73,7 @@ export default function SaldoPage() {
       {/* SEÇÃO 1: CUMPRIMENTO DE CONTRATOS FIXOS (COFCO NSH + SIPAL MATUPÁ) */}
       <div className="max-w-[1200px] mx-auto mb-10">
         <h2 className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-          <FileText size={14} /> Contratos Fixos (Venda 20K + Troca 29.5K)
+          <FileText size={14} /> Saldos Sipal destinados para baixa e cumprimento de contratos fixados)
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
