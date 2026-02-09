@@ -8,6 +8,13 @@ import {
   CONTRATO_TOTAL_SOJA2425, 
   SALDO_FINAL_SOJA2425 
 } from '../data/soja2425/saldoConfig';
+import { 
+  ESTOQUE_FINAL_MILHO25, 
+  CONTRATOS_MILHO25, 
+  ESTOQUE_TOTAL_MILHO25, 
+  CONTRATO_TOTAL_MILHO25, 
+  SALDO_FINAL_MILHO25 
+} from '../data/milho25/saldoConfig';
 
 // Mapeamento para carregar os dados JSON dinamicamente
 const dataMap: Record<string, Romaneio[]> = {
@@ -45,26 +52,19 @@ export function calculateSaldoDashboard(safraId: string) {
   if (safraId === 'soja2425') {
     // Para a safra 24/25, usamos os dados fixos fornecidos pelo usuário
     
-    // O estoque total é a soma de todos os armazéns
     const estoqueTotal = ESTOQUE_TOTAL_SOJA2425;
-    
-    // O volume fixo total é a soma de todos os contratos
     const volumeFixoTotal = CONTRATO_TOTAL_SOJA2425;
-    
-    // O saldo é a diferença
     const saldoContratosFixos = SALDO_FINAL_SOJA2425;
 
-    // Os KPIs de armazéns são todos os itens de estoque
-    const kpisArmazemOutros: SaldoKpi[] = ESTOQUE_FINAL_SOJA2425.map(item => ({
+    const estoqueArmazensFixos: SaldoKpi[] = ESTOQUE_FINAL_SOJA2425.map(item => ({
       nome: item.nome,
       total: item.estoqueLiquido,
     }));
 
-    // Os contratos fixos são todos os itens de contrato
     const contratosFixos: SaldoKpi[] = CONTRATOS_SOJA2425.map(item => ({
       nome: item.nome,
       total: item.total,
-      id: item.id, // Incluindo ID para referência
+      id: item.id,
     }));
 
     return {
@@ -72,9 +72,38 @@ export function calculateSaldoDashboard(safraId: string) {
       volumeFixoTotal,
       saldoContratosFixos,
       contratosFixos,
-      estoqueTotalOutrosArmazens: 0, // Não aplicável/usado neste contexto
-      kpisArmazemOutros: [], // Não aplicável/usado neste contexto
-      estoqueArmazensFixos: kpisArmazemOutros, // Usamos todos os armazéns como 'estoque fixo' para o Card 1
+      estoqueTotalOutrosArmazens: 0,
+      kpisArmazemOutros: [],
+      estoqueArmazensFixos,
+    };
+  }
+  
+  // --- Lógica Específica para Safra Milho 25 (Dados Fixos) ---
+  if (safraId === 'milho25') {
+    
+    const estoqueTotal = ESTOQUE_TOTAL_MILHO25;
+    const volumeFixoTotal = CONTRATO_TOTAL_MILHO25;
+    const saldoContratosFixos = SALDO_FINAL_MILHO25;
+
+    const estoqueArmazensFixos: SaldoKpi[] = ESTOQUE_FINAL_MILHO25.map(item => ({
+      nome: item.nome,
+      total: item.estoqueLiquido,
+    }));
+
+    const contratosFixos: SaldoKpi[] = CONTRATOS_MILHO25.map(item => ({
+      nome: item.nome,
+      total: item.total,
+      id: item.id,
+    }));
+
+    return {
+      estoqueTotalContratosFixos: estoqueTotal,
+      volumeFixoTotal,
+      saldoContratosFixos,
+      contratosFixos,
+      estoqueTotalOutrosArmazens: 0,
+      kpisArmazemOutros: [],
+      estoqueArmazensFixos,
     };
   }
   

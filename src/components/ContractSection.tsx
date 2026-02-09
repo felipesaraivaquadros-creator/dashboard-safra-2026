@@ -37,7 +37,7 @@ export default function ContractSection({ contratosProcessados, romaneiosCount }
             onClick={() => setAbaContratos('pendentes')} 
             className={`flex-1 py-2 text-[10px] font-black uppercase rounded-md transition-all ${abaContratos === 'pendentes' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300'}`}
           >
-            Não Cumpridos
+            Pendentes
           </button>
           <button 
             onClick={() => setAbaContratos('cumpridos')} 
@@ -49,7 +49,7 @@ export default function ContractSection({ contratosProcessados, romaneiosCount }
       </div>
       <div className="overflow-y-auto p-4 space-y-3 flex-1 bg-slate-50/20 dark:bg-slate-900/20">
         {contratosAtivos.length === 0 && (
-          <div className="text-center py-10 text-slate-400 text-xs font-bold uppercase italic">Nenhum contrato nesta aba.</div>
+          <div className="text-center py-10 text-slate-400 text-xs font-bold uppercase italic">Nenhum contrato pendente.</div>
         )}
         {contratosAtivos.map((c) => {
           const isEx = contratoExpandido === c.id;
