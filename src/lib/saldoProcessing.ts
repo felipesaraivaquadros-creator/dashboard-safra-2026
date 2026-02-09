@@ -17,7 +17,14 @@ const ARMAZENS_CONTRATOS_FIXOS = ["COFCO NSH", "SIPAL MATUPÁ"];
 // Função auxiliar para carregar dados e config
 function loadSafraData(safraId: string): { dados: Romaneio[], config: ReturnType<typeof getSafraConfig> } {
   const config = getSafraConfig(safraId);
-  const dados = dataMap[safraId] || [];
+  let dados = dataMap[safraId];
+  
+  // Garante que os dados sejam um array válido, caso contrário, retorna um array vazio.
+  if (!Array.isArray(dados)) {
+    console.error(`Erro ao carregar dados para a safra ${safraId} no saldo processing. Retornando array vazio.`);
+    dados = [];
+  }
+  
   return { dados, config };
 }
 

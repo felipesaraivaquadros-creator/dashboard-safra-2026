@@ -14,7 +14,14 @@ const dataMap: Record<string, Romaneio[]> = {
 // Função auxiliar para carregar dados e config
 function loadSafraData(safraId: string): { dados: Romaneio[], config: SafraConfig } {
   const config = getSafraConfig(safraId);
-  const dados = dataMap[safraId] || [];
+  let dados = dataMap[safraId];
+  
+  // Garante que os dados sejam um array válido, caso contrário, retorna um array vazio.
+  if (!Array.isArray(dados)) {
+    console.error(`Erro ao carregar dados para a safra ${safraId}. Retornando array vazio.`);
+    dados = [];
+  }
+  
   return { dados, config };
 }
 
