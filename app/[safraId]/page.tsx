@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useDataProcessing } from '../../src/hooks/useDataProcessing';
+import { useDataProcessing } from '../../src/lib/useDataProcessing';
 import KpiSection, { ProductivityModal } from '../../src/components/KpiSection';
 import ChartSection from '../../src/components/ChartSection';
 import ContractSection from '../../src/components/ContractSection';

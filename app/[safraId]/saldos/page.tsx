@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { calculateSaldoDashboard } from '../../../src/utils/saldoProcessing';
+import { calculateSaldoDashboard } from '../../../src/lib/saldoProcessing';
 import { ArrowLeft, Package, FileText, Scale, TrendingUp, Warehouse, AlertTriangle, CheckCircle, LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';

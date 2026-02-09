@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "exportar:soja2526": "node exportar-safra.js soja2526 && node normalizar-romaneios.js soja2526 romaneios_soja_25_26.json",
-    "exportar:soja2425": "node exportar-safra.js soja2425 && node normalizar-romaneios.js soja2425 romaneios_soja_24_25.json",
-    "exportar:milho25": "node exportar-safra.js milho25 && node normalizar-romaneios.js milho25 romaneios_milho_25.json"
+    "exportar:soja2526": "node scripts/exportar-safra.js soja2526 && node scripts/normalizar-romaneios.js soja2526 romaneios_soja_25_26.json",
+    "exportar:soja2425": "node scripts/exportar-safra.js soja2425 && node scripts/normalizar-romaneios.js soja2425 romaneios_soja_24_25.json",
+    "exportar:milho25": "node scripts/exportar-safra.js milho25 && node scripts/normalizar-romaneios.js milho25 romaneios_milho_25.json"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.18",
