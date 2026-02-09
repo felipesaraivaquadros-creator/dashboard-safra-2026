@@ -2689,5 +2689,28 @@
     "ardido": 0,
     "avariados": 9373,
     "quebrados": 0
+  },
+  {
+    "data": "2026-02-05",
+    "contrato": "DEP",
+    "ncontrato": "DEP-NOVO-TESTE",
+    "emitente": "Ildo Romancini",
+    "tipoNF": "DEP",
+    "nfe": 1000,
+    "cidadeEntrega": "NOVA CIDADE",
+    "armazem": "NOVO ARMAZÉM TESTE",
+    "armazemsaldo": null,
+    "safra": "Soja25/26",
+    "fazenda": "Estrelinha",
+    "talhao": "EST03",
+    "pesoLiquidoKg": 60000,
+    "pesoBrutoKg": 60000,
+    "sacasLiquida": 1000,
+    "sacasBruto": 1000,
+    "umidade": 1300,
+    "impureza": 0,
+    "ardido": 0,
+    "avariados": 0,
+    "quebrados": 0
   }
 ]
