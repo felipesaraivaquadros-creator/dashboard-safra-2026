@@ -29,7 +29,8 @@ export default function SafraSelectorPage() {
         <ThemeToggle />
       </header>
 
-      <div className="max-w-[1000px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Alterado para grid-cols-1 para empilhar verticalmente */}
+      <div className="max-w-[600px] mx-auto grid grid-cols-1 gap-6">
         {SAFRAS_DISPONIVEIS.map((safra) => {
           const { icon: SafraIcon, color: safraColor } = SafraIconMap[safra.tipo] || { icon: Leaf, color: 'text-slate-500' };
           const { text: statusText, color: statusColor, icon: StatusIcon } = StatusMap[safra.status] || StatusMap['Futura'];
