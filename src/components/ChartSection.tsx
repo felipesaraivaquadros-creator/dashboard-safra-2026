@@ -57,7 +57,16 @@ export default function ChartSection({
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-700" />
               <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} className="dark:text-slate-300" />
               <YAxis fontSize={10} axisLine={false} tickLine={false} tickFormatter={(value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} className="dark:text-slate-300" />
-              <Tooltip cursor={{fill: 'transparent'}} formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} contentStyle={{ backgroundColor: 'var(--bg-tooltip, #fff)', border: '1px solid var(--border-tooltip, #e2e8f0)', borderRadius: '8px' }} />
+              <Tooltip 
+                cursor={{fill: 'transparent'}} 
+                formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} 
+                contentStyle={{ 
+                  backgroundColor: 'var(--bg-tooltip)', 
+                  border: '1px solid var(--border-tooltip)', 
+                  borderRadius: '8px',
+                  color: 'var(--text-color)' // Adiciona a variável de cor do texto
+                }} 
+              />
               <Bar dataKey="sacas" radius={[4, 4, 0, 0]} cursor="pointer" onClick={(data) => handleBarClick(data, true)}>
                 {chartFazendas.map((entry, index) => {
                   // Se não houver filtro, ou se esta for a fazenda selecionada, usa a cor da fazenda.
@@ -80,7 +89,16 @@ export default function ChartSection({
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" className="dark:stroke-slate-700" />
               <XAxis type="number" hide />
               <YAxis dataKey="name" type="category" fontSize={10} width={80} axisLine={false} tickLine={false} className="dark:text-slate-300" />
-              <Tooltip cursor={{fill: 'transparent'}} formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} contentStyle={{ backgroundColor: 'var(--bg-tooltip, #fff)', border: '1px solid var(--border-tooltip, #e2e8f0)', borderRadius: '8px' }} />
+              <Tooltip 
+                cursor={{fill: 'transparent'}} 
+                formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} 
+                contentStyle={{ 
+                  backgroundColor: 'var(--bg-tooltip)', 
+                  border: '1px solid var(--border-tooltip)', 
+                  borderRadius: '8px',
+                  color: 'var(--text-color)' // Adiciona a variável de cor do texto
+                }} 
+              />
               <Bar dataKey="sacas" radius={[0, 4, 4, 0]} cursor="pointer" onClick={(data) => handleBarClick(data, false)}>
                 {chartArmazens.map((entry, index) => {
                   // Se não houver filtro, ou se este for o armazém selecionado, usa a cor do armazém.
@@ -114,8 +132,16 @@ export default function ChartSection({
                   return <Cell key={`cell-pie-${i}`} fill={getCorFazenda(entry.name)} />
                 })}
               </Pie>
-              <Tooltip formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} contentStyle={{ backgroundColor: 'var(--bg-tooltip, #fff)', border: '1px solid var(--border-tooltip, #e2e8f0)', borderRadius: '8px' }} />
-              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: 'var(--text-color, #0f172a)' }} />
+              <Tooltip 
+                formatter={(value: number) => [`${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc`, 'Sacas Líquidas']} 
+                contentStyle={{ 
+                  backgroundColor: 'var(--bg-tooltip)', 
+                  border: '1px solid var(--border-tooltip)', 
+                  borderRadius: '8px',
+                  color: 'var(--text-color)' // Adiciona a variável de cor do texto
+                }} 
+              />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: 'var(--text-color)' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -129,10 +155,14 @@ export default function ChartSection({
         .recharts-wrapper {
           --bg-tooltip: #fff;
           --border-tooltip: #e2e8f0;
-          --text-color: #0f172a;
+          --text-color: #0f172a; /* slate-900 */
         }
         .dark .recharts-text {
           fill: #e2e8f0 !important; /* Garante que o texto do gráfico seja claro no modo escuro */
+        }
+        /* Garante que o texto dentro do tooltip também seja claro no modo escuro */
+        .dark .recharts-tooltip-item {
+          color: #f1f5f9 !important;
         }
       `}</style>
     </div>
