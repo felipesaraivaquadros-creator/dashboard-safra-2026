@@ -25,7 +25,14 @@ function loadSafraData(safraId: string): { dados: Romaneio[], config: ReturnType
     dados = [];
   }
   
-  return { dados, config };
+  // Remove o último registro se for o registro de 'Total' (data: null)
+  let romaneiosValidos = dados;
+  const ultimoRegistro = dados[dados.length - 1];
+  if (ultimoRegistro && ultimoRegistro.data === null) {
+    romaneiosValidos = dados.slice(0, -1);
+  }
+
+  return { dados: romaneiosValidos, config };
 }
 
 export function calculateSaldoDashboard(safraId: string) {

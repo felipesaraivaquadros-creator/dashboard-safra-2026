@@ -11,22 +11,40 @@ const dataMap: Record<string, Romaneio[]> = {
   'milho26': require('../data/milho26/romaneios_normalizados.json'),
 };
 
+interface SafraData {
+  dados: Romaneio[];
+  config: SafraConfig;
+  totalConsolidadoLiq: number;
+}
+
 // Função auxiliar para carregar dados e config
-function loadSafraData(safraId: string): { dados: Romaneio[], config: SafraConfig } {
+function loadSafraData(safraId: string): SafraData {
   const config = getSafraConfig(safraId);
   let dados = dataMap[safraId];
   
-  // Garante que os dados sejam um array válido, caso contrário, retorna um array vazio.
   if (!Array.isArray(dados)) {
     console.error(`Erro ao carregar dados para a safra ${safraId}. Retornando array vazio.`);
     dados = [];
   }
   
-  return { dados, config };
+  let totalConsolidadoLiq = 0;
+  let romaneiosValidos = dados;
+
+  // Lógica para safras passadas que usam o registro de 'Total' no final do arquivo
+  if (safraId === 'soja2425' || safraId === 'milho25') {
+    const ultimoRegistro = dados[dados.length - 1];
+    if (ultimoRegistro && ultimoRegistro.data === null && ultimoRegistro.sacasLiquida !== null) {
+      totalConsolidadoLiq = Number(ultimoRegistro.sacasLiquida) || 0;
+      // Remove o registro de total para que ele não seja processado como um romaneio normal
+      romaneiosValidos = dados.slice(0, -1);
+    }
+  }
+
+  return { dados: romaneiosValidos, config, totalConsolidadoLiq };
 }
 
 export const useDataProcessing = (safraId: string): DataContextType => {
-  const { dados: typedDadosOriginal, config } = useMemo(() => loadSafraData(safraId), [safraId]);
+  const { dados: typedDadosOriginal, config, totalConsolidadoLiq } = useMemo(() => loadSafraData(safraId), [safraId]);
   
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
@@ -60,15 +78,35 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
   // 2. KPIS (Depende de dadosFiltrados)
   const stats: KpiStats = useMemo(() => {
-    const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
-    const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
+    const isConsolidated = safraId === 'soja2425' || safraId === 'milho25';
+    
+    let liq: number;
+    let bruta: number;
+    let umidMed: string;
+
+    if (isConsolidated && !fazendaFiltro && !armazemFiltro) {
+      // Se for safra consolidada e não houver filtros, usa o total consolidado
+      liq = totalConsolidadoLiq;
+      
+      // Para safras consolidadas, o cálculo de bruta e umidade média ainda precisa ser feito
+      // somando os romaneios, pois o registro de total não é filtrável.
+      const brutaSum = typedDadosOriginal.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
+      const somaUmid = typedDadosOriginal.reduce((acc, d) => acc + (Number(d.umidade) || 0), 0);
+      
+      bruta = brutaSum;
+      umidMed = typedDadosOriginal.length > 0 ? (somaUmid / typedDadosOriginal.length / 100).toFixed(1) : '0.0';
+
+    } else {
+      // Lógica normal: soma os romaneios filtrados
+      liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
+      bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
+      
+      const somaUmid = dadosFiltrados.reduce((acc, d) => acc + (Number(d.umidade) || 0), 0);
+      umidMed = dadosFiltrados.length > 0 ? (somaUmid / dadosFiltrados.length / 100).toFixed(1) : '0.0';
+    }
     
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
       Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
-
-    const somaUmid = dadosFiltrados.reduce((acc, d) => acc + (Number(d.umidade) || 0), 0);
-    // A umidade é armazenada como número inteiro (ex: 1400 para 14.0%), então dividimos por 10000 para obter a média percentual.
-    const umidMed = dadosFiltrados.length > 0 ? (somaUmid / dadosFiltrados.length / 100).toFixed(1) : '0.0';
 
     return {
       totalLiq: liq,
@@ -78,7 +116,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       prodBruta: area > 0 ? (bruta / area).toFixed(2) : '0.00',
       umidade: umidMed
     };
-  }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
+  }, [dadosFiltrados, fazendaFiltro, armazemFiltro, config.AREAS_FAZENDAS, safraId, totalConsolidadoLiq, typedDadosOriginal]);
 
   // 3. CONTRATOS
   const contratosProcessados = useMemo(() => {
@@ -130,7 +168,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     });
 
     return {
-      // Se for safra passada, todos vão para cumpridos. Caso contrário, usa a lógica normal.
       pendentes: isSafraPassadaCumprida ? [] : todos.filter(x => !x.isConcluido && x.contratado > 0).sort((a,b) => b.cumprido - a.cumprido),
       cumpridos: isSafraPassadaCumprida ? todos.sort((a,b) => b.cumprido - a.cumprido) : todos.filter(x => x.isConcluido || x.contratado === 0).sort((a,b) => b.cumprido - a.cumprido)
     };
