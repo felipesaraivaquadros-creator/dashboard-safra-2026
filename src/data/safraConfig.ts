@@ -1,3 +1,4 @@
+Atual > Passada).">
 import { ContractVolume } from './types';
 
 export interface SafraConfig {
@@ -122,10 +123,10 @@ const MILHO26_CONFIG: SafraConfig = {
 };
 
 export const SAFRAS_DISPONIVEIS: SafraConfig[] = [
-  SOJA2526_CONFIG,
-  SOJA2425_CONFIG,
-  MILHO25_CONFIG,
-  MILHO26_CONFIG,
+  MILHO26_CONFIG, // Futura (Mais recente)
+  SOJA2526_CONFIG, // Atual
+  MILHO25_CONFIG, // Passada
+  SOJA2425_CONFIG, // Passada (Mais antiga)
 ];
 
 export const SAFRAS_MAP: Record<string, SafraConfig> = SAFRAS_DISPONIVEIS.reduce((acc, safra) => {

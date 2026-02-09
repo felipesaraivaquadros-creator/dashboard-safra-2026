@@ -94,9 +94,9 @@ export default function ContractSection({ contratosProcessados, romaneiosCount }
                     <span className="text-xs font-black text-slate-700 dark:text-slate-200">{c.contratado.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                   </div>
                   
-                  {/* SALDO RESTANTE (Laranja) */}
+                  {/* SALDO A CUMPRIR (Laranja) */}
                   <div className="flex justify-between items-center bg-orange-50 dark:bg-orange-900/30 p-2 rounded">
-                    <span className="text-[9px] font-bold text-orange-600 dark:text-orange-400 uppercase">Saldo Restante</span>
+                    <span className="text-[9px] font-bold text-orange-600 dark:text-orange-400 uppercase">Saldo A Cumprir</span>
                     <span className="text-xs font-black text-orange-700 dark:text-orange-300">{c.aCumprir.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                   </div>
                 </div>
