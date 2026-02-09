@@ -25,8 +25,9 @@ export function calculateSaldoDashboard(safraId: string) {
   const { dados: typedDadosOriginal, config } = loadSafraData(safraId);
   
   // Define quais contratos são considerados 'fixos' para o cálculo de saldo.
-  // Para Soja 25/26, usamos os IDs definidos. Para outras safras, assumimos que não há saldo fixo.
-  const contratosFixosIds = safraId === 'soja2526' ? CONTRATOS_FIXOS_SOJA2526_IDS : [];
+  // Apenas a safra Soja 25/26 tem contratos fixos definidos para este cálculo.
+  const isSoja2526 = safraId === 'soja2526';
+  const contratosFixosIds = isSoja2526 ? CONTRATOS_FIXOS_SOJA2526_IDS : [];
 
   let estoqueTotalContratosFixos = 0;
   let estoqueTotalOutrosArmazens = 0;
@@ -47,16 +48,15 @@ export function calculateSaldoDashboard(safraId: string) {
     if (d.tipoNF !== "DEP" && d.tipoNF !== "VEN-FIXAR") return; 
     
     // Filtra apenas entregas de Ildo Romancini (mantendo a lógica existente para quem entrega)
-    // Nota: Em um cenário real, a lógica de quem entrega para saldo fixo pode variar por safra.
     if (d.emitente === "Ildo Romancini") {
       const sacas = Number(d.sacasLiquida) || 0;
       const armazem = d.armazem || "Outros";
 
-      if (ARMAZENS_CONTRATOS_FIXOS.includes(armazem)) {
+      if (isSoja2526 && ARMAZENS_CONTRATOS_FIXOS.includes(armazem)) {
         estoqueTotalContratosFixos += sacas;
         estoqueArmazensFixosMap[armazem] = (estoqueArmazensFixosMap[armazem] || 0) + sacas;
       } else {
-        // Armazéns que não são COFCO NSH ou SIPAL MATUPÁ
+        // Armazéns que não são COFCO NSH ou SIPAL MATUPÁ (ou qualquer safra que não seja 25/26)
         estoqueTotalOutrosArmazens += sacas;
         kpisArmazemOutrosMap[armazem] = (kpisArmazemOutrosMap[armazem] || 0) + sacas;
       }
