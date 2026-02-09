@@ -1,6 +1,6 @@
 import { Romaneio } from '../data/types';
 import { VOLUMES_CONTRATADOS } from '../data/config';
-import dadosOriginal from '../../romaneios_soja_25_26_normalizado.json';
+import dadosOriginal from '../data/romaneios_normalizados.json';
 
 const typedDadosOriginal: Romaneio[] = dadosOriginal as Romaneio[];
 

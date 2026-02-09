@@ -3,7 +3,7 @@ import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType } fro
 import { AREAS_FAZENDAS, CORES_FAZENDAS, CORES_ARMAZENS, VOLUMES_CONTRATADOS } from '../data/config';
 
 // Importa os dados normalizados
-import dadosOriginal from '../../romaneios_soja_25_26_normalizado.json';
+import dadosOriginal from '../data/romaneios_normalizados.json';
 
 const typedDadosOriginal: Romaneio[] = dadosOriginal as Romaneio[];
 
