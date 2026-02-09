@@ -44,13 +44,13 @@ const SOJA2425_CONFIG: SafraConfig = {
   nome: 'Soja 24/25',
   tipo: 'Soja',
   status: 'Passada',
-  dataPath: './soja2425/romaneios_normalizados.json',
   AREAS_FAZENDAS: { 
-    "São Luiz": 676, 
+    "São Luiz": 700, 
     "Castanhal": 600, 
     "Romancini": 435, 
-    "Estrelinha": 240 
+    "Estrelinha": 225 
   },
+  dataPath: './soja2425/romaneios_normalizados.json',
   VOLUMES_CONTRATADOS: {
     "9058-8634": { nome: "Barter Amaggi Matupá", total: 5754 },
     "9058-8633": { nome: "Barter Amaggi Sinop", total: 18000 },
@@ -80,10 +80,10 @@ const MILHO25_CONFIG: SafraConfig = {
   status: 'Passada',
   dataPath: './milho25/romaneios_normalizados.json',
   AREAS_FAZENDAS: { 
-    "São Luiz": 676, 
+    "São Luiz": 600, 
     "Castanhal": 600, 
     "Romancini": 435, 
-    "Estrelinha": 240 
+    "Estrelinha": 225 
   },
   VOLUMES_CONTRATADOS: {
     "290924M180": { nome: "Barter Sipal LRV M180", total: 14297 },
