@@ -3169,7 +3169,7 @@
   },
   {
     "Data": "2026-02-06T04:00:20.000Z",
-    "Tipo NF": "VEN",
+    "Tipo NF": "VEN-FIXAR",
     "Nº": 4239,
     "NFe": 304,
     "Emitente": "Ildo Romancini",
@@ -3649,7 +3649,7 @@
   },
   {
     "Data": "2026-02-06T04:00:20.000Z",
-    "Tipo NF": "VEN",
+    "Tipo NF": "VEN-FIXAR",
     "Nº": 4265,
     "NFe": 305,
     "Emitente": "Ildo Romancini",
@@ -3713,7 +3713,7 @@
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
-    "Tipo NF": "VEN",
+    "Tipo NF": "VEN-FIXAR",
     "Nº": 4312,
     "NFe": 308,
     "Emitente": "Ildo Romancini",
@@ -3745,7 +3745,7 @@
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
-    "Tipo NF": "VEN",
+    "Tipo NF": "VEN-FIXAR",
     "Nº": 4365,
     "NFe": 309,
     "Emitente": "Ildo Romancini",

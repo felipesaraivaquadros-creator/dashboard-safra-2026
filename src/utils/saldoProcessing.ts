@@ -30,8 +30,8 @@ export function calculateSaldoDashboard() {
   const kpisArmazemOutrosMap: Record<string, number> = {};
   
   typedDadosOriginal.forEach(d => {
-    // CORREÇÃO: Apenas romaneios de DEPÓSITO (DEP) devem ser considerados como estoque entregue.
-    if (d.tipoNF !== "DEP") return; 
+    // Agora aceita tanto "DEP" quanto "VEN-FIXAR"
+    if (d.tipoNF !== "DEP" && d.tipoNF !== "VEN-FIXAR") return; 
     
     // Filtra apenas entregas de Ildo Romancini (mantendo a lógica existente para quem entrega)
     if (d.emitente === "Ildo Romancini") {
