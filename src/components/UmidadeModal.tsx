@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { X, Droplets, Info, Percent } from 'lucide-react';
+import { X, Info, Percent } from 'lucide-react';
 import { DiscountStats } from '../data/types';
 
 interface UmidadeModalProps {
@@ -23,13 +23,14 @@ export default function UmidadeModal({
 
   const formatSc = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 
+  // Cores alteradas para slate (cinza) para padronização
   const items = [
-    { label: "Umidade", value: discountStats.umidadeSc, color: "text-blue-600" },
-    { label: "Impureza", value: discountStats.impurezaSc, color: "text-slate-600" },
-    { label: "Ardidos", value: discountStats.ardidoSc, color: "text-orange-600" },
-    { label: "Avariados", value: discountStats.avariadosSc, color: "text-red-600" },
-    { label: "Contaminantes", value: discountStats.contaminantesSc, color: "text-purple-600" },
-    { label: "Quebrados", value: discountStats.quebradosSc, color: "text-amber-600" },
+    { label: "Umidade", value: discountStats.umidadeSc },
+    { label: "Impureza", value: discountStats.impurezaSc },
+    { label: "Ardidos", value: discountStats.ardidoSc },
+    { label: "Avariados", value: discountStats.avariadosSc },
+    { label: "Contaminantes", value: discountStats.contaminantesSc },
+    { label: "Quebrados", value: discountStats.quebradosSc },
   ];
 
   return (
@@ -52,7 +53,7 @@ export default function UmidadeModal({
             {items.map((item, idx) => (
               <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{item.label}</span>
-                <span className={`text-sm font-black ${item.color}`}>{formatSc(item.value)} sc</span>
+                <span className="text-sm font-black text-slate-600 dark:text-slate-300">{formatSc(item.value)} sc</span>
               </div>
             ))}
           </div>
