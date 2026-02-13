@@ -37,8 +37,9 @@ export default function Dashboard() {
   const [showModalProd, setShowModalProd] = useState(false);
   const [showModalUmid, setShowModalUmid] = useState(false);
 
-  const prodColor = fazendaFiltro ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-400';
-  const prodText = fazendaFiltro ? 'text-purple-600' : 'text-slate-400';
+  // Alterado de purple para orange
+  const prodColor = fazendaFiltro ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-400';
+  const prodText = fazendaFiltro ? 'text-orange-600' : 'text-slate-400';
 
   const handleClearFilters = () => {
     setFazendaFiltro(null);

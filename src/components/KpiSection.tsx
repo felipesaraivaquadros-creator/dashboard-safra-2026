@@ -36,10 +36,10 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
 
       <div 
         onClick={() => fazendaFiltro && setShowModalProd(true)} 
-        className={`bg-white dark:bg-slate-800 p-5 rounded-xl border-2 transition-all cursor-pointer shadow-sm flex items-center justify-between group ${fazendaFiltro ? 'border-purple-400 hover:border-purple-500 dark:border-purple-600 dark:hover:border-purple-500' : 'border-transparent hover:border-slate-300 dark:hover:border-slate-700 cursor-default'}`}
+        className={`bg-white dark:bg-slate-800 p-5 rounded-xl border-2 transition-all cursor-pointer shadow-sm flex items-center justify-between group ${fazendaFiltro ? 'border-orange-400 hover:border-orange-500 dark:border-orange-600 dark:hover:border-orange-500' : 'border-transparent hover:border-slate-300 dark:hover:border-slate-700 cursor-default'}`}
       >
         <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-lg transition-colors ${prodColor} group-hover:bg-purple-600 group-hover:text-white`}>
+          <div className={`p-3 rounded-lg transition-colors ${prodColor} group-hover:bg-orange-600 group-hover:text-white`}>
             <Target size={24}/>
           </div>
           <div>
@@ -103,12 +103,12 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
           className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 my-8" 
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="bg-purple-600 p-6 text-white flex justify-between items-center">
+          <div className="bg-orange-600 p-6 text-white flex justify-between items-center">
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase bg-purple-500 w-fit px-2 py-0.5 rounded-full mb-1">Fazenda</span>
+              <span className="text-[10px] font-black uppercase bg-orange-500 w-fit px-2 py-0.5 rounded-full mb-1">Fazenda</span>
               <h2 className="text-3xl font-black uppercase tracking-tighter italic">{fazendaFiltro || "Geral"}</h2>
             </div>
-            <button onClick={() => setShowModalProd(false)} className="bg-purple-500 hover:bg-purple-400 p-2 rounded-full"><X size={20}/></button>
+            <button onClick={() => setShowModalProd(false)} className="bg-orange-500 hover:bg-orange-400 p-2 rounded-full"><X size={20}/></button>
           </div>
           <div className="p-8 space-y-6">
             {fazendaFiltro ? (
