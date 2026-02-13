@@ -43,22 +43,22 @@ export default function SafraSelector({ currentSafra }: SafraSelectorProps) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all border border-slate-200 dark:border-slate-600 group"
+        className="flex items-center gap-2 px-2 md:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all border border-slate-200 dark:border-slate-600 group"
       >
-        <div className={`p-1.5 rounded-lg ${currentSafra.tipo === 'Soja' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
-          <CurrentIcon size={16} />
+        <div className={`p-1 md:p-1.5 rounded-lg ${currentSafra.tipo === 'Soja' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+          <CurrentIcon size={14} className="md:w-4 md:h-4" />
         </div>
-        <div className="text-left hidden sm:block">
-          <p className="text-[10px] font-black text-slate-400 uppercase leading-none mb-0.5">Safra Selecionada</p>
-          <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase italic tracking-tighter leading-none">
+        <div className="text-left">
+          <p className="text-[8px] md:text-[10px] font-black text-slate-400 uppercase leading-none mb-0.5">Safra</p>
+          <h3 className="text-[11px] md:text-sm font-black text-slate-800 dark:text-white uppercase italic tracking-tighter leading-none">
             {currentSafra.nome}
           </h3>
         </div>
-        <ChevronDown size={16} className={`text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[200] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute top-full right-0 md:left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[200] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           <div className="p-2 space-y-1">
             {SAFRAS_DISPONIVEIS.map((safra) => {
               const Icon = safra.tipo === 'Soja' ? Leaf : Wheat;
