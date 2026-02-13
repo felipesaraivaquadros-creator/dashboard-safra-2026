@@ -117,7 +117,7 @@ export default function SaldoPage() {
           <SafraSelector currentSafra={safraConfig} />
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
+        <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-3">
             <ThemeToggle />
           </div>

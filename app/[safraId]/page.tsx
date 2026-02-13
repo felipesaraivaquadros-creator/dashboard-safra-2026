@@ -67,7 +67,7 @@ export default function Dashboard() {
           <SafraSelector currentSafra={safraConfig} />
         </div>
         
-        <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
+        <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2">
             <UpdateDataButton />
             <Link 
