@@ -53,7 +53,7 @@ export default function Dashboard() {
           <div className="min-w-0">
             {/* Título dinâmico com tamanho responsivo */}
             <h1 className="text-lg md:text-2xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter truncate">
-              Painel {safraConfig.tipo} - {safraConfig.nome}
+              Painel  - {safraConfig.nome}
             </h1>
             <div className="flex flex-wrap gap-2 mt-1">
               {fazendaFiltro && <span style={{backgroundColor: getCorFazenda(fazendaFiltro)}} className="text-[9px] md:text-[10px] text-white px-2 py-0.5 rounded font-bold uppercase">{fazendaFiltro}</span>}
