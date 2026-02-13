@@ -1,0 +1,6 @@
+npm run exportar:soja2526
+npm run exportar:milho25
+npm run exportar:soja2425
+git add .
+git commit -m "Atualização do dashboard $(Get-Date -Format ddMMyyyyHHmm)"
+git push origin main
