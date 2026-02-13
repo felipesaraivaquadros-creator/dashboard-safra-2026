@@ -20,7 +20,7 @@ const SOJA2526_CONFIG: SafraConfig = {
   status: 'Atual',
   dataPath: './soja2526/romaneios_normalizados.json',
   AREAS_FAZENDAS: { 
-    "São Luiz": 676, 
+    "São Luiz": 675, 
     "Castanhal": 600, 
     "Romancini": 435, 
     "Estrelinha": 240 
@@ -113,7 +113,7 @@ const MILHO26_CONFIG: SafraConfig = {
   status: 'Futura',
   dataPath: './milho26/romaneios_normalizados.json',
   AREAS_FAZENDAS: { 
-    "São Luiz": 676, 
+    "São Luiz": 675, 
     "Castanhal": 600, 
     "Romancini": 435, 
     "Estrelinha": 240 
