@@ -45,7 +45,6 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Produtividade</p>
             <h3 className={`text-xl font-black leading-tight ${prodText}`}>{fazendaFiltro ? `${stats.prodLiq} sc/ha` : "Selecione Fazenda"}</h3>
-            {/* Removido kg/ha daqui */}
           </div>
         </div>
         <Info size={16} className="text-slate-300" />
@@ -95,56 +94,62 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
   const formatKg = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all" onClick={() => setShowModalProd(false)}>
-      <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
-        <div className="bg-purple-600 p-6 text-white flex justify-between items-center">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase bg-purple-500 w-fit px-2 py-0.5 rounded-full mb-1">Fazenda</span>
-            <h2 className="text-3xl font-black uppercase tracking-tighter italic">{fazendaFiltro || "Geral"}</h2>
+    <div 
+      className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/60 backdrop-blur-sm transition-all" 
+      onClick={() => setShowModalProd(false)}
+    >
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div 
+          className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 my-8" 
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-purple-600 p-6 text-white flex justify-between items-center">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase bg-purple-500 w-fit px-2 py-0.5 rounded-full mb-1">Fazenda</span>
+              <h2 className="text-3xl font-black uppercase tracking-tighter italic">{fazendaFiltro || "Geral"}</h2>
+            </div>
+            <button onClick={() => setShowModalProd(false)} className="bg-purple-500 hover:bg-purple-400 p-2 rounded-full"><X size={20}/></button>
           </div>
-          <button onClick={() => setShowModalProd(false)} className="bg-purple-500 hover:bg-purple-400 p-2 rounded-full"><X size={20}/></button>
-        </div>
-        <div className="p-8 space-y-6">
-          {fazendaFiltro ? (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
-                  <p className="text-[10px] font-black text-slate-400 uppercase">Área Total</p>
-                  <h4 className="text-xl font-black">{stats.areaHa} ha</h4>
+          <div className="p-8 space-y-6">
+            {fazendaFiltro ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
+                    <p className="text-[10px] font-black text-slate-400 uppercase">Área Total</p>
+                    <h4 className="text-xl font-black">{stats.areaHa} ha</h4>
+                  </div>
+                  <div className="p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
+                    <p className="text-[10px] font-black text-slate-400 uppercase">Cargas (Romaneios)</p>
+                    <h4 className="text-xl font-black">{romaneiosCount} un</h4>
+                  </div>
                 </div>
-                <div className="p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
-                  <p className="text-[10px] font-black text-slate-400 uppercase">Cargas (Romaneios)</p>
-                  <h4 className="text-xl font-black">{romaneiosCount} un</h4>
+                <div className="p-5 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center">
+                  <div>
+                    <p className="text-[10px] font-black text-orange-400 uppercase">Sacas Bruto</p>
+                    <h4 className="text-lg font-black text-orange-700 leading-tight">{stats.totalBruta.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4>
+                    <p className="text-[10px] font-bold text-orange-400">{formatKg(stats.totalBrutaKg)} kg</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-orange-400 uppercase">Rendimento Bruto</p>
+                    <h4 className="text-xl font-black text-orange-700 leading-tight">{stats.prodBruta} <span className="text-xs">sc/ha</span></h4>
+                  </div>
                 </div>
-              </div>
-              <div className="p-5 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center">
-                <div>
-                  <p className="text-[10px] font-black text-orange-400 uppercase">Sacas Bruto</p>
-                  <h4 className="text-lg font-black text-orange-700 leading-tight">{stats.totalBruta.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4>
-                  <p className="text-[10px] font-bold text-orange-400">{formatKg(stats.totalBrutaKg)} kg</p>
+                <div className="p-5 bg-green-50 rounded-2xl border border-green-100 flex justify-between items-center">
+                  <div>
+                    <p className="text-[10px] font-black text-green-400 uppercase">Sacas Líquida</p>
+                    <h4 className="text-lg font-black text-green-700 leading-tight">{stats.totalLiq.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4>
+                    <p className="text-[10px] font-bold text-green-400">{formatKg(stats.totalLiqKg)} kg</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-green-400 uppercase">Rendimento Líquido</p>
+                    <h4 className="text-xl font-black text-green-700 leading-tight">{stats.prodLiq} <span className="text-xs">sc/ha</span></h4>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-orange-400 uppercase">Rendimento Bruto</p>
-                  <h4 className="text-xl font-black text-orange-700 leading-tight">{stats.prodBruta} <span className="text-xs">sc/ha</span></h4>
-                  {/* Removido kg/ha daqui */}
-                </div>
-              </div>
-              <div className="p-5 bg-green-50 rounded-2xl border border-green-100 flex justify-between items-center">
-                <div>
-                  <p className="text-[10px] font-black text-green-400 uppercase">Sacas Líquida</p>
-                  <h4 className="text-lg font-black text-green-700 leading-tight">{stats.totalLiq.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4>
-                  <p className="text-[10px] font-bold text-green-400">{formatKg(stats.totalLiqKg)} kg</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-green-400 uppercase">Rendimento Líquido</p>
-                  <h4 className="text-xl font-black text-green-700 leading-tight">{stats.prodLiq} <span className="text-xs">sc/ha</span></h4>
-                  {/* Removido kg/ha daqui */}
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="py-10 text-center text-slate-400 text-xs font-bold uppercase italic">Selecione uma fazenda no gráfico para detalhar a produtividade.</div>
-          )}
+              </>
+            ) : (
+              <div className="py-10 text-center text-slate-400 text-xs font-bold uppercase italic">Selecione uma fazenda no gráfico para detalhar a produtividade.</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
