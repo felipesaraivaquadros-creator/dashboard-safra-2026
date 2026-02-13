@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../src/data/safraConfig';
 import { ArrowLeft } from 'lucide-react';
+import SafraSelector from '../../src/components/SafraSelector';
 
 export default function Dashboard() {
   const params = useParams();
@@ -50,10 +51,12 @@ export default function Dashboard() {
           <Link href="/" className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors shrink-0">
             <ArrowLeft size={24} />
           </Link>
-          <div className="min-w-0">
-            {/* Título dinâmico com tamanho responsivo */}
+          
+          <SafraSelector currentSafra={safraConfig} />
+
+          <div className="min-w-0 ml-2">
             <h1 className="text-lg md:text-2xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter truncate">
-              Painel  - {safraConfig.nome}
+              Painel
             </h1>
             <div className="flex flex-wrap gap-2 mt-1">
               {fazendaFiltro && <span style={{backgroundColor: getCorFazenda(fazendaFiltro)}} className="text-[9px] md:text-[10px] text-white px-2 py-0.5 rounded font-bold uppercase">{fazendaFiltro}</span>}
