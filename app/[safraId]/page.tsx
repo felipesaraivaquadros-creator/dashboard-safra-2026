@@ -69,13 +69,13 @@ export default function Dashboard() {
         
         <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2">
-            <UpdateDataButton />
             <Link 
               href={`/${safraId}/saldos`} 
               className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md"
             >
               Saldos
             </Link>
+            <UpdateDataButton />
           </div>
           
           <div className="flex items-center gap-3">
