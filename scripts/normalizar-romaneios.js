@@ -41,10 +41,9 @@ function parseData(valor) {
 
 // 🔄 Normalização
 function normalizar(safraId, inputFileName) {
-  // Caminho de entrada agora é relativo à raiz do projeto (um nível acima de scripts/)
   const inputPath = path.join(__dirname, '..', inputFileName);
-  // Caminho de saída agora é relativo à raiz do projeto
   const outputPath = path.join(__dirname, '..', 'src', 'data', safraId, 'romaneios_normalizados.json');
+  const lastUpdatePath = path.join(__dirname, '..', 'src', 'data', 'lastUpdate.json');
 
   if (!fs.existsSync(inputPath)) {
     console.error(`❌ Arquivo de entrada não encontrado: ${inputPath}`);
@@ -91,7 +90,15 @@ function normalizar(safraId, inputFileName) {
     'utf-8'
   );
 
+  // Atualiza o timestamp global
+  fs.writeFileSync(
+    lastUpdatePath,
+    JSON.stringify({ timestamp: new Date().toISOString() }, null, 2),
+    'utf-8'
+  );
+
   console.log(`✅ JSON normalizado com sucesso (${normalizado.length} linhas) em ${outputPath}`);
+  console.log(`🕒 Registro de atualização atualizado em ${lastUpdatePath}`);
 }
 
 const safraId = process.argv[2];

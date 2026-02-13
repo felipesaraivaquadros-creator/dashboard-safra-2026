@@ -3,6 +3,7 @@ import React from 'react'
 import ToastProvider from '../src/components/ToastProvider'
 import { ThemeWrapper } from '../src/components/ThemeWrapper'
 import { Metadata, Viewport } from 'next'
+import LastUpdateBar from '../src/components/LastUpdateBar'
 
 export const metadata: Metadata = {
   title: "Painel Safra",
@@ -36,10 +37,13 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <body>
+      <body className="flex flex-col min-h-screen">
         <ThemeWrapper attribute="class" defaultTheme="light">
+          <LastUpdateBar />
           <ToastProvider />
-          {children}
+          <div className="flex-1">
+            {children}
+          </div>
         </ThemeWrapper>
       </body>
     </html>
