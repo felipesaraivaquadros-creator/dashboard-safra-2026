@@ -134,6 +134,7 @@ export default function Dashboard() {
         fazendaFiltro={fazendaFiltro}
         armazemFiltro={armazemFiltro}
         discountStats={discountStats}
+        totalBruta={stats.totalBruta} // Passando o valor bruto
       />
     </main>
   );
