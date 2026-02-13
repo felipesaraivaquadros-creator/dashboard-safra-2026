@@ -86,7 +86,7 @@ export default function SaldoPage() {
     bg: "bg-red-100 dark:bg-red-900/30",
     border: "border-red-200 dark:border-red-800",
     text: "text-red-900 dark:text-red-200",
-    subText: "text-red-700/70 dark:text-red-400/70",
+    subText: "text-red-700/70 dark:text-green-400/70",
     iconBg: "bg-red-200 text-red-700 dark:bg-red-700 dark:text-white",
     trendingIcon: Scale,
   };
@@ -103,16 +103,18 @@ export default function SaldoPage() {
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
       <header className="max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <Link href="/" className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors shrink-0">
-            <ArrowLeft size={24} />
-          </Link>
-          
-          <SafraSelector currentSafra={safraConfig} />
-
-          <div className="min-w-0 ml-2">
-            <h1 className="text-xl md:text-3xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter truncate">Resumo de Saldos</h1>
+        <div className="flex items-center justify-between w-full md:w-auto gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <Link href="/" className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors shrink-0">
+              <ArrowLeft size={24} />
+            </Link>
+            
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-3xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter truncate">Resumo de Saldos</h1>
+            </div>
           </div>
+
+          <SafraSelector currentSafra={safraConfig} />
         </div>
         
         <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
