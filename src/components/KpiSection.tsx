@@ -11,9 +11,10 @@ interface KpiSectionProps {
   prodText: string;
   setShowModalProd: (show: boolean) => void;
   setShowModalUmid: (show: boolean) => void; 
+  setShowModalVolume: (show: boolean) => void; // Novo
 }
 
-export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, setShowModalProd, setShowModalUmid }: KpiSectionProps) {
+export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, setShowModalProd, setShowModalUmid, setShowModalVolume }: KpiSectionProps) {
   
   const currentDesconto = parseFloat(stats.umidade);
   const isDescontoHigh = currentDesconto > 5.0;
@@ -25,13 +26,19 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
-        <div className="p-3 bg-green-100 rounded-lg text-green-600"><TrendingUp size={24}/></div>
-        <div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase">Total Entregue</p>
-          <h3 className="text-xl font-black leading-tight">{stats.totalLiq.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h3>
-          <p className="text-[10px] font-bold text-slate-400">{formatKg(stats.totalLiqKg)} kg</p>
+      <div 
+        onClick={() => setShowModalVolume(true)}
+        className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between cursor-pointer hover:border-green-400 transition-all group"
+      >
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-green-100 rounded-lg text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors"><TrendingUp size={24}/></div>
+          <div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Total Entregue</p>
+            <h3 className="text-xl font-black leading-tight">{stats.totalLiq.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h3>
+            <p className="text-[10px] font-bold text-slate-400">{formatKg(stats.totalLiqKg)} kg</p>
+          </div>
         </div>
+        <Info size={16} className="text-slate-300" />
       </div>
 
       <div 

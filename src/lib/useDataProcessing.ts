@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType, DiscountStats } from '../data/types';
+import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType, DiscountStats, VolumeStats } from '../data/types';
 import { getSafraConfig, SafraConfig } from '../data/safraConfig';
 import { CORES_FAZENDAS, CORES_ARMAZENS } from '../data/sharedConfig';
 
@@ -59,7 +59,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
   const romaneiosCount = useMemo(() => dadosFiltrados.length, [dadosFiltrados]);
 
-  const { stats, discountStats } = useMemo(() => {
+  const { stats, discountStats, volumeStats } = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
     const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
     
@@ -78,6 +78,33 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
       Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
+
+    // Cálculos de Operação e Tendência
+    const diasMap: Record<string, { kg: number, sc: number }> = {};
+    dadosFiltrados.forEach(d => {
+      if (d.data) {
+        if (!diasMap[d.data]) diasMap[d.data] = { kg: 0, sc: 0 };
+        diasMap[d.data].kg += Number(d.pesoLiquidoKg) || 0;
+        diasMap[d.data].sc += Number(d.sacasLiquida) || 0;
+      }
+    });
+
+    const listaDias = Object.entries(diasMap);
+    const numDias = listaDias.length || 1;
+    
+    let melhorDiaData = "";
+    let melhorDiaKg = 0;
+    let melhorDiaSc = 0;
+
+    listaDias.forEach(([data, val]) => {
+      if (val.kg > melhorDiaKg) {
+        melhorDiaKg = val.kg;
+        melhorDiaSc = val.sc;
+        melhorDiaData = data;
+      }
+    });
+
+    const totalContratado = Object.values(config.VOLUMES_CONTRATADOS).reduce((sum, c) => sum + c.total, 0);
 
     const stats: KpiStats = {
       totalLiq: liq,
@@ -110,8 +137,20 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       percentualDesconto: percDesconto
     };
 
-    return { stats, discountStats };
-  }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
+    const volumeStats: VolumeStats = {
+      mediaCargaKg: dadosFiltrados.length > 0 ? liqKg / dadosFiltrados.length : 0,
+      mediaCargaSc: dadosFiltrados.length > 0 ? liq / dadosFiltrados.length : 0,
+      mediaDiaKg: liqKg / numDias,
+      mediaDiaSc: liq / numDias,
+      melhorDiaKg,
+      melhorDiaSc,
+      melhorDiaData,
+      percentualColhido: area > 0 ? ((liq / (area * 65)) * 100).toFixed(1) : '0.0', // Estimativa baseada em 65 sc/ha
+      metaPercentual: totalContratado > 0 ? ((liq / totalContratado) * 100).toFixed(1) : '0.0'
+    };
+
+    return { stats, discountStats, volumeStats };
+  }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS, config.VOLUMES_CONTRATADOS]);
 
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};
@@ -206,6 +245,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     setArmazemFiltro,
     stats,
     discountStats,
+    volumeStats,
     romaneiosCount, 
     contratosProcessados,
     chartFazendas,

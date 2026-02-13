@@ -56,6 +56,18 @@ export interface DiscountStats {
   percentualDesconto: string;
 }
 
+export interface VolumeStats {
+  mediaCargaKg: number;
+  mediaCargaSc: number;
+  mediaDiaKg: number;
+  mediaDiaSc: number;
+  melhorDiaKg: number;
+  melhorDiaSc: number;
+  melhorDiaData: string;
+  percentualColhido: string;
+  metaPercentual: string;
+}
+
 export interface KpiStats {
   totalLiq: number;
   totalLiqKg: number;
@@ -82,6 +94,7 @@ export interface DataContextType {
   setArmazemFiltro: (armazem: string | null) => void;
   stats: KpiStats;
   discountStats: DiscountStats;
+  volumeStats: VolumeStats; // Novo
   romaneiosCount: number;
   contratosProcessados: {
     pendentes: ProcessedContract[];

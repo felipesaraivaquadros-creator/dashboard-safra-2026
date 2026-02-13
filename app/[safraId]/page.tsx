@@ -7,6 +7,7 @@ import ChartSection from '../../src/components/ChartSection';
 import ContractSection from '../../src/components/ContractSection';
 import UpdateDataButton from '../../src/components/UpdateDataButton';
 import UmidadeModal from '../../src/components/UmidadeModal';
+import VolumeModal from '../../src/components/VolumeModal';
 import { ThemeToggle } from '../../src/components/ThemeToggle';
 import Link from 'next/link'; 
 import { useParams } from 'next/navigation';
@@ -26,6 +27,7 @@ export default function Dashboard() {
     setArmazemFiltro,
     stats,
     discountStats,
+    volumeStats,
     romaneiosCount,
     contratosProcessados,
     chartFazendas,
@@ -36,6 +38,7 @@ export default function Dashboard() {
 
   const [showModalProd, setShowModalProd] = useState(false);
   const [showModalUmid, setShowModalUmid] = useState(false);
+  const [showModalVolume, setShowModalVolume] = useState(false);
 
   // Alterado de purple para orange
   const prodColor = fazendaFiltro ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-400';
@@ -102,6 +105,7 @@ export default function Dashboard() {
             prodText={prodText} 
             setShowModalProd={setShowModalProd} 
             setShowModalUmid={setShowModalUmid}
+            setShowModalVolume={setShowModalVolume}
           />
 
           <ChartSection
@@ -135,6 +139,16 @@ export default function Dashboard() {
         discountStats={discountStats}
         totalBruta={stats.totalBruta}
         totalBrutaKg={stats.totalBrutaKg}
+      />
+
+      <VolumeModal 
+        show={showModalVolume}
+        onClose={() => setShowModalVolume(false)}
+        stats={stats}
+        volumeStats={volumeStats}
+        discountStats={discountStats}
+        romaneiosCount={romaneiosCount}
+        fazendaFiltro={fazendaFiltro}
       />
     </main>
   );
