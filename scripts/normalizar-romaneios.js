@@ -90,22 +90,22 @@ function normalizar(safraId, inputFileName) {
     'utf-8'
   );
 
-  // Atualiza o timestamp global
+  // 🕒 REGISTRO DA EXTRAÇÃO: Atualiza o timestamp global com o momento exato da normalização dos dados
   fs.writeFileSync(
     lastUpdatePath,
     JSON.stringify({ timestamp: new Date().toISOString() }, null, 2),
     'utf-8'
   );
 
-  console.log(`✅ JSON normalizado com sucesso (${normalizado.length} linhas) em ${outputPath}`);
-  console.log(`🕒 Registro de atualização atualizado em ${lastUpdatePath}`);
+  console.log(`✅ Dados extraídos e normalizados com sucesso em ${outputPath}`);
+  console.log(`🕒 Horário da extração registrado em ${lastUpdatePath}`);
 }
 
 const safraId = process.argv[2];
 const inputFileName = process.argv[3];
 
 if (!safraId || !inputFileName) {
-  console.error('❌ Por favor, forneça o ID da safra e o nome do arquivo de entrada (ex: node scripts/normalizar-romaneios.js soja2526 romaneios_soja_25_26.json)');
+  console.error('❌ Por favor, forneça o ID da safra e o nome do arquivo de entrada');
   process.exit(1);
 }
 
