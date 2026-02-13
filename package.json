@@ -12,7 +12,6 @@
     "exportar:milho25": "node scripts/exportar-safra.js milho25 && node scripts/normalizar-romaneios.js milho25 romaneios_milho_25.json"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
     "autoprefixer": "^10.4.18",
     "chokidar": "^5.0.0",
     "clsx": "^2.1.0",
@@ -37,9 +36,9 @@
     "eslint-config-next": "14.1.0",
     "typescript": "^5.3.3"
   },
-  "main": "exportar-safra.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "unrs-resolver"
+    ]
+  }
 }
