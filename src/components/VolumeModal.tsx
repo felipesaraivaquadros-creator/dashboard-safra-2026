@@ -30,7 +30,7 @@ export default function VolumeModal({ show, onClose, stats, volumeStats, discoun
             <span className="text-[10px] font-black uppercase bg-green-500 w-fit px-2 py-0.5 rounded-full mb-1">Volumes Detalhados</span>
             <h2 className="text-3xl font-black uppercase tracking-tighter italic">{fazendaFiltro || "Geral"}</h2>
           </div>
-          <button onClick={onClose} className="bg-green-500 hover:bg-green-400 p-2 rounded-full transition-colors"><X size={20}/></button>
+          <button onClick={onClose} className="bg-green-500 hover:bg-blue-400 p-2 rounded-full transition-colors"><X size={20}/></button>
         </div>
 
         <div className="p-6 space-y-8">
@@ -60,22 +60,22 @@ export default function VolumeModal({ show, onClose, stats, volumeStats, discoun
               <div className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Bruto (100%)</span>
                 <div className="text-right">
-                  <span className="text-sm font-black text-slate-700 dark:text-slate-200">{formatKg(stats.totalBrutaKg)} kg</span>
-                  <span className="text-[10px] font-bold text-slate-400 ml-2">({formatSc(stats.totalBruta)} sc)</span>
+                  <span className="text-sm font-black text-slate-700 dark:text-slate-200">{formatSc(stats.totalBruta)} sc</span>
+                  <span className="text-[10px] font-bold text-slate-400 ml-2">({formatKg(stats.totalBrutaKg)} kg)</span>
                 </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/30">
                 <span className="text-[10px] font-bold text-red-500 uppercase">Descontos ({discountStats.percentualDesconto}%)</span>
                 <div className="text-right">
-                  <span className="text-sm font-black text-red-600">{formatKg(discountStats.totalDescontosKg)} kg</span>
-                  <span className="text-[10px] font-bold text-red-400 ml-2">({formatSc(discountStats.totalDescontosSc)} sc)</span>
+                  <span className="text-sm font-black text-red-600">{formatSc(discountStats.totalDescontosSc)} sc</span>
+                  <span className="text-[10px] font-bold text-red-400 ml-2">({formatKg(discountStats.totalDescontosKg)} kg)</span>
                 </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/30">
                 <span className="text-[10px] font-bold text-green-600 uppercase">Líquido Final</span>
                 <div className="text-right">
-                  <span className="text-sm font-black text-green-700 dark:text-green-300">{formatKg(stats.totalLiqKg)} kg</span>
-                  <span className="text-[10px] font-bold text-green-400 ml-2">({formatSc(stats.totalLiq)} sc)</span>
+                  <span className="text-sm font-black text-green-700 dark:text-green-300">{formatSc(stats.totalLiq)} sc</span>
+                  <span className="text-[10px] font-bold text-green-400 ml-2">({formatKg(stats.totalLiqKg)} kg)</span>
                 </div>
               </div>
             </div>
