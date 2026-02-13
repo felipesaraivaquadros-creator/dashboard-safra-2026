@@ -79,7 +79,8 @@ function normalizar(safraId, inputFileName) {
         impureza: parseNumero(linha['Impu']),
         ardido: parseNumero(linha['Ardi']),
         avariados: parseNumero(linha['Avari']),
-        quebrados: parseNumero(linha['Quebr'])
+        quebrados: parseNumero(linha['Quebr']),
+        contaminantes: parseNumero(linha['Contaminantes']) // Adicionado
       };
     })
     .filter(d => d.sacasLiquida > 0 || d.pesoLiquidoKg > 0);
@@ -90,7 +91,7 @@ function normalizar(safraId, inputFileName) {
     'utf-8'
   );
 
-  // 🕒 REGISTRO DA EXTRAÇÃO: Atualiza o timestamp global com o momento exato da normalização dos dados
+  // 🕒 REGISTRO DA EXTRAÇÃO
   fs.writeFileSync(
     lastUpdatePath,
     JSON.stringify({ timestamp: new Date().toISOString() }, null, 2),
@@ -98,7 +99,6 @@ function normalizar(safraId, inputFileName) {
   );
 
   console.log(`✅ Dados extraídos e normalizados com sucesso em ${outputPath}`);
-  console.log(`🕒 Horário da extração registrado em ${lastUpdatePath}`);
 }
 
 const safraId = process.argv[2];

@@ -2,7 +2,7 @@ export interface Romaneio {
   data: string | null;
   contrato: string;
   ncontrato: string;
-  emitente?: string | null; // Novo campo adicionado
+  emitente?: string | null; 
   tipoNF: string | null;
   nfe: number | null;
   cidadeEntrega: string | null;
@@ -20,6 +20,7 @@ export interface Romaneio {
   ardido: number | null;
   avariados: number | null;
   quebrados: number | null;
+  contaminantes?: number | null; // Novo campo
 }
 
 export interface ContractVolume {
@@ -37,6 +38,17 @@ export interface ProcessedContract {
   isConcluido: boolean;
 }
 
+export interface DiscountStats {
+  umidadeSc: number;
+  impurezaSc: number;
+  ardidoSc: number;
+  avariadosSc: number;
+  contaminantesSc: number;
+  quebradosSc: number;
+  totalDescontosSc: number;
+  percentualDesconto: string;
+}
+
 export interface KpiStats {
   totalLiq: number;
   totalBruta: number;
@@ -52,12 +64,13 @@ export interface ChartData {
 }
 
 export interface DataContextType {
-  safraId: string; // Novo: ID da safra atual
+  safraId: string;
   fazendaFiltro: string | null;
   armazemFiltro: string | null;
   setFazendaFiltro: (fazenda: string | null) => void;
   setArmazemFiltro: (armazem: string | null) => void;
   stats: KpiStats;
+  discountStats: DiscountStats; // Novo campo
   romaneiosCount: number;
   contratosProcessados: {
     pendentes: ProcessedContract[];

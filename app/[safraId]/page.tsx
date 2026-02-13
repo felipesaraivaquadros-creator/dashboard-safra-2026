@@ -6,6 +6,7 @@ import KpiSection, { ProductivityModal } from '../../src/components/KpiSection';
 import ChartSection from '../../src/components/ChartSection';
 import ContractSection from '../../src/components/ContractSection';
 import UpdateDataButton from '../../src/components/UpdateDataButton';
+import UmidadeModal from '../../src/components/UmidadeModal'; // Novo
 import { ThemeToggle } from '../../src/components/ThemeToggle';
 import Link from 'next/link'; 
 import { useParams } from 'next/navigation';
@@ -24,6 +25,7 @@ export default function Dashboard() {
     setFazendaFiltro,
     setArmazemFiltro,
     stats,
+    discountStats, // Novo
     romaneiosCount,
     contratosProcessados,
     chartFazendas,
@@ -33,6 +35,7 @@ export default function Dashboard() {
   } = useDataProcessing(safraId);
 
   const [showModalProd, setShowModalProd] = useState(false);
+  const [showModalUmid, setShowModalUmid] = useState(false); // Novo
 
   // Lógica para determinar a cor do KPI de Produtividade
   const prodColor = fazendaFiltro ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-400';
@@ -99,6 +102,7 @@ export default function Dashboard() {
             prodColor={prodColor} 
             prodText={prodText} 
             setShowModalProd={setShowModalProd} 
+            setShowModalUmid={setShowModalUmid} // Novo
           />
 
           <ChartSection
@@ -122,6 +126,14 @@ export default function Dashboard() {
         fazendaFiltro={fazendaFiltro} 
         stats={stats} 
         romaneiosCount={romaneiosCount}
+      />
+
+      <UmidadeModal 
+        showModalUmid={showModalUmid}
+        setShowModalUmid={setShowModalUmid}
+        fazendaFiltro={fazendaFiltro}
+        armazemFiltro={armazemFiltro}
+        discountStats={discountStats}
       />
     </main>
   );

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType } from '../data/types';
+import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType, DiscountStats } from '../data/types';
 import { getSafraConfig, SafraConfig } from '../data/safraConfig';
 import { CORES_FAZENDAS, CORES_ARMAZENS } from '../data/sharedConfig';
 
@@ -16,7 +16,6 @@ interface SafraData {
   config: SafraConfig;
 }
 
-// Função auxiliar para carregar dados e config (Simplificada)
 function loadSafraData(safraId: string): SafraData {
   const config = getSafraConfig(safraId);
   let dados = dataMap[safraId];
@@ -26,7 +25,6 @@ function loadSafraData(safraId: string): SafraData {
     dados = [];
   }
   
-  // Filtra quaisquer registros inválidos que possam ter sobrado (como o antigo 'Total')
   const romaneiosValidos = dados.filter(d => d.sacasLiquida > 0 && d.data !== null);
 
   return { dados: romaneiosValidos, config };
@@ -38,7 +36,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
 
-  // Auxiliares de Cor (Usando sharedConfig)
   const getCorFazenda = (nome: string): string => CORES_FAZENDAS[nome] || CORES_FAZENDAS["Outros"];
   const getCorArmazem = (nome: string): string => {
     const exactMatch = CORES_ARMAZENS[nome];
@@ -53,7 +50,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     return CORES_ARMAZENS["Outros"];
   };
 
-  // 1. FILTRAGEM GLOBAL (Usada para KPIs e Contratos)
   const dadosFiltrados = useMemo(() => {
     return typedDadosOriginal.filter(d => {
       const matchFazenda = !fazendaFiltro || d.fazenda === fazendaFiltro;
@@ -62,23 +58,31 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     });
   }, [typedDadosOriginal, fazendaFiltro, armazemFiltro]);
 
-  // Contagem de Romaneios (Cargas)
   const romaneiosCount = useMemo(() => dadosFiltrados.length, [dadosFiltrados]);
 
-  // 2. KPIS (Sempre soma os romaneios filtrados)
-  const stats: KpiStats = useMemo(() => {
-    
-    // Lógica normal: soma os romaneios filtrados
+  // KPIS E DESCONTOS
+  const { stats, discountStats } = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
     const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
+    const pesoBrutoTotalKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.pesoBrutoKg) || 0), 0);
     
-    const somaUmid = dadosFiltrados.reduce((acc, d) => acc + (Number(d.umidade) || 0), 0);
-    const umidMed = dadosFiltrados.length > 0 ? (somaUmid / dadosFiltrados.length / 100).toFixed(1) : '0.0';
+    // Somas de descontos em KG
+    const umidKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.umidade) || 0), 0);
+    const impuKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.impureza) || 0), 0);
+    const ardiKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.ardido) || 0), 0);
+    const avariKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.avariados) || 0), 0);
+    const contamKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.contaminantes) || 0), 0);
+    const quebrKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.quebrados) || 0), 0);
+    
+    const totalDescontosKg = umidKg + impuKg + ardiKg + avariKg + contamKg + quebrKg;
+    
+    // Umidade Média % (Baseada no peso bruto total)
+    const umidMed = pesoBrutoTotalKg > 0 ? ((umidKg / pesoBrutoTotalKg) * 100).toFixed(1) : '0.0';
     
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
       Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
 
-    return {
+    const stats: KpiStats = {
       totalLiq: liq,
       totalBruta: bruta,
       areaHa: area,
@@ -86,9 +90,22 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       prodBruta: area > 0 ? (bruta / area).toFixed(2) : '0.00',
       umidade: umidMed
     };
+
+    const discountStats: DiscountStats = {
+      umidadeSc: umidKg / 60,
+      impurezaSc: impuKg / 60,
+      ardidoSc: ardiKg / 60,
+      avariadosSc: avariKg / 60,
+      contaminantesSc: contamKg / 60,
+      quebradosSc: quebrKg / 60,
+      totalDescontosSc: totalDescontosKg / 60,
+      percentualDesconto: bruta > 0 ? ((totalDescontosKg / 60 / bruta) * 100).toFixed(2) : '0.00'
+    };
+
+    return { stats, discountStats };
   }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
 
-  // 3. CONTRATOS
+  // CONTRATOS
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};
     typedDadosOriginal.forEach(d => {
@@ -98,7 +115,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       }
     });
 
-    // Define se a safra é uma safra passada onde os contratos são considerados cumpridos
     const isSafraPassadaCumprida = safraId === 'soja2425' || safraId === 'milho25';
 
     const todos: ProcessedContract[] = Object.keys(config.VOLUMES_CONTRATADOS).map(id => {
@@ -110,17 +126,14 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       let perc = 0;
 
       if (isSafraPassadaCumprida) {
-        // Para safras passadas, consideramos todos os contratos como cumpridos
         isConcluido = true;
         aCumprir = 0;
         perc = c.total > 0 ? 100 : (cumprido > 0 ? 100 : 0);
       } else if (c.total === 0) {
-        // Contratos de depósito/venda a fixar (volume 0)
         isConcluido = cumprido > 0;
         aCumprir = 0;
         perc = cumprido > 0 ? 100 : 0;
       } else {
-        // Contratos com volume fixo (lógica normal)
         aCumprir = Math.max(c.total - cumprido, 0);
         perc = (cumprido / c.total) * 100;
         isConcluido = aCumprir < 1; 
@@ -143,34 +156,25 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     };
   }, [typedDadosOriginal, config.VOLUMES_CONTRATADOS, safraId]);
 
-  // 4. GRÁFICOS
-  
-  // Função auxiliar para calcular totais de sacas líquidas para um conjunto de dados
+  // GRÁFICOS
   const calculateChartData = (data: Romaneio[], key: keyof Romaneio, allKeys: string[]): ChartData[] => {
     const totals: Record<string, number> = {};
-    
-    // Inicializa todos os grupos com 0
     allKeys.forEach(k => totals[k] = 0);
-
-    // Soma os volumes
     data.forEach(d => {
       const groupName = d[key] as string;
       if (groupName) {
         totals[groupName] = (totals[groupName] || 0) + (Number(d.sacasLiquida) || 0);
       }
     });
-    
     return Object.keys(totals)
       .map(name => ({ name, sacas: totals[name] }))
       .filter(d => d.sacas > 0 || allKeys.includes(d.name))
       .sort((a,b) => b.sacas - a.sacas);
   };
 
-  // Obtém todos os nomes únicos de fazendas e armazéns dos dados originais
   const allFazendas = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.fazenda).filter(Boolean) as string[])), [typedDadosOriginal]);
   const allArmazens = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.armazem).filter(Boolean) as string[])), [typedDadosOriginal]);
 
-  // Dados para o Gráfico de Fazendas: Filtrado apenas por Armazém (se houver)
   const dadosParaChartFazendas = useMemo(() => {
     return typedDadosOriginal.filter(d => !armazemFiltro || d.armazem === armazemFiltro);
   }, [typedDadosOriginal, armazemFiltro]);
@@ -179,7 +183,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     return calculateChartData(dadosParaChartFazendas, 'fazenda', allFazendas);
   }, [dadosParaChartFazendas, allFazendas]);
 
-  // Dados para o Gráfico de Armazéns: Filtrado apenas por Fazenda (se houver)
   const dadosParaChartArmazens = useMemo(() => {
     return typedDadosOriginal.filter(d => !fazendaFiltro || d.fazenda === fazendaFiltro);
   }, [typedDadosOriginal, fazendaFiltro]);
@@ -196,6 +199,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     setFazendaFiltro,
     setArmazemFiltro,
     stats,
+    discountStats,
     romaneiosCount, 
     contratosProcessados,
     chartFazendas,

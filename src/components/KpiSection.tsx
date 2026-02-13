@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { TrendingUp, Target, Info, X, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, Target, Info, X, ArrowUpRight, ArrowDownRight, Droplets } from 'lucide-react';
 import { KpiStats } from '../data/types';
 
 interface KpiSectionProps {
@@ -10,9 +10,10 @@ interface KpiSectionProps {
   prodColor: string;
   prodText: string;
   setShowModalProd: (show: boolean) => void;
+  setShowModalUmid: (show: boolean) => void; // Novo
 }
 
-export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, setShowModalProd }: KpiSectionProps) {
+export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, setShowModalProd, setShowModalUmid }: KpiSectionProps) {
   
   const UMIDADE_META = 14.0;
   const currentUmidade = parseFloat(stats.umidade);
@@ -50,14 +51,20 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
         <Info size={16} className="text-slate-300" />
       </div>
 
-      {/* KPI 3: Umidade Média (Atualizado) */}
-      <div className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+      {/* KPI 3: Umidade Média (Com clique para Modal) */}
+      <div 
+        onClick={() => setShowModalUmid(true)}
+        className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between cursor-pointer hover:border-blue-400 transition-all group"
+      >
         <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-lg ${umidadeBg} ${umidadeText}`}>
+          <div className={`p-3 rounded-lg ${umidadeBg} ${umidadeText} group-hover:bg-blue-600 group-hover:text-white transition-colors`}>
             <UmidadeIcon size={24}/>
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Umidade Média</p>
+          <div className="flex-1">
+            <div className="flex justify-between items-start">
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Umidade Média</p>
+              <Info size={14} className="text-slate-300" />
+            </div>
             <h3 className="text-xl font-black">{stats.umidade}%</h3>
           </div>
         </div>
@@ -81,7 +88,7 @@ interface ProductivityModalProps {
   setShowModalProd: (show: boolean) => void;
   fazendaFiltro: string | null;
   stats: KpiStats;
-  romaneiosCount: number; // Alterado para romaneiosCount
+  romaneiosCount: number; 
 }
 
 export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFiltro, stats, romaneiosCount }: ProductivityModalProps) {
@@ -107,7 +114,7 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
                 </div>
                 <div className="p-4 bg-slate-50 dark:bg-slate-700 rounded-2xl text-center border border-slate-100 dark:border-slate-700">
                   <p className="text-[10px] font-black text-slate-400 uppercase">Cargas (Romaneios)</p>
-                  <h4 className="text-xl font-black">{romaneiosCount} un</h4> {/* Usando romaneiosCount */}
+                  <h4 className="text-xl font-black">{romaneiosCount} un</h4>
                 </div>
               </div>
               <div className="p-5 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center">
