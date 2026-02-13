@@ -52,7 +52,7 @@ export default function UmidadeModal({
               <span className="text-[10px] font-black uppercase bg-blue-500 w-fit px-2 py-0.5 rounded-full mb-1">Qualidade & Umidade</span>
               <h2 className="text-2xl font-black uppercase tracking-tighter italic">
                 {fazendaFiltro || armazemFiltro ? (
-                  <span className="truncate block max-w-[250px]">{fazendaFiltro || armazemFiltem}</span>
+                  <span className="truncate block max-w-[250px]">{fazendaFiltro || armazemFiltro}</span>
                 ) : "Geral"}
               </h2>
             </div>
