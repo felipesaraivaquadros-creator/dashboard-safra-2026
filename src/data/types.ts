@@ -20,7 +20,7 @@ export interface Romaneio {
   ardido: number | null;
   avariados: number | null;
   quebrados: number | null;
-  contaminantes?: number | null; // Novo campo
+  contaminantes?: number | null;
 }
 
 export interface ContractVolume {
@@ -40,21 +40,32 @@ export interface ProcessedContract {
 
 export interface DiscountStats {
   umidadeSc: number;
+  umidadeKg: number;
   impurezaSc: number;
+  impurezaKg: number;
   ardidoSc: number;
+  ardidoKg: number;
   avariadosSc: number;
+  avariadosKg: number;
   contaminantesSc: number;
+  contaminantesKg: number;
   quebradosSc: number;
+  quebradosKg: number;
   totalDescontosSc: number;
+  totalDescontosKg: number;
   percentualDesconto: string;
 }
 
 export interface KpiStats {
   totalLiq: number;
+  totalLiqKg: number;
   totalBruta: number;
+  totalBrutaKg: number;
   areaHa: number;
   prodLiq: string;
+  prodLiqKg: string;
   prodBruta: string;
+  prodBrutaKg: string;
   umidade: string;
 }
 
@@ -70,7 +81,7 @@ export interface DataContextType {
   setFazendaFiltro: (fazenda: string | null) => void;
   setArmazemFiltro: (armazem: string | null) => void;
   stats: KpiStats;
-  discountStats: DiscountStats; // Novo campo
+  discountStats: DiscountStats;
   romaneiosCount: number;
   contratosProcessados: {
     pendentes: ProcessedContract[];

@@ -16,7 +16,6 @@ import {
   SALDO_FINAL_MILHO25 
 } from '../data/milho25/saldoConfig';
 
-// Mapeamento para carregar os dados JSON dinamicamente
 const dataMap: Record<string, Romaneio[]> = {
   'soja2526': require('../data/soja2526/romaneios_normalizados.json'),
   'soja2425': require('../data/soja2425/romaneios_normalizados.json'),
@@ -24,23 +23,18 @@ const dataMap: Record<string, Romaneio[]> = {
   'milho26': require('../data/milho26/romaneios_normalizados.json'),
 };
 
-// IDs dos contratos fixos que devem ser pagos pelo estoque da COFCO NSH e SIPAL MATUPÁ
-// Estes IDs são específicos da safra Soja 25/26, mas a lógica deve ser genérica.
 const CONTRATOS_FIXOS_SOJA2526_IDS = ["72208", "290925M339"];
 const ARMAZENS_CONTRATOS_FIXOS = ["COFCO NSH", "SIPAL MATUPÁ"];
 
-// Função auxiliar para carregar dados e config
 function loadSafraData(safraId: string): { dados: Romaneio[], config: ReturnType<typeof getSafraConfig> } {
   const config = getSafraConfig(safraId);
   let dados = dataMap[safraId];
   
-  // Garante que os dados sejam um array válido, caso contrário, retorna um array vazio.
   if (!Array.isArray(dados)) {
     console.error(`Erro ao carregar dados para a safra ${safraId} no saldo processing. Retornando array vazio.`);
     dados = [];
   }
   
-  // Filtra quaisquer registros inválidos que possam ter sobrado (como o antigo 'Total')
   const romaneiosValidos = dados.filter(d => d.sacasLiquida > 0 && d.data !== null);
 
   return { dados: romaneiosValidos, config };
@@ -48,10 +42,7 @@ function loadSafraData(safraId: string): { dados: Romaneio[], config: ReturnType
 
 export function calculateSaldoDashboard(safraId: string) {
   
-  // --- Lógica Específica para Safra 24/25 (Dados Fixos) ---
   if (safraId === 'soja2425') {
-    // Para a safra 24/25, usamos os dados fixos fornecidos pelo usuário
-    
     const estoqueTotal = ESTOQUE_TOTAL_SOJA2425;
     const volumeFixoTotal = CONTRATO_TOTAL_SOJA2425;
     const saldoContratosFixos = SALDO_FINAL_SOJA2425;
@@ -59,28 +50,32 @@ export function calculateSaldoDashboard(safraId: string) {
     const estoqueArmazensFixos: SaldoKpi[] = ESTOQUE_FINAL_SOJA2425.map(item => ({
       nome: item.nome,
       total: item.estoqueLiquido,
+      totalKg: item.estoqueLiquido * 60
     }));
 
     const contratosFixos: SaldoKpi[] = CONTRATOS_SOJA2425.map(item => ({
       nome: item.nome,
       total: item.total,
+      totalKg: item.total * 60,
       id: item.id,
     }));
 
     return {
       estoqueTotalContratosFixos: estoqueTotal,
+      estoqueTotalContratosFixosKg: estoqueTotal * 60,
       volumeFixoTotal,
+      volumeFixoTotalKg: volumeFixoTotal * 60,
       saldoContratosFixos,
+      saldoContratosFixosKg: saldoContratosFixos * 60,
       contratosFixos,
       estoqueTotalOutrosArmazens: 0,
+      estoqueTotalOutrosArmazensKg: 0,
       kpisArmazemOutros: [],
       estoqueArmazensFixos,
     };
   }
   
-  // --- Lógica Específica para Safra Milho 25 (Dados Fixos) ---
   if (safraId === 'milho25') {
-    
     const estoqueTotal = ESTOQUE_TOTAL_MILHO25;
     const volumeFixoTotal = CONTRATO_TOTAL_MILHO25;
     const saldoContratosFixos = SALDO_FINAL_MILHO25;
@@ -88,26 +83,30 @@ export function calculateSaldoDashboard(safraId: string) {
     const estoqueArmazensFixos: SaldoKpi[] = ESTOQUE_FINAL_MILHO25.map(item => ({
       nome: item.nome,
       total: item.estoqueLiquido,
+      totalKg: item.estoqueLiquido * 60
     }));
 
     const contratosFixos: SaldoKpi[] = CONTRATOS_MILHO25.map(item => ({
       nome: item.nome,
       total: item.total,
+      totalKg: item.total * 60,
       id: item.id,
     }));
 
     return {
       estoqueTotalContratosFixos: estoqueTotal,
+      estoqueTotalContratosFixosKg: estoqueTotal * 60,
       volumeFixoTotal,
+      volumeFixoTotalKg: volumeFixoTotal * 60,
       saldoContratosFixos,
+      saldoContratosFixosKg: saldoContratosFixos * 60,
       contratosFixos,
       estoqueTotalOutrosArmazens: 0,
+      estoqueTotalOutrosArmazensKg: 0,
       kpisArmazemOutros: [],
       estoqueArmazensFixos,
     };
   }
-  
-  // --- Lógica Padrão para Safra 25/26 (Cálculo Dinâmico) ---
   
   const { dados: typedDadosOriginal, config } = loadSafraData(safraId);
   
@@ -115,67 +114,72 @@ export function calculateSaldoDashboard(safraId: string) {
   const contratosFixosIds = isSoja2526 ? CONTRATOS_FIXOS_SOJA2526_IDS : [];
 
   let estoqueTotalContratosFixos = 0;
+  let estoqueTotalContratosFixosKg = 0;
   let estoqueTotalOutrosArmazens = 0;
+  let estoqueTotalOutrosArmazensKg = 0;
   
-  const estoqueArmazensFixosMap: Record<string, number> = {};
+  const estoqueArmazensFixosMap: Record<string, { sc: number, kg: number }> = {};
+  const kpisArmazemOutrosMap: Record<string, { sc: number, kg: number }> = {};
 
-  // 1. Volume Fixo Total (Apenas os contratos específicos)
   const volumeFixoTotal = contratosFixosIds.reduce((acc, id) => {
     const contrato = config.VOLUMES_CONTRATADOS[id];
     return acc + (contrato ? contrato.total : 0);
   }, 0);
 
-  // 2. Calcular estoque entregue, filtrando por DEPÓSITO (DEP)
-  const kpisArmazemOutrosMap: Record<string, number> = {};
-  
   typedDadosOriginal.forEach(d => {
-    // Considera DEP e VEN-FIXAR como entregas de estoque
     if (d.tipoNF !== "DEP" && d.tipoNF !== "VEN-FIXAR") return; 
     
-    // Filtra apenas entregas de Ildo Romancini (mantendo a lógica existente para quem entrega)
     if (d.emitente === "Ildo Romancini") {
       const sacas = Number(d.sacasLiquida) || 0;
+      const kg = Number(d.pesoLiquidoKg) || 0;
       const armazem = d.armazem || "Outros";
 
       if (isSoja2526 && ARMAZENS_CONTRATOS_FIXOS.includes(armazem)) {
         estoqueTotalContratosFixos += sacas;
-        estoqueArmazensFixosMap[armazem] = (estoqueArmazensFixosMap[armazem] || 0) + sacas;
+        estoqueTotalContratosFixosKg += kg;
+        if (!estoqueArmazensFixosMap[armazem]) estoqueArmazensFixosMap[armazem] = { sc: 0, kg: 0 };
+        estoqueArmazensFixosMap[armazem].sc += sacas;
+        estoqueArmazensFixosMap[armazem].kg += kg;
       } else {
-        // Armazéns que não são COFCO NSH ou SIPAL MATUPÁ (ou qualquer safra que não seja 25/26)
         estoqueTotalOutrosArmazens += sacas;
-        kpisArmazemOutrosMap[armazem] = (kpisArmazemOutrosMap[armazem] || 0) + sacas;
+        estoqueTotalOutrosArmazensKg += kg;
+        if (!kpisArmazemOutrosMap[armazem]) kpisArmazemOutrosMap[armazem] = { sc: 0, kg: 0 };
+        kpisArmazemOutrosMap[armazem].sc += sacas;
+        kpisArmazemOutrosMap[armazem].kg += kg;
       }
     }
   });
 
-  // 3. Saldo Líquido para Contratos Fixos (Estoque - Contratado)
   const saldoContratosFixos = estoqueTotalContratosFixos - volumeFixoTotal;
+  const saldoContratosFixosKg = estoqueTotalContratosFixosKg - (volumeFixoTotal * 60);
 
-  // 4. KPIs de Armazéns (Excluindo os de contratos fixos)
   const kpisArmazemOutros: SaldoKpi[] = Object.entries(kpisArmazemOutrosMap)
-    .map(([nome, total]) => ({ nome, total: parseFloat(total.toFixed(2)) }))
+    .map(([nome, val]) => ({ nome, total: parseFloat(val.sc.toFixed(2)), totalKg: val.kg }))
     .sort((a, b) => b.total - a.total);
     
-  // 5. Estrutura de dados para o novo card de estoque fixo
   const estoqueArmazensFixos: SaldoKpi[] = Object.entries(estoqueArmazensFixosMap)
-    .map(([nome, total]) => ({ nome, total: parseFloat(total.toFixed(2)) }))
+    .map(([nome, val]) => ({ nome, total: parseFloat(val.sc.toFixed(2)), totalKg: val.kg }))
     .sort((a, b) => b.total - a.total);
 
-  // 6. Contratos Fixos detalhados
   const contratosFixos: SaldoKpi[] = contratosFixosIds
     .map(id => ({
       id,
       nome: config.VOLUMES_CONTRATADOS[id].nome,
       total: config.VOLUMES_CONTRATADOS[id].total,
+      totalKg: config.VOLUMES_CONTRATADOS[id].total * 60
     }));
 
 
   return {
     estoqueTotalContratosFixos: parseFloat(estoqueTotalContratosFixos.toFixed(2)),
+    estoqueTotalContratosFixosKg,
     volumeFixoTotal,
+    volumeFixoTotalKg: volumeFixoTotal * 60,
     saldoContratosFixos: parseFloat(saldoContratosFixos.toFixed(2)),
+    saldoContratosFixosKg,
     contratosFixos,
     estoqueTotalOutrosArmazens: parseFloat(estoqueTotalOutrosArmazens.toFixed(2)),
+    estoqueTotalOutrosArmazensKg,
     kpisArmazemOutros,
     estoqueArmazensFixos
   };

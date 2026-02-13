@@ -3,7 +3,6 @@ import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType, Disc
 import { getSafraConfig, SafraConfig } from '../data/safraConfig';
 import { CORES_FAZENDAS, CORES_ARMAZENS } from '../data/sharedConfig';
 
-// Mapeamento para carregar os dados JSON dinamicamente
 const dataMap: Record<string, Romaneio[]> = {
   'soja2526': require('../data/soja2526/romaneios_normalizados.json'),
   'soja2425': require('../data/soja2425/romaneios_normalizados.json'),
@@ -60,12 +59,13 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
   const romaneiosCount = useMemo(() => dadosFiltrados.length, [dadosFiltrados]);
 
-  // KPIS E DESCONTOS
   const { stats, discountStats } = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
     const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
     
-    // Somas de descontos em KG
+    const liqKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.pesoLiquidoKg) || 0), 0);
+    const brutaKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.pesoBrutoKg) || 0), 0);
+
     const umidKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.umidade) || 0), 0);
     const impuKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.impureza) || 0), 0);
     const ardiKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.ardido) || 0), 0);
@@ -74,8 +74,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const quebrKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.quebrados) || 0), 0);
     
     const totalDescontosKg = umidKg + impuKg + ardiKg + avariKg + contamKg + quebrKg;
-    
-    // Percentual de Desconto Total (Sacas de Desconto / Sacas Bruto)
     const percDesconto = bruta > 0 ? ((totalDescontosKg / 60 / bruta) * 100).toFixed(2) : '0.00';
     
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
@@ -83,28 +81,38 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
     const stats: KpiStats = {
       totalLiq: liq,
+      totalLiqKg: liqKg,
       totalBruta: bruta,
+      totalBrutaKg: brutaKg,
       areaHa: area,
       prodLiq: area > 0 ? (liq / area).toFixed(2) : '0.00', 
+      prodLiqKg: area > 0 ? (liqKg / area).toFixed(2) : '0.00',
       prodBruta: area > 0 ? (bruta / area).toFixed(2) : '0.00',
-      umidade: percDesconto // Agora o campo umidade carrega o percentual total de descontos
+      prodBrutaKg: area > 0 ? (brutaKg / area).toFixed(2) : '0.00',
+      umidade: percDesconto
     };
 
     const discountStats: DiscountStats = {
       umidadeSc: umidKg / 60,
+      umidadeKg: umidKg,
       impurezaSc: impuKg / 60,
+      impurezaKg: impuKg,
       ardidoSc: ardiKg / 60,
+      ardidoKg: ardiKg,
       avariadosSc: avariKg / 60,
+      avariadosKg: avariKg,
       contaminantesSc: contamKg / 60,
+      contaminantesKg: contamKg,
       quebradosSc: quebrKg / 60,
+      quebradosKg: quebrKg,
       totalDescontosSc: totalDescontosKg / 60,
+      totalDescontosKg: totalDescontosKg,
       percentualDesconto: percDesconto
     };
 
     return { stats, discountStats };
   }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
 
-  // CONTRATOS
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};
     typedDadosOriginal.forEach(d => {
@@ -155,7 +163,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     };
   }, [typedDadosOriginal, config.VOLUMES_CONTRATADOS, safraId]);
 
-  // GRÁFICOS
   const calculateChartData = (data: Romaneio[], key: keyof Romaneio, allKeys: string[]): ChartData[] => {
     const totals: Record<string, number> = {};
     allKeys.forEach(k => totals[k] = 0);

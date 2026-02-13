@@ -10,7 +10,6 @@ import { getSafraConfig } from '../../../src/data/safraConfig';
 import { SaldoKpi } from '../../../src/data/saldoTypes';
 import SafraSelector from '../../../src/components/SafraSelector';
 
-// Definindo a interface para as configurações do card de saldo
 interface SaldoCardConfig {
   title: string;
   icon: LucideIcon;
@@ -22,18 +21,16 @@ interface SaldoCardConfig {
   trendingIcon: LucideIcon;
 }
 
-// Componente auxiliar para renderizar listas de KPIs
 function SaldoKpiList({ items, valueColor }: { items: SaldoKpi[], valueColor: string }) {
   const isContractList = items.some(item => item.id);
 
   return (
     <div className="flex-1 space-y-2 mb-4 max-h-64 overflow-y-auto custom-scrollbar">
-      {/* Cabeçalho da lista de contratos */}
       {isContractList && (
         <div className="flex justify-between items-center text-[9px] font-black text-slate-400 uppercase border-b border-slate-200 dark:border-slate-700 pb-1 sticky top-0 bg-white dark:bg-slate-800 z-10">
           <span className="w-1/3 truncate">Contrato</span>
           <span className="w-1/3 truncate text-center">Nº Contrato</span>
-          <span className="w-1/3 truncate text-right">Sacas</span>
+          <span className="w-1/3 truncate text-right">Sacas / KG</span>
         </div>
       )}
       
@@ -43,12 +40,18 @@ function SaldoKpiList({ items, valueColor }: { items: SaldoKpi[], valueColor: st
             <>
               <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-1/3">{kpi.nome}</span>
               <span className="font-medium text-slate-500 dark:text-slate-400 truncate w-1/3 text-center text-[10px]">{kpi.id || 'N/A'}</span>
-              <span className={`font-black ${valueColor} truncate w-1/3 text-right`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+              <div className="w-1/3 text-right">
+                <span className={`font-black ${valueColor} block leading-none`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+                <span className="text-[8px] font-bold text-slate-400">{kpi.totalKg?.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
+              </div>
             </>
           ) : (
             <>
               <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{kpi.nome}</span>
-              <span className={`font-black ${valueColor} truncate w-1/3 text-right`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+              <div className="w-1/3 text-right">
+                <span className={`font-black ${valueColor} block leading-none`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+                <span className="text-[8px] font-bold text-slate-400">{kpi.totalKg?.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
+              </div>
             </>
           )}
         </div>
@@ -65,12 +68,13 @@ export default function SaldoPage() {
   const data = useMemo(() => calculateSaldoDashboard(safraId), [safraId]);
   
   const saldo = data.saldoContratosFixos;
+  const saldoKg = data.saldoContratosFixosKg;
   const isExcedente = saldo >= 0;
   const saldoAbsoluto = Math.abs(saldo);
+  const saldoAbsolutoKg = Math.abs(saldoKg);
   
   const isSafraPassada = safraId === 'soja2425' || safraId === 'milho25';
 
-  // Configurações dinâmicas para o Saldo Final
   const saldoCardConfig: SaldoCardConfig = isExcedente ? {
     title: "Saldo Excedente",
     icon: CheckCircle,
@@ -91,11 +95,9 @@ export default function SaldoPage() {
     trendingIcon: Scale,
   };
   
-  // Desestruturação dos componentes de ícone
   const IconComponent = saldoCardConfig.icon;
   const TrendingIconComponent = saldoCardConfig.trendingIcon;
 
-  // Título da Seção 1
   const section1Title = isSafraPassada 
     ? "Resumo de Estoque e Contratos (Final de Safra)"
     : "Saldos Sipal destinados para baixa e cumprimento de contratos fixados";
@@ -127,7 +129,6 @@ export default function SaldoPage() {
         </div>
       </header>
 
-      {/* SEÇÃO 1: ESTOQUE E CONTRATOS FIXOS */}
       <div className="max-w-[1200px] mx-auto mb-10">
         <h2 className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
           <FileText size={14} /> {section1Title}
@@ -135,7 +136,6 @@ export default function SaldoPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          {/* CARD 1.1: ESTOQUE ENTREGUE */}
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
@@ -147,11 +147,13 @@ export default function SaldoPage() {
 
             <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-center">
               <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Total Entregue</span>
-              <span className="text-xl font-black text-blue-600">{data.estoqueTotalContratosFixos.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+              <div className="text-right">
+                <span className="text-xl font-black text-blue-600 block leading-none">{data.estoqueTotalContratosFixos.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+                <span className="text-[10px] font-bold text-slate-400">{data.estoqueTotalContratosFixosKg.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
+              </div>
             </div>
           </div>
 
-          {/* CARD 1.2: CONTRATOS FIXOS */}
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
@@ -163,11 +165,13 @@ export default function SaldoPage() {
 
             <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-center">
               <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Total Contratado</span>
-              <span className="text-xl font-black text-purple-600">{data.volumeFixoTotal.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+              <div className="text-right">
+                <span className="text-xl font-black text-purple-600 block leading-none">{data.volumeFixoTotal.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+                <span className="text-[10px] font-bold text-slate-400">{data.volumeFixoTotalKg.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
+              </div>
             </div>
           </div>
 
-          {/* CARD 1.3: SALDO FINAL (DINÂMICO) */}
           <div className={`${saldoCardConfig.bg} ${saldoCardConfig.border} border-2 p-6 rounded-3xl shadow-lg flex flex-col justify-between relative overflow-hidden group`}>
             <div className={`absolute -right-4 -top-4 ${saldoCardConfig.text}/50 rotate-12 transition-transform group-hover:scale-110`}>
               <TrendingIconComponent size={120} />
@@ -182,9 +186,10 @@ export default function SaldoPage() {
 
             <div className="relative z-10 mt-4">
               <p className="text-xs font-black uppercase mb-1" style={{ color: saldoCardConfig.subText.split(' ')[0] }}>{isExcedente ? 'Volume Disponível' : 'Volume Pendente'}</p>
-              <h2 className={`text-4xl font-black tracking-tighter ${saldoCardConfig.text}`}>
+              <h2 className={`text-4xl font-black tracking-tighter ${saldoCardConfig.text} leading-none`}>
                 {saldoAbsoluto.toLocaleString('pt-BR', { minimumFractionDigits: 0 })} <span className="text-lg">sc</span>
               </h2>
+              <p className={`text-sm font-black mt-1 ${saldoCardConfig.text} opacity-80`}>{saldoAbsolutoKg.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</p>
               <p className={`text-[10px] font-bold uppercase mt-4 flex items-center gap-1 italic ${saldoCardConfig.subText}`}>
                 * Cálculo: Entregue - Contratado
               </p>
@@ -193,7 +198,6 @@ export default function SaldoPage() {
         </div>
       </div>
 
-      {/* SEÇÃO 2: KPIS DE OUTROS ARMAZÉNS (Oculta para safras passadas onde tudo está no Card 1) */}
       {!isSafraPassada && (
         <div className="max-w-[1200px] mx-auto mb-10">
           <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
@@ -202,7 +206,6 @@ export default function SaldoPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {data.kpisArmazemOutros.length > 0 ? (
               data.kpisArmazemOutros.map((kpi, i) => {
-                // Novo visual minimalista e premium
                 return (
                   <div 
                     key={i} 
@@ -212,9 +215,10 @@ export default function SaldoPage() {
                       <Warehouse size={16} className="text-blue-500 dark:text-blue-400" />
                       <p className="text-[10px] font-black uppercase truncate text-slate-500 dark:text-slate-400">{kpi.nome}</p>
                     </div>
-                    <h4 className="text-2xl font-black text-slate-800 dark:text-white">
+                    <h4 className="text-2xl font-black text-slate-800 dark:text-white leading-none">
                       {kpi.total.toLocaleString('pt-BR')} <span className="text-sm font-bold text-slate-400">sc</span>
                     </h4>
+                    <p className="text-[10px] font-bold text-slate-400 mt-1">{kpi.totalKg?.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</p>
                   </div>
                 );
               })
@@ -239,10 +243,10 @@ export default function SaldoPage() {
           border-radius: 10px;
         }
         .dark .custom-scrollbar::-webkit-scrollbar-track {
-          background: #1e293b; /* slate-800 */
+          background: #1e293b;
         }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #475569; /* slate-600 */
+          background: #475569;
         }
       `}</style>
     </main>

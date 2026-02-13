@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { TrendingUp, Target, Info, X, ArrowUpRight, ArrowDownRight, Droplets } from 'lucide-react';
+import { TrendingUp, Target, Info, X, Droplets } from 'lucide-react';
 import { KpiStats } from '../data/types';
 
 interface KpiSectionProps {
@@ -16,13 +16,12 @@ interface KpiSectionProps {
 export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, setShowModalProd, setShowModalUmid }: KpiSectionProps) {
   
   const currentDesconto = parseFloat(stats.umidade);
-  
-  // Como agora é Desconto Total, usamos um ícone neutro ou de alerta se for muito alto
-  const isDescontoHigh = currentDesconto > 5.0; // Exemplo de threshold
+  const isDescontoHigh = currentDesconto > 5.0;
 
-  const DiscountIcon = isDescontoHigh ? ArrowDownRight : ArrowUpRight;
   const discountBg = isDescontoHigh ? 'bg-orange-100' : 'bg-blue-100';
   const discountText = isDescontoHigh ? 'text-orange-600' : 'text-blue-600';
+
+  const formatKg = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -30,7 +29,8 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
         <div className="p-3 bg-green-100 rounded-lg text-green-600"><TrendingUp size={24}/></div>
         <div>
           <p className="text-[10px] font-bold text-slate-400 uppercase">Total Entregue</p>
-          <h3 className="text-xl font-black">{stats.totalLiq.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h3>
+          <h3 className="text-xl font-black leading-tight">{stats.totalLiq.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h3>
+          <p className="text-[10px] font-bold text-slate-400">{formatKg(stats.totalLiqKg)} kg</p>
         </div>
       </div>
 
@@ -44,13 +44,13 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Produtividade</p>
-            <h3 className={`text-xl font-black ${prodText}`}>{fazendaFiltro ? `${stats.prodLiq} sc/ha` : "Selecione Fazenda"}</h3>
+            <h3 className={`text-xl font-black leading-tight ${prodText}`}>{fazendaFiltro ? `${stats.prodLiq} sc/ha` : "Selecione Fazenda"}</h3>
+            {fazendaFiltro && <p className="text-[10px] font-bold text-slate-400">{stats.prodLiqKg} kg/ha</p>}
           </div>
         </div>
         <Info size={16} className="text-slate-300" />
       </div>
 
-      {/* KPI 3: Descontos Totais % (Sincronizado com o Modal) */}
       <div 
         onClick={() => setShowModalUmid(true)}
         className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between cursor-pointer hover:border-blue-400 transition-all group"
@@ -92,6 +92,8 @@ interface ProductivityModalProps {
 export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFiltro, stats, romaneiosCount }: ProductivityModalProps) {
   if (!showModalProd) return null;
 
+  const formatKg = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-all" onClick={() => setShowModalProd(false)}>
       <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
@@ -116,12 +118,28 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
                 </div>
               </div>
               <div className="p-5 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center">
-                <div><p className="text-[10px] font-black text-orange-400 uppercase">Sacas Bruto</p><h4 className="text-lg font-black text-orange-700">{stats.totalBruta.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4></div>
-                <div className="text-right"><p className="text-[10px] font-black text-orange-400 uppercase">Rendimento Bruto</p><h4 className="text-xl font-black text-orange-700">{stats.prodBruta} <span className="text-xs">sc/ha</span></h4></div>
+                <div>
+                  <p className="text-[10px] font-black text-orange-400 uppercase">Sacas Bruto</p>
+                  <h4 className="text-lg font-black text-orange-700 leading-tight">{stats.totalBruta.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4>
+                  <p className="text-[10px] font-bold text-orange-400">{formatKg(stats.totalBrutaKg)} kg</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-orange-400 uppercase">Rendimento Bruto</p>
+                  <h4 className="text-xl font-black text-orange-700 leading-tight">{stats.prodBruta} <span className="text-xs">sc/ha</span></h4>
+                  <p className="text-[10px] font-bold text-orange-400">{stats.prodBrutaKg} kg/ha</p>
+                </div>
               </div>
               <div className="p-5 bg-green-50 rounded-2xl border border-green-100 flex justify-between items-center">
-                <div><p className="text-[10px] font-black text-green-400 uppercase">Sacas Líquida</p><h4 className="text-lg font-black text-green-700">{stats.totalLiq.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4></div>
-                <div className="text-right"><p className="text-[10px] font-black text-green-400 uppercase">Rendimento Líquido</p><h4 className="text-xl font-black text-green-700">{stats.prodLiq} <span className="text-xs">sc/ha</span></h4></div>
+                <div>
+                  <p className="text-[10px] font-black text-green-400 uppercase">Sacas Líquida</p>
+                  <h4 className="text-lg font-black text-green-700 leading-tight">{stats.totalLiq.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4>
+                  <p className="text-[10px] font-bold text-green-400">{formatKg(stats.totalLiqKg)} kg</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-green-400 uppercase">Rendimento Líquido</p>
+                  <h4 className="text-xl font-black text-green-700 leading-tight">{stats.prodLiq} <span className="text-xs">sc/ha</span></h4>
+                  <p className="text-[10px] font-bold text-green-400">{stats.prodLiqKg} kg/ha</p>
+                </div>
               </div>
             </>
           ) : (

@@ -9,5 +9,6 @@ export interface SaldoItem {
 export interface SaldoKpi {
   nome: string;
   total: number;
-  id?: string; // Adicionado ID do contrato
+  totalKg?: number; // Adicionado campo de peso
+  id?: string;
 }

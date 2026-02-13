@@ -6,7 +6,7 @@ import KpiSection, { ProductivityModal } from '../../src/components/KpiSection';
 import ChartSection from '../../src/components/ChartSection';
 import ContractSection from '../../src/components/ContractSection';
 import UpdateDataButton from '../../src/components/UpdateDataButton';
-import UmidadeModal from '../../src/components/UmidadeModal'; // Novo
+import UmidadeModal from '../../src/components/UmidadeModal';
 import { ThemeToggle } from '../../src/components/ThemeToggle';
 import Link from 'next/link'; 
 import { useParams } from 'next/navigation';
@@ -25,7 +25,7 @@ export default function Dashboard() {
     setFazendaFiltro,
     setArmazemFiltro,
     stats,
-    discountStats, // Novo
+    discountStats,
     romaneiosCount,
     contratosProcessados,
     chartFazendas,
@@ -35,13 +35,11 @@ export default function Dashboard() {
   } = useDataProcessing(safraId);
 
   const [showModalProd, setShowModalProd] = useState(false);
-  const [showModalUmid, setShowModalUmid] = useState(false); // Novo
+  const [showModalUmid, setShowModalUmid] = useState(false);
 
-  // Lógica para determinar a cor do KPI de Produtividade
   const prodColor = fazendaFiltro ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-400';
   const prodText = fazendaFiltro ? 'text-purple-600' : 'text-slate-400';
 
-  // Função para limpar todos os filtros
   const handleClearFilters = () => {
     setFazendaFiltro(null);
     setArmazemFiltro(null);
@@ -102,7 +100,7 @@ export default function Dashboard() {
             prodColor={prodColor} 
             prodText={prodText} 
             setShowModalProd={setShowModalProd} 
-            setShowModalUmid={setShowModalUmid} // Novo
+            setShowModalUmid={setShowModalUmid}
           />
 
           <ChartSection
@@ -134,7 +132,8 @@ export default function Dashboard() {
         fazendaFiltro={fazendaFiltro}
         armazemFiltro={armazemFiltro}
         discountStats={discountStats}
-        totalBruta={stats.totalBruta} // Passando o valor bruto
+        totalBruta={stats.totalBruta}
+        totalBrutaKg={stats.totalBrutaKg}
       />
     </main>
   );
