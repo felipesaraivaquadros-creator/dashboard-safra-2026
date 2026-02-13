@@ -1,26 +1,24 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Painel Soja - Safra 25/26',
-    short_name: 'Painel Soja',
-    description: 'Acompanhamento de Romaneios e Saldos de Soja e Milho',
+    name: 'Painel Safra',
+    short_name: 'Safra',
+    description: 'Painel de acompanhamento de safras, romaneios e indicadores agrícolas',
     start_url: '/',
     display: 'standalone',
-    background_color: '#f8fafc',
-    theme_color: '#7c3aed',
+    background_color: '#ffffff',
+    theme_color: '#166534',
     icons: [
       {
         src: '/icon-192.png',
         sizes: '192x192',
         type: 'image/png',
-        purpose: 'maskable',
       },
       {
         src: '/icon-512.png',
         sizes: '512x512',
         type: 'image/png',
-        purpose: 'maskable',
       },
     ],
   }
