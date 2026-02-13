@@ -45,7 +45,7 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Produtividade</p>
             <h3 className={`text-xl font-black leading-tight ${prodText}`}>{fazendaFiltro ? `${stats.prodLiq} sc/ha` : "Selecione Fazenda"}</h3>
-            {fazendaFiltro && <p className="text-[10px] font-bold text-slate-400">{stats.prodLiqKg} kg/ha</p>}
+            {/* Removido kg/ha daqui */}
           </div>
         </div>
         <Info size={16} className="text-slate-300" />
@@ -126,7 +126,7 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
                 <div className="text-right">
                   <p className="text-[10px] font-black text-orange-400 uppercase">Rendimento Bruto</p>
                   <h4 className="text-xl font-black text-orange-700 leading-tight">{stats.prodBruta} <span className="text-xs">sc/ha</span></h4>
-                  <p className="text-[10px] font-bold text-orange-400">{stats.prodBrutaKg} kg/ha</p>
+                  {/* Removido kg/ha daqui */}
                 </div>
               </div>
               <div className="p-5 bg-green-50 rounded-2xl border border-green-100 flex justify-between items-center">
@@ -138,7 +138,7 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
                 <div className="text-right">
                   <p className="text-[10px] font-black text-green-400 uppercase">Rendimento Líquido</p>
                   <h4 className="text-xl font-black text-green-700 leading-tight">{stats.prodLiq} <span className="text-xs">sc/ha</span></h4>
-                  <p className="text-[10px] font-bold text-green-400">{stats.prodLiqKg} kg/ha</p>
+                  {/* Removido kg/ha daqui */}
                 </div>
               </div>
             </>
