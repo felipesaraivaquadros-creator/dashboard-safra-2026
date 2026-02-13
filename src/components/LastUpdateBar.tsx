@@ -25,10 +25,10 @@ export default function LastUpdateBar() {
   }, []);
 
   // Enquanto não monta no cliente, não exibe nada ou exibe um placeholder para evitar erro de hidratação
-  if (!formattedDate) return <div className="w-full h-6 bg-orange-600 dark:bg-orange-700" />;
+  if (!formattedDate) return <div className="w-full h-6 bg-green-600 dark:bg-green-700" />;
 
   return (
-    <div className="w-full bg-orange-600 dark:bg-orange-700 py-1 px-4 flex justify-center items-center gap-2 shadow-sm z-[100]">
+    <div className="w-full bg-green-600 dark:bg-green-700 py-1 px-4 flex justify-center items-center gap-2 shadow-sm z-[100]">
       <Clock size={12} className="text-white/80" />
       <p className="text-[10px] md:text-xs font-black text-white uppercase tracking-wider">
         Última atualização: <span className="opacity-90">{formattedDate}</span> 
