@@ -64,7 +64,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   const { stats, discountStats } = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
     const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
-    const pesoBrutoTotalKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.pesoBrutoKg) || 0), 0);
     
     // Somas de descontos em KG
     const umidKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.umidade) || 0), 0);
@@ -76,8 +75,8 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     
     const totalDescontosKg = umidKg + impuKg + ardiKg + avariKg + contamKg + quebrKg;
     
-    // Umidade Média % (Baseada no peso bruto total)
-    const umidMed = pesoBrutoTotalKg > 0 ? ((umidKg / pesoBrutoTotalKg) * 100).toFixed(1) : '0.0';
+    // Percentual de Desconto Total (Sacas de Desconto / Sacas Bruto)
+    const percDesconto = bruta > 0 ? ((totalDescontosKg / 60 / bruta) * 100).toFixed(2) : '0.00';
     
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
       Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
@@ -88,7 +87,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       areaHa: area,
       prodLiq: area > 0 ? (liq / area).toFixed(2) : '0.00', 
       prodBruta: area > 0 ? (bruta / area).toFixed(2) : '0.00',
-      umidade: umidMed
+      umidade: percDesconto // Agora o campo umidade carrega o percentual total de descontos
     };
 
     const discountStats: DiscountStats = {
@@ -99,7 +98,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       contaminantesSc: contamKg / 60,
       quebradosSc: quebrKg / 60,
       totalDescontosSc: totalDescontosKg / 60,
-      percentualDesconto: bruta > 0 ? ((totalDescontosKg / 60 / bruta) * 100).toFixed(2) : '0.00'
+      percentualDesconto: percDesconto
     };
 
     return { stats, discountStats };

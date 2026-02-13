@@ -10,20 +10,19 @@ interface KpiSectionProps {
   prodColor: string;
   prodText: string;
   setShowModalProd: (show: boolean) => void;
-  setShowModalUmid: (show: boolean) => void; // Novo
+  setShowModalUmid: (show: boolean) => void; 
 }
 
 export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, setShowModalProd, setShowModalUmid }: KpiSectionProps) {
   
-  const UMIDADE_META = 14.0;
-  const currentUmidade = parseFloat(stats.umidade);
+  const currentDesconto = parseFloat(stats.umidade);
   
-  // Umidade é considerada 'boa' se estiver ABAIXO da meta (14.0%)
-  const isUmidadeGood = currentUmidade < UMIDADE_META;
+  // Como agora é Desconto Total, usamos um ícone neutro ou de alerta se for muito alto
+  const isDescontoHigh = currentDesconto > 5.0; // Exemplo de threshold
 
-  const UmidadeIcon = isUmidadeGood ? ArrowUpRight : ArrowDownRight;
-  const umidadeBg = isUmidadeGood ? 'bg-green-100' : 'bg-red-100';
-  const umidadeText = isUmidadeGood ? 'text-green-600' : 'text-red-600';
+  const DiscountIcon = isDescontoHigh ? ArrowDownRight : ArrowUpRight;
+  const discountBg = isDescontoHigh ? 'bg-orange-100' : 'bg-blue-100';
+  const discountText = isDescontoHigh ? 'text-orange-600' : 'text-blue-600';
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -51,30 +50,29 @@ export default function KpiSection({ stats, fazendaFiltro, prodColor, prodText, 
         <Info size={16} className="text-slate-300" />
       </div>
 
-      {/* KPI 3: Umidade Média (Com clique para Modal) */}
+      {/* KPI 3: Descontos Totais % (Sincronizado com o Modal) */}
       <div 
         onClick={() => setShowModalUmid(true)}
         className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between cursor-pointer hover:border-blue-400 transition-all group"
       >
         <div className="flex items-center gap-4">
-          <div className={`p-3 rounded-lg ${umidadeBg} ${umidadeText} group-hover:bg-blue-600 group-hover:text-white transition-colors`}>
-            <UmidadeIcon size={24}/>
+          <div className={`p-3 rounded-lg ${discountBg} ${discountText} group-hover:bg-blue-600 group-hover:text-white transition-colors`}>
+            <Droplets size={24}/>
           </div>
           <div className="flex-1">
             <div className="flex justify-between items-start">
-              <p className="text-[10px] font-bold text-slate-400 uppercase">Umidade Média</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Descontos Totais</p>
               <Info size={14} className="text-slate-300" />
             </div>
             <h3 className="text-xl font-black">{stats.umidade}%</h3>
           </div>
         </div>
         
-        {/* Meta de Umidade */}
         <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
           <p className="text-[10px] font-bold text-slate-400 uppercase flex justify-between items-center">
-            Meta de Armazenagem
-            <span className={`text-xs font-black ${umidadeText}`}>
-              {UMIDADE_META.toFixed(1)}%
+            Qualidade & Umidade
+            <span className="text-[9px] font-black text-blue-500 italic">
+              Clique para detalhes
             </span>
           </p>
         </div>
