@@ -21,6 +21,7 @@ export interface Romaneio {
   avariados: number | null;
   quebrados: number | null;
   contaminantes?: number | null;
+  precofrete?: number | null; // Novo campo
 }
 
 export interface ContractVolume {
@@ -94,7 +95,7 @@ export interface DataContextType {
   setArmazemFiltro: (armazem: string | null) => void;
   stats: KpiStats;
   discountStats: DiscountStats;
-  volumeStats: VolumeStats; // Novo
+  volumeStats: VolumeStats;
   romaneiosCount: number;
   contratosProcessados: {
     pendentes: ProcessedContract[];

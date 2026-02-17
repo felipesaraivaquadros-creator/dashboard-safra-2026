@@ -80,7 +80,8 @@ function normalizar(safraId, inputFileName) {
         ardido: parseNumero(linha['Ardi']),
         avariados: parseNumero(linha['Avari']),
         quebrados: parseNumero(linha['Quebr']),
-        contaminantes: parseNumero(linha['Contaminantes']) // Adicionado
+        contaminantes: parseNumero(linha['Contaminantes']),
+        precofrete: parseNumero(linha['precofrete']) // Adicionado
       };
     })
     .filter(d => d.sacasLiquida > 0 || d.pesoLiquidoKg > 0);
