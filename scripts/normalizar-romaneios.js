@@ -70,6 +70,8 @@ function normalizar(safraId, inputFileName) {
         safra: linha['Safra'] || null,
         fazenda: linha['Fazenda'] || null,
         talhao: linha['Talhão'] || null,
+        motorista: linha['Motorista'] || null, // Adicionado
+        placa: linha['Placa'] || null, // Adicionado
 
         pesoLiquidoKg: pesoLiquidoKg,
         pesoBrutoKg: parseNumero(linha['Peso Bruto']),
@@ -81,7 +83,7 @@ function normalizar(safraId, inputFileName) {
         avariados: parseNumero(linha['Avari']),
         quebrados: parseNumero(linha['Quebr']),
         contaminantes: parseNumero(linha['Contaminantes']),
-        precofrete: parseNumero(linha['precofrete']) // Adicionado
+        precofrete: parseNumero(linha['precofrete'])
       };
     })
     .filter(d => d.sacasLiquida > 0 || d.pesoLiquidoKg > 0);

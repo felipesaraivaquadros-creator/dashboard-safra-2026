@@ -11,6 +11,8 @@ export interface Romaneio {
   safra: string | null;
   fazenda: string | null;
   talhao: string | null;
+  motorista?: string | null; // Adicionado
+  placa?: string | null; // Adicionado
   pesoLiquidoKg: number | null;
   pesoBrutoKg: number | null;
   sacasLiquida: number | null;
@@ -21,7 +23,7 @@ export interface Romaneio {
   avariados: number | null;
   quebrados: number | null;
   contaminantes?: number | null;
-  precofrete?: number | null; // Novo campo
+  precofrete?: number | null;
 }
 
 export interface ContractVolume {

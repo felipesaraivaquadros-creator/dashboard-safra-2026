@@ -29,19 +29,17 @@ export default function FretesPage() {
   const [armazemFiltro, setArmazemFiltro] = useState("");
   const [showRelatorio, setShowRelatorio] = useState(false);
 
-  // Opções para os selects
-  const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => (r as any).motorista || (r as any).Motorista).filter(Boolean))).sort(), [romaneios]);
-  const placas = useMemo(() => Array.from(new Set(romaneios.map(r => (r as any).placa || (r as any).Placa).filter(Boolean))).sort(), [romaneios]);
+  // Opções para os selects (usando nomes normalizados)
+  const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => r.motorista).filter(Boolean))).sort(), [romaneios]);
+  const placas = useMemo(() => Array.from(new Set(romaneios.map(r => r.placa).filter(Boolean))).sort(), [romaneios]);
   const armazens = useMemo(() => Array.from(new Set(romaneios.map(r => r.armazem).filter(Boolean))).sort(), [romaneios]);
 
   // Lógica do Relatório
   const dadosRelatorio = useMemo(() => {
     if (!showRelatorio) return [];
     return romaneios.filter(r => {
-      const m = (r as any).motorista || (r as any).Motorista;
-      const p = (r as any).placa || (r as any).Placa;
-      const matchM = !motoristaFiltro || m === motoristaFiltro;
-      const matchP = !placaFiltro || p === placaFiltro;
+      const matchM = !motoristaFiltro || r.motorista === motoristaFiltro;
+      const matchP = !placaFiltro || r.placa === placaFiltro;
       const matchA = !armazemFiltro || r.armazem === armazemFiltro;
       return matchM && matchP && matchA;
     });
