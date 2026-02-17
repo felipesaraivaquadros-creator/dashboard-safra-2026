@@ -177,6 +177,17 @@ export default function FretesPage() {
         {showRelatorio && (
           <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 print:space-y-6">
             
+            {/* Cabeçalho Exclusivo para Impressão */}
+            <div className="hidden print:block border-b-2 border-slate-900 pb-4 mb-6">
+              <h1 className="text-2xl font-black uppercase tracking-tighter mb-2">Relatório de Fretes</h1>
+              <div className="grid grid-cols-2 gap-y-1 text-xs font-bold uppercase">
+                <p><span className="text-slate-500">Motorista:</span> {motoristaFiltro || "Todos"}</p>
+                <p><span className="text-slate-500">Safra:</span> {safraConfig.nome}</p>
+                {placaFiltro && <p><span className="text-slate-500">Placa:</span> {placaFiltro}</p>}
+                {armazemFiltro && <p><span className="text-slate-500">Armazém:</span> {armazemFiltro}</p>}
+              </div>
+            </div>
+
             {/* BLOCO 1: RELATÓRIO DE FRETES */}
             <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden print:shadow-none print:border-slate-300 print:rounded-none">
               <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20 print:bg-white print:p-4">
