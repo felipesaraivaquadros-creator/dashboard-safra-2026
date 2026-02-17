@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight, ArrowLeft } from 'lucide-react';
 
 export default function NavigationMenu() {
   const [isOpen, setIsOpen] = useState(false);
