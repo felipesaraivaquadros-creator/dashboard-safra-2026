@@ -22,7 +22,7 @@ const dataMap: Record<string, Romaneio[]> = {
   'milho26': require('../../../src/data/milho26/romaneios_normalizados.json'),
 };
 
-// Mapeamento de dados extras (apenas soja2526 por enquanto)
+// Mapeamento de dados extras
 const adiantamentosMap: Record<string, any[]> = {
   'soja2526': require('../../../src/data/soja2526/adiantamentos_normalizados.json'),
 };
@@ -41,19 +41,16 @@ export default function FretesPage() {
   const adiantamentosRaw = adiantamentosMap[safraId] || [];
   const abastecimentosRaw = abastecimentosMap[safraId] || [];
 
-  // Estados dos Filtros
   const [motoristaFiltro, setMotoristaFiltro] = useState("");
   const [placaFiltro, setPlacaFiltro] = useState("");
   const [armazemFiltro, setArmazemFiltro] = useState("");
   const [tipoCalculo, setTipoCalculo] = useState<'com' | 'sem'>('com');
   const [showRelatorio, setShowRelatorio] = useState(false);
 
-  // Opções para os selects
   const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => r.motorista).filter(Boolean))).sort(), [romaneios]);
   const placas = useMemo(() => Array.from(new Set(romaneios.map(r => r.placa).filter(Boolean))).sort(), [romaneios]);
   const armazens = useMemo(() => Array.from(new Set(romaneios.map(r => r.armazem).filter(Boolean))).sort(), [romaneios]);
 
-  // 1. Filtragem de Fretes
   const dadosFretes = useMemo(() => {
     if (!showRelatorio) return [];
     return romaneios.filter(r => {
@@ -64,19 +61,16 @@ export default function FretesPage() {
     });
   }, [showRelatorio, romaneios, motoristaFiltro, placaFiltro, armazemFiltro]);
 
-  // 2. Filtragem de Adiantamentos
   const dadosAdiantamentos = useMemo(() => {
     if (!showRelatorio || !isSoja2526) return [];
     return adiantamentosRaw.filter(a => !motoristaFiltro || a.motorista === motoristaFiltro);
   }, [showRelatorio, isSoja2526, adiantamentosRaw, motoristaFiltro]);
 
-  // 3. Filtragem de Abastecimentos
   const dadosAbastecimentos = useMemo(() => {
     if (!showRelatorio || !isSoja2526) return [];
     return abastecimentosRaw.filter(a => !motoristaFiltro || a.motorista === motoristaFiltro);
   }, [showRelatorio, isSoja2526, abastecimentosRaw, motoristaFiltro]);
 
-  // Cálculos de Totais
   const totaisFrete = useMemo(() => {
     return dadosFretes.reduce((acc, r) => {
       const sacasOriginal = Number(r.sacasBruto) || 0;
@@ -184,7 +178,7 @@ export default function FretesPage() {
           <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
             
             {/* BLOCO 1: RELATÓRIO DE FRETES */}
-            <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
+            <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden print:shadow-none print:border-slate-300">
               <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg"><Truck size={20}/></div>
@@ -222,7 +216,8 @@ export default function FretesPage() {
                       );
                     })}
                   </tbody>
-                  <tfoot>
+                  {/* tfoot ajustado com CSS para não repetir em todas as páginas na impressão */}
+                  <tfoot className="print:table-row-group">
                     <tr className="bg-blue-50/50 dark:bg-blue-900/10 font-black text-blue-700 dark:text-blue-300">
                       <td colSpan={4} className="px-6 py-4 text-right uppercase text-[10px]">Total Fretes</td>
                       <td className="px-4 py-4 text-right">{totaisFrete.sacas.toLocaleString('pt-BR')} sc</td>
@@ -238,8 +233,8 @@ export default function FretesPage() {
               <>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   
-                  {/* BLOCO 2: ADIANTAMENTOS */}
-                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden">
+                  {/* BLOCO 2: ADIANTAMENTOS - print:break-inside-avoid impede quebra no meio */}
+                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300">
                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-orange-50/30 dark:bg-orange-900/10">
                       <div className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg"><HandCoins size={20}/></div>
                       <h2 className="text-sm font-black uppercase italic tracking-tighter">2. Adiantamentos</h2>
@@ -276,8 +271,8 @@ export default function FretesPage() {
                     </div>
                   </section>
 
-                  {/* BLOCO 3: ABASTECIMENTOS */}
-                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden">
+                  {/* BLOCO 3: ABASTECIMENTOS - print:break-inside-avoid impede quebra no meio */}
+                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300">
                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-red-50/30 dark:bg-red-900/10">
                       <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg"><Fuel size={20}/></div>
                       <h2 className="text-sm font-black uppercase italic tracking-tighter">3. Abastecimentos (Diesel)</h2>
@@ -307,7 +302,7 @@ export default function FretesPage() {
                         {dadosAbastecimentos.length > 0 && (
                           <tfoot>
                             <tr className="bg-red-50/50 dark:bg-red-900/10 font-black text-red-700 dark:text-red-400">
-                              <td className="px-6 py-3 text-right uppercase text-[9px]">Totais</td>
+                              <td colSpan={2} className="px-6 py-3 text-right uppercase text-[9px]">Totais</td>
                               <td className="px-4 py-3 text-right">{totaisAbastecimento.litros.toLocaleString('pt-BR')} L</td>
                               <td className="px-4 py-3">-</td>
                               <td className="px-6 py-3 text-right">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
@@ -320,46 +315,46 @@ export default function FretesPage() {
                 </div>
 
                 {/* BLOCO 4: TOTALIZADOR DE SALDO MOTORISTA */}
-                <section className="bg-slate-900 dark:bg-purple-950 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                <section className="bg-slate-900 dark:bg-purple-950 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden group print:bg-slate-100 print:text-slate-900 print:shadow-none print:border print:border-slate-300 print:break-inside-avoid">
+                  <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700 print:hidden">
                     <Wallet size={180} />
                   </div>
                   
                   <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-8">
-                      <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md"><Wallet size={32}/></div>
+                      <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md print:bg-slate-200"><Wallet size={32} className="print:text-slate-600"/></div>
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-300">Resumo Financeiro</p>
-                        <h2 className="text-3xl font-black uppercase italic tracking-tighter">Saldo Líquido do Motorista</h2>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-300 print:text-slate-500">Resumo Financeiro</p>
+                        <h2 className="text-3xl font-black uppercase italic tracking-tighter print:text-slate-900">Saldo Líquido do Motorista</h2>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2"><TrendingUp size={12} className="text-green-400"/> Total Fretes (+)</p>
-                        <p className="text-2xl font-black">R$ {totaisFrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingUp size={12} className="text-green-400"/> Total Fretes (+)</p>
+                        <p className="text-2xl font-black print:text-slate-900">R$ {totaisFrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                       </div>
                       
-                      <div className="text-white/30 hidden md:block"><ArrowRight size={24}/></div>
+                      <div className="text-white/30 hidden md:block print:hidden"><ArrowRight size={24}/></div>
 
                       <div className="space-y-4">
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2"><TrendingDown size={12} className="text-orange-400"/> Adiantamentos (-)</p>
-                          <p className="text-xl font-bold text-orange-200">R$ {totalAdiantamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                          <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingDown size={12} className="text-orange-400"/> Adiantamentos (-)</p>
+                          <p className="text-xl font-bold text-orange-200 print:text-orange-600">R$ {totalAdiantamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2"><TrendingDown size={12} className="text-red-400"/> Abastecimentos (-)</p>
-                          <p className="text-xl font-bold text-red-200">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                          <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingDown size={12} className="text-red-400"/> Abastecimentos (-)</p>
+                          <p className="text-xl font-bold text-red-200 print:text-red-600">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                         </div>
                       </div>
 
-                      <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1">
-                        <p className="text-[10px] font-black uppercase text-purple-300 mb-1">Valor a Pagar</p>
-                        <p className={`text-4xl font-black tracking-tighter ${saldoFinal >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1 print:bg-white print:border-slate-300">
+                        <p className="text-[10px] font-black uppercase text-purple-300 mb-1 print:text-slate-500">Valor a Pagar</p>
+                        <p className={`text-4xl font-black tracking-tighter ${saldoFinal >= 0 ? 'text-green-400 print:text-green-600' : 'text-red-400 print:text-red-600'}`}>
                           R$ {saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </p>
-                        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
-                          <span className="text-[9px] font-bold uppercase text-white/40 italic">* Sujeito a conferência final</span>
+                        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center print:border-slate-100">
+                          <span className="text-[9px] font-bold uppercase text-white/40 italic print:text-slate-400">* Sujeito a conferência final</span>
                           <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${saldoFinal >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                             {saldoFinal >= 0 ? 'Credor' : 'Devedor'}
                           </div>
@@ -373,6 +368,35 @@ export default function FretesPage() {
           </div>
         )}
       </div>
+      
+      {/* Estilos globais para impressão */}
+      <style jsx global>{`
+        @media print {
+          @page {
+            margin: 1.5cm;
+            size: auto;
+          }
+          body {
+            background: white !important;
+            color: black !important;
+          }
+          /* Força o tfoot a se comportar como um grupo de linhas normal para não repetir */
+          tfoot {
+            display: table-row-group !important;
+          }
+          /* Evita quebras dentro de seções críticas */
+          section {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          /* Ajuste de cores para economia de tinta e clareza */
+          .bg-slate-900 {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }
