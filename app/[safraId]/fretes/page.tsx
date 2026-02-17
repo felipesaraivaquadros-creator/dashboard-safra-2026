@@ -131,7 +131,7 @@ export default function FretesPage() {
         </div>
       </header>
 
-      <div className="max-w-[1200px] mx-auto space-y-8 print:space-y-6">
+      <div className="max-w-[1200px] mx-auto space-y-8 print:space-y-0">
         
         {/* Filtros */}
         <section className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm print:hidden">
@@ -175,7 +175,7 @@ export default function FretesPage() {
         </section>
 
         {showRelatorio && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 print:space-y-6">
+          <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 print:space-y-0">
             
             {/* Cabeçalho Exclusivo para Impressão */}
             <div className="hidden print:block border-b-2 border-slate-900 pb-4 mb-6">
@@ -189,7 +189,7 @@ export default function FretesPage() {
             </div>
 
             {/* BLOCO 1: RELATÓRIO DE FRETES */}
-            <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden print:shadow-none print:border-slate-300 print:rounded-none">
+            <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden print:shadow-none print:border-slate-300 print:rounded-none print:mb-8 print:break-inside-auto">
               <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20 print:bg-white print:p-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg print:hidden"><Truck size={20}/></div>
@@ -241,7 +241,7 @@ export default function FretesPage() {
 
             {isSoja2526 && (
               <>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:block print:space-y-8">
                   
                   {/* BLOCO 2: ADIANTAMENTOS */}
                   <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300 print:rounded-none">
@@ -325,7 +325,7 @@ export default function FretesPage() {
                 </div>
 
                 {/* BLOCO 4: TOTALIZADOR DE SALDO MOTORISTA */}
-                <section className="bg-slate-900 dark:bg-purple-950 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden group print:bg-white print:text-slate-900 print:shadow-none print:border print:border-slate-300 print:break-inside-avoid print:rounded-none print:p-6">
+                <section className="bg-slate-900 dark:bg-purple-950 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden group print:bg-white print:text-slate-900 print:shadow-none print:border print:border-slate-300 print:break-inside-avoid print:rounded-none print:p-6 print:mt-8">
                   <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700 print:hidden">
                     <Wallet size={180} />
                   </div>
@@ -392,17 +392,28 @@ export default function FretesPage() {
             padding: 0 !important;
             margin: 0 !important;
           }
-          /* Remove paddings do container principal */
+          /* Desativa animações que podem causar problemas no print */
+          .animate-in {
+            animation: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+          }
+          /* Remove paddings e alturas fixas */
           main {
             padding: 0 !important;
             margin: 0 !important;
             min-height: auto !important;
+            display: block !important;
           }
-          /* Força o tfoot a se comportar como um grupo de linhas normal para não repetir */
+          /* Força o tfoot a se comportar como um grupo de linhas normal */
           tfoot {
             display: table-row-group !important;
           }
-          /* Evita quebras dentro de seções críticas */
+          /* Permite que a primeira seção quebre se necessário para não pular de página */
+          section:first-of-type {
+            break-inside: auto !important;
+          }
+          /* Evita quebras dentro de seções subsequentes */
           section {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
