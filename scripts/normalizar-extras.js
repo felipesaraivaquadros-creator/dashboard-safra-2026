@@ -1,22 +1,46 @@
 const fs = require('fs');
 const path = require('path');
 
+// 🔧 Helper para limpar valores monetários (ex: "R$ 2.500,00" -> 2500)
 function parseNumero(valor) {
   if (valor === null || valor === undefined) return 0;
+  if (typeof valor === 'number') return valor;
+  
   if (typeof valor === 'string') {
-    const cleanedValue = valor.replace(/\./g, '').replace(',', '.');
-    const num = Number(cleanedValue);
+    // Remove R$, espaços e pontos de milhar, troca vírgula por ponto
+    const cleanedValue = valor
+      .replace(/[R$\s]/g, '') 
+      .replace(/\./g, '')   
+      .replace(',', '.');   
+    
+    const num = parseFloat(cleanedValue);
     return isNaN(num) ? 0 : num;
   }
-  return typeof valor === 'number' ? valor : 0;
+
+  return 0;
 }
 
+// 📅 Helper para converter datas (ISO ou DD/MM/YYYY -> YYYY-MM-DD)
 function parseData(valor) {
   if (!valor) return null;
-  if (typeof valor === 'string' && valor.includes('T')) {
-    return valor.split('T')[0];
+  
+  const str = String(valor).trim();
+
+  // Caso venha como ISO (2026-01-15T...)
+  if (str.includes('T')) {
+    return str.split('T')[0];
   }
-  return valor;
+
+  // Caso venha como brasileiro (15/01/2026)
+  if (str.includes('/')) {
+    const partes = str.split('/');
+    if (partes.length === 3) {
+      const [dia, mes, ano] = partes;
+      return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+    }
+  }
+
+  return str;
 }
 
 function normalizar(tipo, safraId, inputFileName) {
@@ -38,14 +62,13 @@ function normalizar(tipo, safraId, inputFileName) {
 
   if (tipo === 'adiantamentos') {
     normalizado = rawData.map(linha => {
-      // Procura a coluna de valor mesmo que tenha espaços (ex: " VALOR ")
       const valorKey = Object.keys(linha).find(k => k.trim() === 'VALOR');
       const motoristaKey = Object.keys(linha).find(k => k.trim() === 'Motorista');
       const dataKey = Object.keys(linha).find(k => k.trim() === 'DATA');
       const safraKey = Object.keys(linha).find(k => k.trim() === 'SAFRA');
 
       return {
-        motorista: String(linha[motoristaKey] || '').trim(),
+        motorista: String(linha[motoristaKey] || '').trim().toUpperCase(),
         data: parseData(linha[dataKey]),
         valor: parseNumero(linha[valorKey]),
         safra: String(linha[safraKey] || '').trim()
@@ -64,7 +87,7 @@ function normalizar(tipo, safraId, inputFileName) {
       return {
         safra: String(linha[safraKey] || '').trim(),
         data: parseData(linha[dataKey]),
-        motorista: String(linha[motoristaKey] || '').trim(),
+        motorista: String(linha[motoristaKey] || '').trim().toUpperCase(),
         litros: parseNumero(linha[litrosKey]),
         preco: parseNumero(linha[precoKey]),
         total: parseNumero(linha[totalKey])
