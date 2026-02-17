@@ -95,10 +95,10 @@ export default function FretesPage() {
           </div>
           <div className="p-6">
             {safraConfig.TABELA_FRETES.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {safraConfig.TABELA_FRETES.map((item, i) => (
                   <div key={i} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-700 text-center">
-                    <p className="text-[9px] font-black text-slate-400 uppercase mb-1 truncate">{item.armazem}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase mb-1 truncate">{item.local}</p>
                     <p className="text-lg font-black text-blue-600 dark:text-blue-400">R$ {item.preco.toFixed(2)}</p>
                     <p className="text-[8px] font-bold text-slate-400 uppercase">por saca</p>
                   </div>

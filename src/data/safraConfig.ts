@@ -1,7 +1,7 @@
 import { ContractVolume } from './types';
 
 export interface FreteItem {
-  armazem: string;
+  local: string; // Alterado de armazem para local para abranger cidades
   preco: number;
 }
 
@@ -13,7 +13,7 @@ export interface SafraConfig {
   dataPath: string;
   AREAS_FAZENDAS: Record<string, number>;
   VOLUMES_CONTRATADOS: Record<string, ContractVolume>;
-  TABELA_FRETES: FreteItem[]; // Nova estrutura
+  TABELA_FRETES: FreteItem[];
 }
 
 // --- CONFIGURAÇÕES DE SAFRAS ---
@@ -43,12 +43,10 @@ const SOJA2526_CONFIG: SafraConfig = {
     "VENDA-ADM-FIXAR": { nome: "Venda ADM a Fixar", total: 0 },
   },
   TABELA_FRETES: [
-    { armazem: "COFCO NSH", preco: 1.50 },
-    { armazem: "SIPAL MATUPÁ", preco: 1.80 },
-    { armazem: "AMAGGI MATUPÁ", preco: 1.80 },
-    { armazem: "SIPAL CLÁUDIA", preco: 2.20 },
-    { armazem: "SIPAL LRV", preco: 3.50 },
-    { armazem: "AC GRÃOS", preco: 1.50 },
+    { local: "LRV", preco: 1.70 },
+    { local: "CLÁUDIA", preco: 2.00 },
+    { local: "NOVA STA HELENA", preco: 2.70 },
+    { local: "MATUPÁ", preco: 2.00 },
   ],
 };
 
@@ -83,7 +81,7 @@ const SOJA2425_CONFIG: SafraConfig = {
     "2025-01-055-01160": { nome: "Venda Amaggi LRV 1160", total: 527 },
     "COMISSAO-2425": { nome: "Comissão Funcionários", total: 1500 },
   },
-  TABELA_FRETES: [], // Estrutura pronta para receber dados
+  TABELA_FRETES: [],
 };
 
 const MILHO25_CONFIG: SafraConfig = {

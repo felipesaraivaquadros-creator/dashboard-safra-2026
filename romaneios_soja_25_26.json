@@ -26,10 +26,10 @@
     "Peso Liquido": 50414,
     "Sacas Bruto": 909.8333333333334,
     "Sacas Liquida": 840.2333333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-09T04:00:20.000Z",
@@ -58,10 +58,10 @@
     "Peso Liquido": 45894,
     "Sacas Bruto": 806,
     "Sacas Liquida": 764.9,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-10T04:00:20.000Z",
@@ -90,10 +90,10 @@
     "Peso Liquido": 49712,
     "Sacas Bruto": 842,
     "Sacas Liquida": 828.5333333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-10T04:00:20.000Z",
@@ -122,10 +122,10 @@
     "Peso Liquido": 46310,
     "Sacas Bruto": 790.3333333333334,
     "Sacas Liquida": 771.8333333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-10T04:00:20.000Z",
@@ -154,10 +154,10 @@
     "Peso Liquido": 53312,
     "Sacas Bruto": 920.6666666666666,
     "Sacas Liquida": 888.5333333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-10T04:00:20.000Z",
@@ -186,10 +186,10 @@
     "Peso Liquido": 55634,
     "Sacas Bruto": 932.8333333333334,
     "Sacas Liquida": 927.2333333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -218,10 +218,10 @@
     "Peso Liquido": 54210,
     "Sacas Bruto": 903.5,
     "Sacas Liquida": 903.5,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -250,10 +250,10 @@
     "Peso Liquido": 46280,
     "Sacas Bruto": 771.3333333333334,
     "Sacas Liquida": 771.3333333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -282,10 +282,10 @@
     "Peso Liquido": 52810,
     "Sacas Bruto": 880.1666666666666,
     "Sacas Liquida": 880.1666666666666,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -314,10 +314,10 @@
     "Peso Liquido": 52294,
     "Sacas Bruto": 876.8333333333334,
     "Sacas Liquida": 871.5666666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -346,10 +346,10 @@
     "Peso Liquido": 63824,
     "Sacas Bruto": 1087.6666666666667,
     "Sacas Liquida": 1063.7333333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -378,10 +378,10 @@
     "Peso Liquido": 53671,
     "Sacas Bruto": 925.3333333333334,
     "Sacas Liquida": 894.5166666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -410,10 +410,10 @@
     "Peso Liquido": 45168,
     "Sacas Bruto": 791.8333333333334,
     "Sacas Liquida": 752.8,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -442,10 +442,10 @@
     "Peso Liquido": 50736,
     "Sacas Bruto": 904,
     "Sacas Liquida": 845.6,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -474,10 +474,10 @@
     "Peso Liquido": 53023,
     "Sacas Bruto": 902.6666666666666,
     "Sacas Liquida": 883.7166666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -506,10 +506,10 @@
     "Peso Liquido": 51230,
     "Sacas Bruto": 901.3333333333334,
     "Sacas Liquida": 853.8333333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-12T04:00:20.000Z",
@@ -538,10 +538,10 @@
     "Peso Liquido": 44713,
     "Sacas Bruto": 772.1666666666666,
     "Sacas Liquida": 745.2166666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-13T04:00:20.000Z",
@@ -570,10 +570,10 @@
     "Peso Liquido": 35490,
     "Sacas Bruto": 591.5,
     "Sacas Liquida": 591.5,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-13T04:00:20.000Z",
@@ -602,10 +602,10 @@
     "Peso Liquido": 18000,
     "Sacas Bruto": 300,
     "Sacas Liquida": 300,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-13T04:00:20.000Z",
@@ -634,10 +634,10 @@
     "Peso Liquido": 46830,
     "Sacas Bruto": 780.5,
     "Sacas Liquida": 780.5,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-13T04:00:20.000Z",
@@ -666,10 +666,10 @@
     "Peso Liquido": 54150,
     "Sacas Bruto": 902.5,
     "Sacas Liquida": 902.5,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-13T04:00:20.000Z",
@@ -698,10 +698,10 @@
     "Peso Liquido": 49072,
     "Sacas Bruto": 831.1666666666666,
     "Sacas Liquida": 817.8666666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-13T04:00:20.000Z",
@@ -730,10 +730,10 @@
     "Peso Liquido": 62597,
     "Sacas Bruto": 1074.6666666666667,
     "Sacas Liquida": 1043.2833333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-13T04:00:20.000Z",
@@ -762,10 +762,10 @@
     "Peso Liquido": 51303,
     "Sacas Bruto": 901,
     "Sacas Liquida": 855.05,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-14T04:00:20.000Z",
@@ -794,10 +794,10 @@
     "Peso Liquido": 39217,
     "Sacas Bruto": 653.6166666666667,
     "Sacas Liquida": 653.6166666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-14T04:00:20.000Z",
@@ -826,10 +826,10 @@
     "Peso Liquido": 53495,
     "Sacas Bruto": 969,
     "Sacas Liquida": 891.5833333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-14T04:00:20.000Z",
@@ -858,10 +858,10 @@
     "Peso Liquido": 48155,
     "Sacas Bruto": 870.6666666666666,
     "Sacas Liquida": 802.5833333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-14T04:00:20.000Z",
@@ -890,10 +890,10 @@
     "Peso Liquido": 13323,
     "Sacas Bruto": 248.38333333333333,
     "Sacas Liquida": 222.05,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-15T04:00:20.000Z",
@@ -922,10 +922,10 @@
     "Peso Liquido": 45440,
     "Sacas Bruto": 781.1666666666666,
     "Sacas Liquida": 757.3333333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-15T04:00:20.000Z",
@@ -954,10 +954,10 @@
     "Peso Liquido": 51624,
     "Sacas Bruto": 897,
     "Sacas Liquida": 860.4,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-15T04:00:20.000Z",
@@ -986,10 +986,10 @@
     "Peso Liquido": 45196,
     "Sacas Bruto": 803.8333333333334,
     "Sacas Liquida": 753.2666666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-15T04:00:20.000Z",
@@ -1018,10 +1018,10 @@
     "Peso Liquido": 56620,
     "Sacas Bruto": 1021.8333333333334,
     "Sacas Liquida": 943.6666666666666,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-16T04:00:20.000Z",
@@ -1050,10 +1050,10 @@
     "Peso Liquido": 50588,
     "Sacas Bruto": 867.3333333333334,
     "Sacas Liquida": 843.1333333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-16T04:00:20.000Z",
@@ -1082,10 +1082,10 @@
     "Peso Liquido": 53942,
     "Sacas Bruto": 924.8333333333334,
     "Sacas Liquida": 899.0333333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-16T04:00:20.000Z",
@@ -1114,10 +1114,10 @@
     "Peso Liquido": 57685,
     "Sacas Bruto": 1007.6666666666666,
     "Sacas Liquida": 961.4166666666666,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-16T04:00:20.000Z",
@@ -1146,10 +1146,10 @@
     "Peso Liquido": 52714,
     "Sacas Bruto": 894.6666666666666,
     "Sacas Liquida": 878.5666666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-16T04:00:20.000Z",
@@ -1178,10 +1178,10 @@
     "Peso Liquido": 64739,
     "Sacas Bruto": 1085.5,
     "Sacas Liquida": 1078.9833333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-16T04:00:20.000Z",
@@ -1210,10 +1210,10 @@
     "Peso Liquido": 49054,
     "Sacas Bruto": 826.6666666666666,
     "Sacas Liquida": 817.5666666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-17T04:00:20.000Z",
@@ -1242,10 +1242,10 @@
     "Peso Liquido": 50794,
     "Sacas Bruto": 893.6666666666666,
     "Sacas Liquida": 846.5666666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-17T04:00:20.000Z",
@@ -1274,10 +1274,10 @@
     "Peso Liquido": 54136,
     "Sacas Bruto": 956.5,
     "Sacas Liquida": 902.2666666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-17T04:00:20.000Z",
@@ -1306,10 +1306,10 @@
     "Peso Liquido": 52001,
     "Sacas Bruto": 881.6666666666666,
     "Sacas Liquida": 866.6833333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-17T04:00:20.000Z",
@@ -1338,10 +1338,10 @@
     "Peso Liquido": 41359,
     "Sacas Bruto": 702.6666666666666,
     "Sacas Liquida": 689.3166666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-17T04:00:20.000Z",
@@ -1370,10 +1370,10 @@
     "Peso Liquido": 46535,
     "Sacas Bruto": 794.1666666666666,
     "Sacas Liquida": 775.5833333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-17T04:00:20.000Z",
@@ -1402,10 +1402,10 @@
     "Peso Liquido": 51661,
     "Sacas Bruto": 883,
     "Sacas Liquida": 861.0166666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-17T04:00:20.000Z",
@@ -1434,10 +1434,10 @@
     "Peso Liquido": 62137,
     "Sacas Bruto": 1055.6666666666667,
     "Sacas Liquida": 1035.6166666666666,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-17T04:00:20.000Z",
@@ -1466,10 +1466,10 @@
     "Peso Liquido": 48540,
     "Sacas Bruto": 818.8333333333334,
     "Sacas Liquida": 809,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-18T04:00:20.000Z",
@@ -1498,10 +1498,10 @@
     "Peso Liquido": 44250,
     "Sacas Bruto": 749.5,
     "Sacas Liquida": 737.5,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-18T04:00:20.000Z",
@@ -1530,10 +1530,10 @@
     "Peso Liquido": 50968,
     "Sacas Bruto": 871.1666666666666,
     "Sacas Liquida": 849.4666666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-20T04:00:20.000Z",
@@ -1562,10 +1562,10 @@
     "Peso Liquido": 46876,
     "Sacas Bruto": 793.3333333333334,
     "Sacas Liquida": 781.2666666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-21T04:00:20.000Z",
@@ -1594,10 +1594,10 @@
     "Peso Liquido": 41100,
     "Sacas Bruto": 685,
     "Sacas Liquida": 685,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-21T04:00:20.000Z",
@@ -1626,10 +1626,10 @@
     "Peso Liquido": 51517,
     "Sacas Bruto": 984.6666666666666,
     "Sacas Liquida": 858.6166666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-21T04:00:20.000Z",
@@ -1658,10 +1658,10 @@
     "Peso Liquido": 48169,
     "Sacas Bruto": 920.6666666666666,
     "Sacas Liquida": 802.8166666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-23T04:00:20.000Z",
@@ -1690,10 +1690,10 @@
     "Peso Liquido": 34935,
     "Sacas Bruto": 783.6666666666666,
     "Sacas Liquida": 582.25,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-23T04:00:20.000Z",
@@ -1722,10 +1722,10 @@
     "Peso Liquido": 46622,
     "Sacas Bruto": 881,
     "Sacas Liquida": 777.0333333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-25T04:00:20.000Z",
@@ -1754,10 +1754,10 @@
     "Peso Liquido": 1281,
     "Sacas Bruto": 21.35,
     "Sacas Liquida": 21.35,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-25T04:00:20.000Z",
@@ -1786,10 +1786,10 @@
     "Peso Liquido": 39035,
     "Sacas Bruto": 690.5,
     "Sacas Liquida": 650.5833333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-25T04:00:20.000Z",
@@ -1818,10 +1818,10 @@
     "Peso Liquido": 48000,
     "Sacas Bruto": 871.3166666666667,
     "Sacas Liquida": 800,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-25T04:00:20.000Z",
@@ -1850,10 +1850,10 @@
     "Peso Liquido": 34209,
     "Sacas Bruto": 909.3333333333334,
     "Sacas Liquida": 570.15,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-25T04:00:20.000Z",
@@ -1882,10 +1882,10 @@
     "Peso Liquido": 40450,
     "Sacas Bruto": 1015.3333333333334,
     "Sacas Liquida": 674.1666666666666,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-25T04:00:20.000Z",
@@ -1914,10 +1914,10 @@
     "Peso Liquido": 12268,
     "Sacas Bruto": 419,
     "Sacas Liquida": 204.46666666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-26T04:00:20.000Z",
@@ -1946,10 +1946,10 @@
     "Peso Liquido": 45661,
     "Sacas Bruto": 830.1666666666666,
     "Sacas Liquida": 761.0166666666667,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-26T04:00:20.000Z",
@@ -1978,10 +1978,10 @@
     "Peso Liquido": 49776,
     "Sacas Bruto": 915.1666666666666,
     "Sacas Liquida": 829.6,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-26T04:00:20.000Z",
@@ -2010,10 +2010,10 @@
     "Peso Liquido": 49553,
     "Sacas Bruto": 907.6666666666666,
     "Sacas Liquida": 825.8833333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-27T04:00:20.000Z",
@@ -2042,10 +2042,10 @@
     "Peso Liquido": 37206,
     "Sacas Bruto": 781,
     "Sacas Liquida": 620.1,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-27T04:00:20.000Z",
@@ -2074,10 +2074,10 @@
     "Peso Liquido": 42431,
     "Sacas Bruto": 807.8333333333334,
     "Sacas Liquida": 707.1833333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-27T04:00:20.000Z",
@@ -2106,10 +2106,10 @@
     "Peso Liquido": 49196,
     "Sacas Bruto": 911.3333333333334,
     "Sacas Liquida": 819.9333333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-28T04:00:20.000Z",
@@ -2138,10 +2138,10 @@
     "Peso Liquido": 51522,
     "Sacas Bruto": 911.6666666666666,
     "Sacas Liquida": 858.7,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-28T04:00:20.000Z",
@@ -2170,10 +2170,10 @@
     "Peso Liquido": 49450,
     "Sacas Bruto": 900.3333333333334,
     "Sacas Liquida": 824.1666666666666,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-28T04:00:20.000Z",
@@ -2202,10 +2202,10 @@
     "Peso Liquido": 45479,
     "Sacas Bruto": 827.6666666666666,
     "Sacas Liquida": 757.9833333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-28T04:00:20.000Z",
@@ -2234,10 +2234,10 @@
     "Peso Liquido": 42440,
     "Sacas Bruto": 863.6666666666666,
     "Sacas Liquida": 707.3333333333334,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-28T04:00:20.000Z",
@@ -2266,10 +2266,10 @@
     "Peso Liquido": 14594,
     "Sacas Bruto": 351,
     "Sacas Liquida": 243.23333333333332,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-29T04:00:20.000Z",
@@ -2298,10 +2298,10 @@
     "Peso Liquido": 41076,
     "Sacas Bruto": 777.3333333333334,
     "Sacas Liquida": 684.6,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-29T04:00:20.000Z",
@@ -2330,10 +2330,10 @@
     "Peso Liquido": 50509,
     "Sacas Bruto": 900.3333333333334,
     "Sacas Liquida": 841.8166666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-29T04:00:20.000Z",
@@ -2362,10 +2362,10 @@
     "Peso Liquido": 42518,
     "Sacas Bruto": 746.3333333333334,
     "Sacas Liquida": 708.6333333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2394,10 +2394,10 @@
     "Peso Liquido": 47637,
     "Sacas Bruto": 900.1666666666666,
     "Sacas Liquida": 793.95,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2426,10 +2426,10 @@
     "Peso Liquido": 42661,
     "Sacas Bruto": 770.3333333333334,
     "Sacas Liquida": 711.0166666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2458,10 +2458,10 @@
     "Peso Liquido": 52918,
     "Sacas Bruto": 895.6666666666666,
     "Sacas Liquida": 881.9666666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2490,10 +2490,10 @@
     "Peso Liquido": 51582,
     "Sacas Bruto": 911,
     "Sacas Liquida": 859.7,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2522,10 +2522,10 @@
     "Peso Liquido": 47627,
     "Sacas Bruto": 818,
     "Sacas Liquida": 793.7833333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2554,10 +2554,10 @@
     "Peso Liquido": 52251,
     "Sacas Bruto": 893,
     "Sacas Liquida": 870.85,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2586,10 +2586,10 @@
     "Peso Liquido": 44603,
     "Sacas Bruto": 772.3333333333334,
     "Sacas Liquida": 743.3833333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2618,10 +2618,10 @@
     "Peso Liquido": 46119,
     "Sacas Bruto": 841.3333333333334,
     "Sacas Liquida": 768.65,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2650,10 +2650,10 @@
     "Peso Liquido": 45799,
     "Sacas Bruto": 886.3333333333334,
     "Sacas Liquida": 763.3166666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2682,10 +2682,10 @@
     "Peso Liquido": 41169,
     "Sacas Bruto": 800,
     "Sacas Liquida": 686.15,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-30T04:00:20.000Z",
@@ -2714,10 +2714,10 @@
     "Peso Liquido": 54621,
     "Sacas Bruto": 914,
     "Sacas Liquida": 910.35,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-31T04:00:20.000Z",
@@ -2746,10 +2746,10 @@
     "Peso Liquido": 41603,
     "Sacas Bruto": 737.3333333333334,
     "Sacas Liquida": 693.3833333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-01-31T04:00:20.000Z",
@@ -2778,10 +2778,10 @@
     "Peso Liquido": 21050,
     "Sacas Bruto": 411,
     "Sacas Liquida": 350.8333333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-01T04:00:20.000Z",
@@ -2810,10 +2810,10 @@
     "Peso Liquido": 21978,
     "Sacas Bruto": 457,
     "Sacas Liquida": 366.3,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-01T04:00:20.000Z",
@@ -2842,10 +2842,10 @@
     "Peso Liquido": 38204,
     "Sacas Bruto": 779.8333333333334,
     "Sacas Liquida": 636.7333333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-01T04:00:20.000Z",
@@ -2874,10 +2874,10 @@
     "Peso Liquido": 42602,
     "Sacas Bruto": 734.3333333333334,
     "Sacas Liquida": 710.0333333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-04T04:00:20.000Z",
@@ -2906,10 +2906,10 @@
     "Peso Liquido": 36302,
     "Sacas Bruto": 762.5,
     "Sacas Liquida": 605.0333333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-04T04:00:20.000Z",
@@ -2938,10 +2938,10 @@
     "Peso Liquido": 49022,
     "Sacas Bruto": 885.6666666666666,
     "Sacas Liquida": 817.0333333333333,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-04T04:00:20.000Z",
@@ -2970,10 +2970,10 @@
     "Peso Liquido": 31255,
     "Sacas Bruto": 650.6666666666666,
     "Sacas Liquida": 520.9166666666666,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-04T04:00:20.000Z",
@@ -3002,10 +3002,10 @@
     "Peso Liquido": 36767,
     "Sacas Bruto": 612.7833333333333,
     "Sacas Liquida": 612.7833333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-04T04:00:20.000Z",
@@ -3034,10 +3034,10 @@
     "Peso Liquido": 9041,
     "Sacas Bruto": 209.38333333333333,
     "Sacas Liquida": 150.68333333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-04T04:00:20.000Z",
@@ -3066,10 +3066,10 @@
     "Peso Liquido": 35866,
     "Sacas Bruto": 863.3333333333334,
     "Sacas Liquida": 597.7666666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-05T04:00:20.000Z",
@@ -3098,10 +3098,10 @@
     "Peso Liquido": 45124,
     "Sacas Bruto": 886.3333333333334,
     "Sacas Liquida": 752.0666666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-05T04:00:20.000Z",
@@ -3130,10 +3130,10 @@
     "Peso Liquido": 50965,
     "Sacas Bruto": 892.3333333333334,
     "Sacas Liquida": 849.4166666666666,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-05T04:00:20.000Z",
@@ -3162,10 +3162,10 @@
     "Peso Liquido": 34850,
     "Sacas Bruto": 819,
     "Sacas Liquida": 580.8333333333334,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-05T04:00:20.000Z",
@@ -3194,10 +3194,10 @@
     "Peso Liquido": 52695,
     "Sacas Bruto": 882.6666666666666,
     "Sacas Liquida": 878.25,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-06T04:00:20.000Z",
@@ -3226,10 +3226,10 @@
     "Peso Liquido": 32897,
     "Sacas Bruto": 747,
     "Sacas Liquida": 548.2833333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-06T04:00:20.000Z",
@@ -3258,10 +3258,10 @@
     "Peso Liquido": 44415,
     "Sacas Bruto": 754.6666666666666,
     "Sacas Liquida": 740.25,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-06T04:00:20.000Z",
@@ -3290,10 +3290,10 @@
     "Peso Liquido": 51723,
     "Sacas Bruto": 875,
     "Sacas Liquida": 862.05,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-06T04:00:20.000Z",
@@ -3322,10 +3322,10 @@
     "Peso Liquido": 45770,
     "Sacas Bruto": 764.6666666666666,
     "Sacas Liquida": 762.8333333333334,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
@@ -3354,10 +3354,10 @@
     "Peso Liquido": 51122,
     "Sacas Bruto": 895,
     "Sacas Liquida": 852.0333333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
@@ -3386,10 +3386,10 @@
     "Peso Liquido": 47500,
     "Sacas Bruto": 791.6666666666666,
     "Sacas Liquida": 791.6666666666666,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
@@ -3418,10 +3418,10 @@
     "Peso Liquido": 55460,
     "Sacas Bruto": 924.3333333333334,
     "Sacas Liquida": 924.3333333333334,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
@@ -3450,10 +3450,10 @@
     "Peso Liquido": 57500,
     "Sacas Bruto": 958.3333333333334,
     "Sacas Liquida": 958.3333333333334,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
@@ -3482,10 +3482,10 @@
     "Peso Liquido": 47020,
     "Sacas Bruto": 783.6666666666666,
     "Sacas Liquida": 783.6666666666666,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-08T04:00:20.000Z",
@@ -3514,10 +3514,10 @@
     "Peso Liquido": 53297,
     "Sacas Bruto": 912,
     "Sacas Liquida": 888.2833333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-08T04:00:20.000Z",
@@ -3546,10 +3546,10 @@
     "Peso Liquido": 50966,
     "Sacas Bruto": 937.6666666666666,
     "Sacas Liquida": 849.4333333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-08T04:00:20.000Z",
@@ -3578,10 +3578,10 @@
     "Peso Liquido": 57516,
     "Sacas Bruto": 1007.6666666666666,
     "Sacas Liquida": 958.6,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-08T04:00:20.000Z",
@@ -3610,10 +3610,10 @@
     "Peso Liquido": 45482,
     "Sacas Bruto": 794.6666666666666,
     "Sacas Liquida": 758.0333333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-08T04:00:20.000Z",
@@ -3642,10 +3642,10 @@
     "Peso Liquido": 52421,
     "Sacas Bruto": 912,
     "Sacas Liquida": 873.6833333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-08T04:00:20.000Z",
@@ -3674,10 +3674,10 @@
     "Peso Liquido": 52976,
     "Sacas Bruto": 937,
     "Sacas Liquida": 882.9333333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-06T04:00:20.000Z",
@@ -3706,10 +3706,10 @@
     "Peso Liquido": 43826,
     "Sacas Bruto": 837.6666666666666,
     "Sacas Liquida": 730.4333333333333,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
@@ -3738,10 +3738,10 @@
     "Peso Liquido": 35713,
     "Sacas Bruto": 792.6666666666666,
     "Sacas Liquida": 595.2166666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
@@ -3770,10 +3770,10 @@
     "Peso Liquido": 41478,
     "Sacas Bruto": 846.6666666666666,
     "Sacas Liquida": 691.3,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-07T04:00:20.000Z",
@@ -3802,10 +3802,10 @@
     "Peso Liquido": 37731,
     "Sacas Bruto": 852.6666666666666,
     "Sacas Liquida": 628.85,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-08T04:00:20.000Z",
@@ -3834,10 +3834,10 @@
     "Peso Liquido": 28687,
     "Sacas Bruto": 780.3333333333334,
     "Sacas Liquida": 478.1166666666667,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-09T04:00:20.000Z",
@@ -3866,10 +3866,10 @@
     "Peso Liquido": 49455,
     "Sacas Bruto": 913,
     "Sacas Liquida": 824.25,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-11T04:00:20.000Z",
@@ -3898,10 +3898,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-11T04:00:20.000Z",
@@ -3930,10 +3930,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-11T04:00:20.000Z",
@@ -3962,10 +3962,10 @@
     "Peso Liquido": 48473,
     "Sacas Bruto": 978.6666666666666,
     "Sacas Liquida": 807.8833333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-11T04:00:20.000Z",
@@ -3994,10 +3994,10 @@
     "Peso Liquido": 6671,
     "Sacas Bruto": 316.3333333333333,
     "Sacas Liquida": 111.18333333333334,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-11T04:00:20.000Z",
@@ -4026,10 +4026,10 @@
     "Peso Liquido": 39550,
     "Sacas Bruto": 933,
     "Sacas Liquida": 659.1666666666666,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-11T04:00:20.000Z",
@@ -4058,10 +4058,10 @@
     "Peso Liquido": 40045,
     "Sacas Bruto": 839,
     "Sacas Liquida": 667.4166666666666,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-12T04:00:20.000Z",
@@ -4090,10 +4090,10 @@
     "Peso Liquido": 39996,
     "Sacas Bruto": 882.3333333333334,
     "Sacas Liquida": 666.6,
+    "precofrete": 2.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-12T04:00:20.000Z",
@@ -4122,10 +4122,10 @@
     "Peso Liquido": 38945,
     "Sacas Bruto": 792.3333333333334,
     "Sacas Liquida": 649.0833333333334,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-14T04:00:20.000Z",
@@ -4154,10 +4154,10 @@
     "Peso Liquido": 58340,
     "Sacas Bruto": 972.3333333333334,
     "Sacas Liquida": 972.3333333333334,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-15T04:00:20.000Z",
@@ -4186,10 +4186,10 @@
     "Peso Liquido": 57360,
     "Sacas Bruto": 956,
     "Sacas Liquida": 956,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-15T04:00:20.000Z",
@@ -4218,10 +4218,10 @@
     "Peso Liquido": 51211,
     "Sacas Bruto": 908.6666666666666,
     "Sacas Liquida": 853.5166666666667,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-15T04:00:20.000Z",
@@ -4250,10 +4250,10 @@
     "Peso Liquido": 58660,
     "Sacas Bruto": 977.6666666666666,
     "Sacas Liquida": 977.6666666666666,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-15T04:00:20.000Z",
@@ -4282,10 +4282,10 @@
     "Peso Liquido": 7671,
     "Sacas Bruto": 156.88333333333333,
     "Sacas Liquida": 127.85,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-15T04:00:20.000Z",
@@ -4314,10 +4314,10 @@
     "Peso Liquido": 18150,
     "Sacas Bruto": 314,
     "Sacas Liquida": 302.5,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-13T04:00:20.000Z",
@@ -4346,10 +4346,10 @@
     "Peso Liquido": 52938,
     "Sacas Bruto": 976,
     "Sacas Liquida": 882.3,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-13T04:00:20.000Z",
@@ -4378,10 +4378,10 @@
     "Peso Liquido": 44228,
     "Sacas Bruto": 797.3333333333334,
     "Sacas Liquida": 737.1333333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-13T04:00:20.000Z",
@@ -4410,10 +4410,10 @@
     "Peso Liquido": 52290,
     "Sacas Bruto": 924.6666666666666,
     "Sacas Liquida": 871.5,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-14T04:00:20.000Z",
@@ -4442,10 +4442,10 @@
     "Peso Liquido": 55179,
     "Sacas Bruto": 982,
     "Sacas Liquida": 919.65,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-14T04:00:20.000Z",
@@ -4474,10 +4474,10 @@
     "Peso Liquido": 53158,
     "Sacas Bruto": 945.3333333333334,
     "Sacas Liquida": 885.9666666666667,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-14T04:00:20.000Z",
@@ -4506,10 +4506,10 @@
     "Peso Liquido": 47580,
     "Sacas Bruto": 793,
     "Sacas Liquida": 793,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-15T04:00:20.000Z",
@@ -4538,10 +4538,10 @@
     "Peso Liquido": 58840,
     "Sacas Bruto": 980.6666666666666,
     "Sacas Liquida": 980.6666666666666,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-15T04:00:20.000Z",
@@ -4570,10 +4570,10 @@
     "Peso Liquido": 40787,
     "Sacas Bruto": 679.7833333333333,
     "Sacas Liquida": 679.7833333333333,
+    "precofrete": 1.7,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": "2026-02-14T04:00:20.000Z",
@@ -4602,10 +4602,10 @@
     "Peso Liquido": 45168,
     "Sacas Bruto": 853.3333333333334,
     "Sacas Liquida": 752.8,
+    "precofrete": 2,
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4634,10 +4634,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4666,10 +4666,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4698,10 +4698,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4730,10 +4730,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4762,10 +4762,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4794,10 +4794,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4826,10 +4826,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4858,10 +4858,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4890,10 +4890,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4922,10 +4922,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4954,10 +4954,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -4986,10 +4986,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -5018,10 +5018,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -5050,10 +5050,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -5082,10 +5082,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -5114,10 +5114,10 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   },
   {
     "Data": null,
@@ -5146,9 +5146,9 @@
     "Peso Liquido": 0,
     "Sacas Bruto": 0,
     "Sacas Liquida": 0,
+    "precofrete": "",
     "__EMPTY": null,
     "__EMPTY_1": null,
-    "__EMPTY_2": null,
-    "__EMPTY_3": null
+    "__EMPTY_2": null
   }
 ]
