@@ -281,73 +281,69 @@ export default function FretesPage() {
               <>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:block print:space-y-8">
                   
-                  {/* BLOCO 2: ADIANTAMENTOS */}
-                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300 print:rounded-none">
-                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-orange-50/30 dark:bg-orange-900/10 print:bg-white print:p-4">
-                      <div className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg print:hidden"><HandCoins size={20}/></div>
-                      <h2 className="text-sm font-black uppercase italic tracking-tighter">2. Adiantamentos</h2>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse min-w-[400px] print:min-w-full">
-                        <thead>
-                          <tr className="text-[9px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
-                            <th className="px-6 py-3 print:px-2">Data</th>
-                            <th className="px-4 py-3 print:px-2">Motorista</th>
-                            <th className="px-6 py-3 text-right print:px-2">Valor</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-xs font-bold">
-                          {dadosAdiantamentos.length > 0 ? dadosAdiantamentos.map((a, i) => (
-                            <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50">
-                              <td className="px-6 py-3 text-slate-500 dark:text-slate-400 print:px-2">{formatarDataBR(a.data)}</td>
-                              <td className="px-4 py-3 uppercase text-[10px] print:px-2">{a.motorista}</td>
-                              <td className="px-6 py-3 text-right text-red-600 print:px-2">R$ {(Number(a.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                  {/* BLOCO 2: ADIANTAMENTOS (Oculto se vazio) */}
+                  {dadosAdiantamentos.length > 0 && (
+                    <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300 print:rounded-none">
+                      <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-orange-50/30 dark:bg-orange-900/10 print:bg-white print:p-4">
+                        <div className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg print:hidden"><HandCoins size={20}/></div>
+                        <h2 className="text-sm font-black uppercase italic tracking-tighter">2. Adiantamentos</h2>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[400px] print:min-w-full">
+                          <thead>
+                            <tr className="text-[9px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
+                              <th className="px-6 py-3 print:px-2">Data</th>
+                              <th className="px-4 py-3 print:px-2">Motorista</th>
+                              <th className="px-6 py-3 text-right print:px-2">Valor</th>
                             </tr>
-                          )) : (
-                            <tr><td colSpan={3} className="py-8 text-center text-slate-400 italic text-[10px] uppercase">Nenhum adiantamento</td></tr>
-                          )}
-                        </tbody>
-                        {dadosAdiantamentos.length > 0 && (
+                          </thead>
+                          <tbody className="text-xs font-bold">
+                            {dadosAdiantamentos.map((a, i) => (
+                              <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50">
+                                <td className="px-6 py-3 text-slate-500 dark:text-slate-400 print:px-2">{formatarDataBR(a.data)}</td>
+                                <td className="px-4 py-3 uppercase text-[10px] print:px-2">{a.motorista}</td>
+                                <td className="px-6 py-3 text-right text-red-600 print:px-2">R$ {(Number(a.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                              </tr>
+                            ))}
+                          </tbody>
                           <tfoot>
                             <tr className="bg-orange-50/50 dark:bg-orange-900/10 font-black text-orange-700 dark:text-orange-400">
                               <td colSpan={2} className="px-6 py-3 text-right uppercase text-[9px] print:px-2">Total Adiantamentos</td>
                               <td className="px-6 py-3 text-right print:px-2">R$ {totalAdiantamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                             </tr>
                           </tfoot>
-                        )}
-                      </table>
-                    </div>
-                  </section>
+                        </table>
+                      </div>
+                    </section>
+                  )}
 
-                  {/* BLOCO 3: ABASTECIMENTOS */}
-                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300 print:rounded-none">
-                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-red-50/30 dark:bg-red-900/10 print:bg-white print:p-4">
-                      <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg print:hidden"><Fuel size={20}/></div>
-                      <h2 className="text-sm font-black uppercase italic tracking-tighter">3. Abastecimentos (Diesel)</h2>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse min-w-[400px] print:min-w-full">
-                        <thead>
-                          <tr className="text-[9px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
-                            <th className="px-6 py-3 print:px-2">Data</th>
-                            <th className="px-4 py-3 text-right print:px-2">Litros</th>
-                            <th className="px-4 py-3 text-right print:px-2">Preço</th>
-                            <th className="px-6 py-3 text-right print:px-2">Total</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-xs font-bold">
-                          {dadosAbastecimentos.length > 0 ? dadosAbastecimentos.map((a, i) => (
-                            <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50">
-                              <td className="px-6 py-3 text-slate-500 dark:text-slate-400 print:px-2">{formatarDataBR(a.data)}</td>
-                              <td className="px-4 py-3 text-right print:px-2">{(Number(a.litros) || 0).toLocaleString('pt-BR')} L</td>
-                              <td className="px-4 py-3 text-right text-slate-400 print:px-2">R$ {(Number(a.preco) || 0).toFixed(2)}</td>
-                              <td className="px-6 py-3 text-right text-red-600 print:px-2">R$ {(Number(a.total) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                  {/* BLOCO 3: ABASTECIMENTOS (Oculto se vazio) */}
+                  {dadosAbastecimentos.length > 0 && (
+                    <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300 print:rounded-none">
+                      <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-red-50/30 dark:bg-red-900/10 print:bg-white print:p-4">
+                        <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg print:hidden"><Fuel size={20}/></div>
+                        <h2 className="text-sm font-black uppercase italic tracking-tighter">3. Abastecimentos (Diesel)</h2>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[400px] print:min-w-full">
+                          <thead>
+                            <tr className="text-[9px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
+                              <th className="px-6 py-3 print:px-2">Data</th>
+                              <th className="px-4 py-3 text-right print:px-2">Litros</th>
+                              <th className="px-4 py-3 text-right print:px-2">Preço</th>
+                              <th className="px-6 py-3 text-right print:px-2">Total</th>
                             </tr>
-                          )) : (
-                            <tr><td colSpan={4} className="py-8 text-center text-slate-400 italic text-[10px] uppercase">Nenhum abastecimento</td></tr>
-                          )}
-                        </tbody>
-                        {dadosAbastecimentos.length > 0 && (
+                          </thead>
+                          <tbody className="text-xs font-bold">
+                            {dadosAbastecimentos.map((a, i) => (
+                              <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50">
+                                <td className="px-6 py-3 text-slate-500 dark:text-slate-400 print:px-2">{formatarDataBR(a.data)}</td>
+                                <td className="px-4 py-3 text-right print:px-2">{(Number(a.litros) || 0).toLocaleString('pt-BR')} L</td>
+                                <td className="px-4 py-3 text-right text-slate-400 print:px-2">R$ {(Number(a.preco) || 0).toFixed(2)}</td>
+                                <td className="px-6 py-3 text-right text-red-600 print:px-2">R$ {(Number(a.total) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                              </tr>
+                            ))}
+                          </tbody>
                           <tfoot>
                             <tr className="bg-red-50/50 dark:bg-red-900/10 font-black text-red-700 dark:text-red-400">
                               <td colSpan={2} className="px-6 py-3 text-right uppercase text-[9px] print:px-2">Totais</td>
@@ -356,10 +352,10 @@ export default function FretesPage() {
                               <td className="px-6 py-3 text-right print:px-2">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                             </tr>
                           </tfoot>
-                        )}
-                      </table>
-                    </div>
-                  </section>
+                        </table>
+                      </div>
+                    </section>
+                  )}
                 </div>
 
                 {/* BLOCO 4: TOTALIZADOR DE SALDO MOTORISTA */}
@@ -386,14 +382,18 @@ export default function FretesPage() {
                       <div className="text-white/30 hidden md:block print:hidden"><ArrowRight size={24}/></div>
 
                       <div className="space-y-4 print:space-y-2">
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingDown size={12} className="text-orange-400"/> Adiantamentos (-)</p>
-                          <p className="text-xl font-bold text-orange-200 print:text-orange-600">R$ {totalAdiantamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingDown size={12} className="text-red-400"/> Abastecimentos (-)</p>
-                          <p className="text-xl font-bold text-red-200 print:text-red-600">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                        </div>
+                        {totalAdiantamentos > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingDown size={12} className="text-orange-400"/> Adiantamentos (-)</p>
+                            <p className="text-xl font-bold text-orange-200 print:text-orange-600">R$ {totalAdiantamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                          </div>
+                        )}
+                        {totaisAbastecimento.valor > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingDown size={12} className="text-red-400"/> Abastecimentos (-)</p>
+                            <p className="text-xl font-bold text-red-200 print:text-red-600">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1 print:bg-slate-50 print:border-slate-300 print:rounded-xl print:p-4">
