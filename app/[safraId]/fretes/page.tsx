@@ -8,23 +8,29 @@ import { getSafraConfig } from '../../../src/data/safraConfig';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
 import UpdateDataButton from '../../../src/components/UpdateDataButton';
-import { Romaneio, Adiantamento, Abastecimento } from '../../../src/data/types';
 
-const dataMap: Record<string, any> = {
-  'soja2526': {
-    romaneios: require('../../../src/data/soja2526/romaneios_normalizados.json'),
-    adiantamentos: require('../../../src/data/soja2526/adiantamentos_normalizados.json'),
-    diesel: require('../../../src/data/soja2526/diesel_normalizados.json'),
-  },
-  'soja2425': { romaneios: require('../../../src/data/soja2425/romaneios_normalizados.json'), adiantamentos: [], diesel: [] },
-  'milho25': { romaneios: require('../../../src/data/milho25/romaneios_normalizados.json'), adiantamentos: [], diesel: [] },
+// Função auxiliar para carregar dados com segurança
+const safeRequire = (path: string) => {
+  try {
+    return require(`../../../src/data/${path}`);
+  } catch (e) {
+    return [];
+  }
 };
 
 export default function FretesPage() {
   const params = useParams();
   const safraId = params.safraId as string;
   const safraConfig = getSafraConfig(safraId);
-  const safraData = dataMap[safraId] || { romaneios: [], adiantamentos: [], diesel: [] };
+
+  // Carregamento dinâmico e seguro dos dados
+  const safraData = useMemo(() => {
+    return {
+      romaneios: safeRequire(`${safraId}/romaneios_normalizados.json`),
+      adiantamentos: safeRequire(`${safraId}/adiantamentos_normalizados.json`),
+      diesel: safeRequire(`${safraId}/diesel_normalizados.json`),
+    };
+  }, [safraId]);
 
   const [motoristaFiltro, setMotoristaFiltro] = useState("");
   const [placaFiltro, setPlacaFiltro] = useState("");
@@ -49,7 +55,6 @@ export default function FretesPage() {
 
     const adiantamentos = aplicarDescontos === 'Sim' ? safraData.adiantamentos.filter((a: any) => {
       const matchM = !motoristaFiltro || a.motorista === motoristaFiltro;
-      // Adiantamentos não têm placa no Excel fornecido, filtramos apenas por motorista
       return matchM;
     }) : [];
 
@@ -80,7 +85,12 @@ export default function FretesPage() {
     };
   }, [dadosRelatorio, tipoCalculo]);
 
-  const formatarDataBR = (d: string | null) => d ? d.split('-').reverse().join('-') : "-";
+  const formatarDataBR = (d: string | null) => {
+    if (!d) return "-";
+    const partes = d.split('-');
+    if (partes.length !== 3) return d;
+    return `${partes[2]}-${partes[1]}-${partes[0]}`;
+  };
 
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
