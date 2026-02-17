@@ -45,12 +45,16 @@ export default function FretesPage() {
     });
   }, [showRelatorio, romaneios, motoristaFiltro, placaFiltro, armazemFiltro]);
 
+  // Cálculo dos totais com a nova regra de arredondamento
   const totais = useMemo(() => {
     return dadosRelatorio.reduce((acc, r) => {
-      const sacas = Number(r.sacasBruto) || 0;
+      const sacasOriginal = Number(r.sacasBruto) || 0;
+      const sacasArredondada = Math.floor(sacasOriginal); // Arredonda para baixo (inteiro)
       const preco = Number(r.precofrete) || 0;
-      acc.sacas += sacas;
-      acc.valor += sacas * preco;
+      const subtotal = sacasArredondada * preco;
+
+      acc.sacas += sacasArredondada;
+      acc.valor += subtotal;
       return acc;
     }, { sacas: 0, valor: 0 });
   }, [dadosRelatorio]);
@@ -191,17 +195,20 @@ export default function FretesPage() {
                 <tbody className="text-xs font-bold">
                   {dadosRelatorio.length > 0 ? (
                     dadosRelatorio.map((r, i) => {
-                      const sacas = Number(r.sacasBruto) || 0;
+                      const sacasOriginal = Number(r.sacasBruto) || 0;
+                      const sacasArredondada = Math.floor(sacasOriginal); // Regra: Arredondar para baixo
                       const preco = Number(r.precofrete) || 0;
+                      const subtotal = sacasArredondada * preco;
+
                       return (
                         <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
                           <td className="px-8 py-4 text-slate-500">{r.data}</td>
                           <td className="px-4 py-4">{(r as any).Nº || "-"}</td>
                           <td className="px-4 py-4">{r.nfe}</td>
                           <td className="px-4 py-4 uppercase text-[10px]">{r.armazem}</td>
-                          <td className="px-4 py-4 text-right">{sacas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-4 text-right">{sacasArredondada.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</td>
                           <td className="px-4 py-4 text-right text-blue-600">R$ {preco.toFixed(2)}</td>
-                          <td className="px-8 py-4 text-right font-black">R$ {(sacas * preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-8 py-4 text-right font-black">R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         </tr>
                       );
                     })
@@ -215,9 +222,9 @@ export default function FretesPage() {
                   <tfoot>
                     <tr className="bg-slate-100 dark:bg-slate-900/80 font-black text-slate-800 dark:text-white">
                       <td colSpan={4} className="px-8 py-6 text-right uppercase tracking-widest text-[10px]">Totais do Relatório</td>
-                      <td className="px-4 py-6 text-right text-lg">{totais.sacas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} <span className="text-[10px] text-slate-400">sc</span></td>
+                      <td className="px-4 py-6 text-right text-lg">{totais.sacas.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} <span className="text-[10px] text-slate-400">sc</span></td>
                       <td className="px-4 py-6 text-right">-</td>
-                      <td className="px-8 py-6 text-right text-xl text-green-600 dark:text-green-400">R$ {totais.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-8 py-6 text-right text-xl text-green-600 dark:text-green-400">R$ {totais.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
                   </tfoot>
                 )}
