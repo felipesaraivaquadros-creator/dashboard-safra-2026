@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "motorista": "MAILSON",
+    "data": "2026-01-15",
+    "valor": 2500,
+    "safra": "SOJA25/26"
+  },
+  {
+    "motorista": "SADI",
+    "data": "2026-01-22",
+    "valor": 10000,
+    "safra": "SOJA25/26"
+  },
+  {
+    "motorista": "MAILSON",
+    "data": "2026-01-23",
+    "valor": 8723.9,
+    "safra": "SOJA25/26"
+  },
+  {
+    "motorista": "MAILSON",
+    "data": "2026-02-07",
+    "valor": 5000,
+    "safra": "SOJA25/26"
+  },
+  {
+    "motorista": "SADI",
+    "data": "2026-02-09",
+    "valor": 6000,
+    "safra": "SOJA25/26"
+  }
+]
