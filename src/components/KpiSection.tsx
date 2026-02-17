@@ -130,7 +130,7 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
                     <h4 className="text-xl font-black">{romaneiosCount} un</h4>
                   </div>
                 </div>
-                <div className="p-5 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center">
+                <div className="p-5 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-baseline">
                   <div>
                     <p className="text-[10px] font-black text-orange-400 uppercase">Sacas Bruto</p>
                     <h4 className="text-lg font-black text-orange-700 leading-tight">{stats.totalBruta.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4>
@@ -141,7 +141,7 @@ export function ProductivityModal({ showModalProd, setShowModalProd, fazendaFilt
                     <h4 className="text-xl font-black text-orange-700 leading-tight">{stats.prodBruta} <span className="text-xs">sc/ha</span></h4>
                   </div>
                 </div>
-                <div className="p-5 bg-green-50 rounded-2xl border border-green-100 flex justify-between items-center">
+                <div className="p-5 bg-green-50 rounded-2xl border border-green-100 flex justify-between items-baseline">
                   <div>
                     <p className="text-[10px] font-black text-green-400 uppercase">Sacas Líquida</p>
                     <h4 className="text-lg font-black text-green-700 leading-tight">{stats.totalLiq.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</h4>

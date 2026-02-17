@@ -4,16 +4,6 @@ import React from 'react';
 import { X, Info, Percent, Scale } from 'lucide-react';
 import { DiscountStats } from '../data/types';
 
-interface UmidadeModalProps {
-  showModalUmid: boolean;
-  setShowModalUmid: (show: boolean) => void;
-  fazendaFiltro: string | null;
-  armazemFiltro: string | null;
-  discountStats: DiscountStats;
-  totalBruta: number;
-  totalBrutaKg: number;
-}
-
 export default function UmidadeModal({ 
   showModalUmid, 
   setShowModalUmid, 
@@ -22,7 +12,7 @@ export default function UmidadeModal({
   discountStats,
   totalBruta,
   totalBrutaKg
-}: UmidadeModalProps) {
+}: any) {
   if (!showModalUmid) return null;
 
   const formatSc = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
@@ -62,7 +52,7 @@ export default function UmidadeModal({
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 gap-3">
               {items.map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                <div key={idx} className="flex justify-between items-baseline p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{item.label}</span>
                   <div className="text-right">
                     <span className="text-sm font-black text-slate-600 dark:text-slate-300 block leading-none">{formatSc(item.sc)} sc</span>
@@ -73,7 +63,7 @@ export default function UmidadeModal({
             </div>
 
             <div className="pt-6 border-t border-dashed border-slate-200 dark:border-slate-700">
-              <div className="flex justify-between items-end mb-6">
+              <div className="flex justify-between items-baseline mb-6">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Total de Descontos</p>
                   <h3 className="text-3xl font-black text-blue-600 tracking-tighter leading-none">
@@ -90,7 +80,7 @@ export default function UmidadeModal({
                 </div>
               </div>
 
-              <div className="flex justify-between items-center p-3 bg-slate-100 dark:bg-slate-700 rounded-xl mb-4 border border-slate-200 dark:border-slate-600">
+              <div className="flex justify-between items-baseline p-3 bg-slate-100 dark:bg-slate-700 rounded-xl mb-4 border border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-2">
                   <Scale size={16} className="text-slate-400" />
                   <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase">Volume Bruto Total</span>

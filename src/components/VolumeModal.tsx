@@ -60,21 +60,21 @@ export default function VolumeModal({ show, onClose, stats, volumeStats, discoun
               <TrendingUp size={14} /> Composição de Volume
             </h3>
             <div className="grid grid-cols-1 gap-2">
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700 gap-1 sm:gap-0">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-baseline p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700 gap-1 sm:gap-0">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Bruto (100%)</span>
                 <div className="flex items-baseline gap-2 sm:justify-end">
                   <span className="text-sm font-black text-slate-700 dark:text-slate-200">{formatSc(stats.totalBruta)} sc</span>
                   <span className="text-[10px] font-bold text-slate-400">({formatKg(stats.totalBrutaKg)} kg)</span>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center p-3 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/30 gap-1 sm:gap-0">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-baseline p-3 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900/30 gap-1 sm:gap-0">
                 <span className="text-[10px] font-bold text-red-500 uppercase">Descontos ({discountStats.percentualDesconto}%)</span>
                 <div className="flex items-baseline gap-2 sm:justify-end">
                   <span className="text-sm font-black text-red-600">{formatSc(discountStats.totalDescontosSc)} sc</span>
-                  <span className="text-[10px] font-bold text-red-400">({formatKg(discountStats.totalDescontosKg)} kg)</span>
+                  <span className="text-[10px] font-bold text-slate-400">({formatKg(discountStats.totalDescontosKg)} kg)</span>
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center p-3 bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/30 gap-1 sm:gap-0">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-baseline p-3 bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/30 gap-1 sm:gap-0">
                 <span className="text-[10px] font-bold text-green-600 uppercase">Líquido Final</span>
                 <div className="flex items-baseline gap-2 sm:justify-end">
                   <span className="text-sm font-black text-green-700 dark:text-green-300">{formatSc(stats.totalLiq)} sc</span>

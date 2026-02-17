@@ -9,7 +9,7 @@ interface ContractSectionProps {
     pendentes: ProcessedContract[];
     cumpridos: ProcessedContract[];
   };
-  romaneiosCount: number; // Novo: Contagem total de romaneios
+  romaneiosCount: number; 
 }
 
 export default function ContractSection({ contratosProcessados, romaneiosCount }: ContractSectionProps) {
@@ -83,19 +83,19 @@ export default function ContractSection({ contratosProcessados, romaneiosCount }
                 <div className="mt-4 pt-4 border-t border-purple-200 dark:border-purple-800 grid grid-cols-1 gap-1.5 animate-in slide-in-from-top-1">
                   
                   {/* SALDO CUMPRIDO (Verde) */}
-                  <div className="flex justify-between items-center bg-green-50 dark:bg-green-900/30 p-2 rounded">
+                  <div className="flex justify-between items-baseline bg-green-50 dark:bg-green-900/30 p-2 rounded">
                     <span className="text-[9px] font-bold text-green-600 dark:text-green-400 uppercase">Saldo Cumprido</span>
                     <span className="text-xs font-black text-green-700 dark:text-green-300">{c.cumprido.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                   </div>
 
                   {/* TOTAL CONTRATO (Neutro) */}
-                  <div className="flex justify-between items-center bg-white/50 dark:bg-slate-600/50 p-2 rounded">
+                  <div className="flex justify-between items-baseline bg-white/50 dark:bg-slate-600/50 p-2 rounded">
                     <span className="text-[9px] font-bold text-slate-400 uppercase">Total Contrato</span>
                     <span className="text-xs font-black text-slate-700 dark:text-slate-200">{c.contratado.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                   </div>
                   
                   {/* SALDO A CUMPRIR (Laranja) */}
-                  <div className="flex justify-between items-center bg-orange-50 dark:bg-orange-900/30 p-2 rounded">
+                  <div className="flex justify-between items-baseline bg-orange-50 dark:bg-orange-900/30 p-2 rounded">
                     <span className="text-[9px] font-bold text-orange-600 dark:text-orange-400 uppercase">Saldo A Cumprir</span>
                     <span className="text-xs font-black text-orange-700 dark:text-orange-300">{c.aCumprir.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                   </div>
