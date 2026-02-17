@@ -64,14 +64,15 @@ function normalizar(safraId, inputFileName) {
         emitente: linha['Emitente'] || null,
         tipoNF: linha['Tipo NF'] || null,
         nfe: parseNumero(linha['NFe']),
+        numero: parseNumero(linha['Nº']), // Adicionado campo Numero
         cidadeEntrega: linha['Cidade de Entrega'] || null,
         armazem: linha['Armazem'] || null,
         armazemsaldo: linha['armazemsaldo'] || null,
         safra: linha['Safra'] || null,
         fazenda: linha['Fazenda'] || null,
         talhao: linha['Talhão'] || null,
-        motorista: linha['Motorista'] || null, // Adicionado
-        placa: linha['Placa'] || null, // Adicionado
+        motorista: linha['Motorista'] || null,
+        placa: linha['Placa'] || null,
 
         pesoLiquidoKg: pesoLiquidoKg,
         pesoBrutoKg: parseNumero(linha['Peso Bruto']),

@@ -50,7 +50,6 @@ export default function FretesPage() {
   const totais = useMemo(() => {
     return dadosRelatorio.reduce((acc, r) => {
       const sacasOriginal = Number(r.sacasBruto) || 0;
-      // Se 'com', arredonda para baixo. Se 'sem', usa o valor original.
       const sacasUsada = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : sacasOriginal;
       const preco = Number(r.precofrete) || 0;
       const subtotal = sacasUsada * preco;
@@ -69,9 +68,17 @@ export default function FretesPage() {
     setShowRelatorio(false);
   };
 
+  // Helper para formatar data AAAA-MM-DD para DD-MM-AAAA
+  const formatarDataBR = (dataISO: string | null) => {
+    if (!dataISO) return "-";
+    const partes = dataISO.split('-');
+    if (partes.length !== 3) return dataISO;
+    return `${partes[2]}-${partes[1]}-${partes[0]}`;
+  };
+
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
-      <header className="max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <header className="max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
         <div className="flex items-center justify-between w-full md:w-auto gap-4">
           <div className="flex items-center gap-4 min-w-0">
             <Link href={`/${safraId}`} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors shrink-0">
@@ -93,7 +100,7 @@ export default function FretesPage() {
       <div className="max-w-[1200px] mx-auto space-y-8">
         
         {/* Tabela de Preços de Referência */}
-        <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden print:hidden">
           <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
             <Calculator size={18} className="text-blue-500" />
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Tabela de Preços (Referência)</h2>
@@ -118,7 +125,7 @@ export default function FretesPage() {
         </section>
 
         {/* Filtros do Relatório */}
-        <section className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        <section className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm print:hidden">
           <div className="flex items-center gap-2 mb-6">
             <Filter size={18} className="text-purple-500" />
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Gerar Relatório</h2>
@@ -181,17 +188,17 @@ export default function FretesPage() {
 
         {/* Relatório Gerado */}
         {showRelatorio && (
-          <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 print:shadow-none print:border-none print:rounded-none">
             <div className="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start">
               <div>
                 <h2 className="text-2xl font-black uppercase italic tracking-tighter text-slate-800 dark:text-white mb-1">Relatório de Fretes</h2>
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-black uppercase text-slate-400">
                   <span>Safra: <span className="text-purple-600">{safraConfig.nome}</span></span>
                   <span>Motorista: <span className="text-slate-600 dark:text-slate-200">{motoristaFiltro || "Geral"}</span></span>
-                  <span>Lógica: <span className="text-blue-600">{tipoCalculo === 'com' ? 'Com Arredondamento' : 'Sem Arredondamento'}</span></span>
+                  <span className="print:hidden">Lógica: <span className="text-blue-600">{tipoCalculo === 'com' ? 'Com Arredondamento' : 'Sem Arredondamento'}</span></span>
                 </div>
               </div>
-              <button onClick={() => window.print()} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-500 hover:bg-slate-200 transition-all">
+              <button onClick={() => window.print()} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-500 hover:bg-slate-200 transition-all print:hidden">
                 <Printer size={20} />
               </button>
             </div>
@@ -203,6 +210,7 @@ export default function FretesPage() {
                     <th className="px-8 py-4">Data</th>
                     <th className="px-4 py-4">Nº</th>
                     <th className="px-4 py-4">NFe</th>
+                    <th className="px-4 py-4">Placa</th>
                     <th className="px-4 py-4">Armazém</th>
                     <th className="px-4 py-4 text-right">Sacas Bruto</th>
                     <th className="px-4 py-4 text-right">Preço Frete</th>
@@ -219,9 +227,10 @@ export default function FretesPage() {
 
                       return (
                         <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
-                          <td className="px-8 py-4 text-slate-500">{r.data}</td>
-                          <td className="px-4 py-4">{(r as any).Nº || "-"}</td>
+                          <td className="px-8 py-4 text-slate-500">{formatarDataBR(r.data)}</td>
+                          <td className="px-4 py-4">{r.numero || "-"}</td>
                           <td className="px-4 py-4">{r.nfe}</td>
+                          <td className="px-4 py-4 uppercase text-[10px]">{r.placa || "-"}</td>
                           <td className="px-4 py-4 uppercase text-[10px]">{r.armazem}</td>
                           <td className="px-4 py-4 text-right">
                             {sacasUsada.toLocaleString('pt-BR', { 
@@ -236,14 +245,14 @@ export default function FretesPage() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={7} className="py-20 text-center text-slate-400 uppercase italic font-black">Nenhum registro encontrado para os filtros selecionados.</td>
+                      <td colSpan={8} className="py-20 text-center text-slate-400 uppercase italic font-black">Nenhum registro encontrado para os filtros selecionados.</td>
                     </tr>
                   )}
                 </tbody>
                 {dadosRelatorio.length > 0 && (
                   <tfoot>
                     <tr className="bg-slate-100 dark:bg-slate-900/80 font-black text-slate-800 dark:text-white">
-                      <td colSpan={4} className="px-8 py-6 text-right uppercase tracking-widest text-[10px]">Totais do Relatório</td>
+                      <td colSpan={5} className="px-8 py-6 text-right uppercase tracking-widest text-[10px]">Totais do Relatório</td>
                       <td className="px-4 py-6 text-right text-lg">
                         {totais.sacas.toLocaleString('pt-BR', { 
                           maximumFractionDigits: tipoCalculo === 'com' ? 0 : 2,

@@ -5,14 +5,15 @@ export interface Romaneio {
   emitente?: string | null; 
   tipoNF: string | null;
   nfe: number | null;
+  numero: number | null; // Adicionado
   cidadeEntrega: string | null;
   armazem: string | null;
   armazemsaldo?: string | null;
   safra: string | null;
   fazenda: string | null;
   talhao: string | null;
-  motorista?: string | null; // Adicionado
-  placa?: string | null; // Adicionado
+  motorista?: string | null;
+  placa?: string | null;
   pesoLiquidoKg: number | null;
   pesoBrutoKg: number | null;
   sacasLiquida: number | null;
