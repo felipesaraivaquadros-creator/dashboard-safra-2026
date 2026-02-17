@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -37,15 +37,21 @@ export default function FretesPage() {
   const safraConfig = getSafraConfig(safraId);
   const isSoja2526 = safraId === 'soja2526';
 
-  const romaneios = dataMap[safraId] || [];
-  const adiantamentosRaw = adiantamentosMap[safraId] || [];
-  const abastecimentosRaw = abastecimentosMap[safraId] || [];
-
+  const [mounted, setMounted] = useState(false);
   const [motoristaFiltro, setMotoristaFiltro] = useState("");
   const [placaFiltro, setPlacaFiltro] = useState("");
   const [armazemFiltro, setArmazemFiltro] = useState("");
   const [tipoCalculo, setTipoCalculo] = useState<'com' | 'sem'>('com');
   const [showRelatorio, setShowRelatorio] = useState(false);
+
+  // Garante que o componente só renderize o conteúdo após montar no cliente
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const romaneios = useMemo(() => dataMap[safraId] || [], [safraId]);
+  const adiantamentosRaw = useMemo(() => adiantamentosMap[safraId] || [], [safraId]);
+  const abastecimentosRaw = useMemo(() => abastecimentosMap[safraId] || [], [safraId]);
 
   const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => r.motorista).filter(Boolean))).sort(), [romaneios]);
   const placas = useMemo(() => Array.from(new Set(romaneios.map(r => r.placa).filter(Boolean))).sort(), [romaneios]);
@@ -111,6 +117,11 @@ export default function FretesPage() {
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
   };
 
+  // Se não estiver montado, renderiza um estado vazio para evitar erro de hidratação
+  if (!mounted) {
+    return <div className="min-h-screen bg-slate-50 dark:bg-slate-900" />;
+  }
+
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 print:bg-white print:p-0 print:min-h-0">
       <header className="max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
@@ -136,7 +147,7 @@ export default function FretesPage() {
         {/* Tabela de Preços e Filtros */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:hidden">
           
-          {/* Tabela de Preços de Referência (Agora Superior) */}
+          {/* Tabela de Preços de Referência */}
           <section className="lg:col-span-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
               <DollarSign size={18} className="text-green-500" />
