@@ -187,7 +187,7 @@ export default function FretesPage() {
                 <button onClick={() => window.print()} className="p-2 bg-white dark:bg-slate-700 rounded-full text-slate-400 hover:text-slate-600 transition-all print:hidden shadow-sm border dark:border-slate-600"><Printer size={18} /></button>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead>
                     <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
                       <th className="px-6 py-4">Data</th>
@@ -216,7 +216,6 @@ export default function FretesPage() {
                       );
                     })}
                   </tbody>
-                  {/* tfoot ajustado com CSS para não repetir em todas as páginas na impressão */}
                   <tfoot className="print:table-row-group">
                     <tr className="bg-blue-50/50 dark:bg-blue-900/10 font-black text-blue-700 dark:text-blue-300">
                       <td colSpan={4} className="px-6 py-4 text-right uppercase text-[10px]">Total Fretes</td>
@@ -233,14 +232,14 @@ export default function FretesPage() {
               <>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   
-                  {/* BLOCO 2: ADIANTAMENTOS - print:break-inside-avoid impede quebra no meio */}
+                  {/* BLOCO 2: ADIANTAMENTOS */}
                   <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300">
                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-orange-50/30 dark:bg-orange-900/10">
                       <div className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg"><HandCoins size={20}/></div>
                       <h2 className="text-sm font-black uppercase italic tracking-tighter">2. Adiantamentos</h2>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
+                      <table className="w-full text-left border-collapse min-w-[400px]">
                         <thead>
                           <tr className="text-[9px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
                             <th className="px-6 py-3">Data</th>
@@ -271,14 +270,14 @@ export default function FretesPage() {
                     </div>
                   </section>
 
-                  {/* BLOCO 3: ABASTECIMENTOS - print:break-inside-avoid impede quebra no meio */}
+                  {/* BLOCO 3: ABASTECIMENTOS */}
                   <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300">
                     <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-red-50/30 dark:bg-red-900/10">
                       <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg"><Fuel size={20}/></div>
                       <h2 className="text-sm font-black uppercase italic tracking-tighter">3. Abastecimentos (Diesel)</h2>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
+                      <table className="w-full text-left border-collapse min-w-[400px]">
                         <thead>
                           <tr className="text-[9px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
                             <th className="px-6 py-3">Data</th>
@@ -302,7 +301,7 @@ export default function FretesPage() {
                         {dadosAbastecimentos.length > 0 && (
                           <tfoot>
                             <tr className="bg-red-50/50 dark:bg-red-900/10 font-black text-red-700 dark:text-red-400">
-                              <td colSpan={2} className="px-6 py-3 text-right uppercase text-[9px]">Totais</td>
+                              <td className="px-6 py-3 text-right uppercase text-[9px]">Totais</td>
                               <td className="px-4 py-3 text-right">{totaisAbastecimento.litros.toLocaleString('pt-BR')} L</td>
                               <td className="px-4 py-3">-</td>
                               <td className="px-6 py-3 text-right">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
