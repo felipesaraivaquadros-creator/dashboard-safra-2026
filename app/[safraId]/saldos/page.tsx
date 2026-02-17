@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { calculateSaldoDashboard } from '../../../src/lib/saldoProcessing';
-import { ArrowLeft, Package, FileText, Scale, TrendingUp, Warehouse, AlertTriangle, CheckCircle, LucideIcon } from 'lucide-react';
+import { Package, FileText, Scale, TrendingUp, Warehouse, AlertTriangle, CheckCircle, LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import { useParams } from 'next/navigation';
@@ -36,11 +36,11 @@ function SaldoKpiList({ items, valueColor }: { items: SaldoKpi[], valueColor: st
       )}
       
       {items.map((kpi, i) => (
-        <div key={i} className="flex justify-between items-center text-[11px] border-b border-slate-50 dark:border-slate-700 pb-1">
+        <div key={i} className="flex justify-between items-start text-[11px] border-b border-slate-50 dark:border-slate-700 pb-1 pt-1">
           {isContractList ? (
             <>
-              <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-1/3">{kpi.nome}</span>
-              <span className="font-medium text-slate-500 dark:text-slate-400 truncate w-1/3 text-center text-[10px]">{kpi.id || 'N/A'}</span>
+              <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-1/3 mt-0.5">{kpi.nome}</span>
+              <span className="font-medium text-slate-500 dark:text-slate-400 truncate w-1/3 text-center text-[10px] mt-0.5">{kpi.id || 'N/A'}</span>
               <div className="w-1/3 text-right">
                 <span className={`font-black ${valueColor} block leading-none`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                 <span className="text-[8px] font-bold text-slate-400">{kpi.totalKg?.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
@@ -48,7 +48,7 @@ function SaldoKpiList({ items, valueColor }: { items: SaldoKpi[], valueColor: st
             </>
           ) : (
             <>
-              <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3">{kpi.nome}</span>
+              <span className="font-bold text-slate-600 dark:text-slate-300 uppercase truncate w-2/3 mt-0.5">{kpi.nome}</span>
               <div className="w-1/3 text-right">
                 <span className={`font-black ${valueColor} block leading-none`}>{kpi.total.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                 <span className="text-[8px] font-bold text-slate-400">{kpi.totalKg?.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
@@ -150,8 +150,8 @@ export default function SaldoPage() {
             
             <SaldoKpiList items={data.estoqueArmazensFixos} valueColor="text-blue-600 dark:text-blue-400" />
 
-            <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-center">
-              <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Total Entregue</span>
+            <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-start">
+              <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic mt-1">Total Entregue</span>
               <div className="text-right">
                 <span className="text-xl font-black text-blue-600 block leading-none">{data.estoqueTotalContratosFixos.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                 <span className="text-[10px] font-bold text-slate-400">{data.estoqueTotalContratosFixosKg.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
@@ -168,8 +168,8 @@ export default function SaldoPage() {
             
             <SaldoKpiList items={data.contratosFixos} valueColor="text-purple-600 dark:text-purple-400" />
 
-            <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-center">
-              <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic">Total Contratado</span>
+            <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-start">
+              <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic mt-1">Total Contratado</span>
               <div className="text-right">
                 <span className="text-xl font-black text-purple-600 block leading-none">{data.volumeFixoTotal.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
                 <span className="text-[10px] font-bold text-slate-400">{data.volumeFixoTotalKg.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>

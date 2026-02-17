@@ -4,9 +4,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
-  ArrowLeft, Truck, FileText, Calculator, Search, Filter, 
-  Printer, Settings2, HandCoins, Fuel, Wallet, ArrowRight,
-  TrendingDown, TrendingUp, MapPin, DollarSign
+  Truck, Filter, Printer, Settings2, HandCoins, Fuel, Wallet, ArrowRight,
+  TrendingDown, TrendingUp, MapPin, DollarSign, Search
 } from 'lucide-react';
 import { getSafraConfig } from '../../../src/data/safraConfig';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
@@ -368,13 +367,13 @@ export default function FretesPage() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center print:grid-cols-3 print:gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-start print:grid-cols-3 print:gap-4">
                           <div className="space-y-1">
                             <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingUp size={12} className="text-green-400"/> Total Fretes (+)</p>
                             <p className="text-2xl font-black print:text-slate-900">R$ {totaisFrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                           </div>
                           
-                          <div className="text-white/30 hidden md:block print:hidden"><ArrowRight size={24}/></div>
+                          <div className="text-white/30 hidden md:block print:hidden pt-4"><ArrowRight size={24}/></div>
 
                           <div className="space-y-4 print:space-y-2">
                             {totalAdiantamentos > 0 && (
