@@ -26,7 +26,7 @@ const dataMap: Record<string, Romaneio[]> = {
 const CONTRATOS_FIXOS_SOJA2526_IDS = ["72208", "290925M339"];
 const ARMAZENS_CONTRATOS_FIXOS = ["COFCO NSH", "SIPAL MATUPÁ"];
 
-function loadSafraData(safraId: string): { dados: Romaneio[], config: ReturnType<typeof getSafraConfig> } {
+function loadSafraData(safraId: string): { dados: Romaneio[], config: any } {
   const config = getSafraConfig(safraId);
   let dados = dataMap[safraId];
   
@@ -35,7 +35,13 @@ function loadSafraData(safraId: string): { dados: Romaneio[], config: ReturnType
     dados = [];
   }
   
-  const romaneiosValidos = dados.filter(d => d.sacasLiquida > 0 && d.data !== null);
+  // Normalização on-the-fly para garantir que sacasLiquida exista
+  const dadosProcessados = dados.map(d => ({
+    ...d,
+    sacasLiquida: d.sacasLiquida || (Number(d.pesoLiquidoKg) || 0) / 60
+  }));
+
+  const romaneiosValidos = dadosProcessados.filter(d => (Number(d.sacasLiquida) > 0 || Number(d.pesoLiquidoKg) > 0) && d.data !== null);
 
   return { dados: romaneiosValidos, config };
 }

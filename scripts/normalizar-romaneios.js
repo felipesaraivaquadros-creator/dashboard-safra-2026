@@ -35,21 +35,36 @@ function normalizar(safraId) {
   const romaneioInput = path.join(baseDir, `romaneios_${safraId === 'soja2526' ? 'soja_25_26' : safraId}.json`);
   if (fs.existsSync(romaneioInput)) {
     const raw = JSON.parse(fs.readFileSync(romaneioInput, 'utf-8'));
-    const normalizado = raw.map(l => ({
-      data: parseData(l['Data']),
-      ncontrato: String(l['ncontrato'] || '').trim(),
-      emitente: l['Emitente'],
-      tipoNF: l['Tipo NF'],
-      nfe: parseNumero(l['NFe']),
-      numero: parseNumero(l['Nº']),
-      armazem: l['Armazem'],
-      fazenda: l['Fazenda'],
-      motorista: l['Motorista'],
-      placa: l['Placa'],
-      pesoLiquidoKg: parseNumero(l['Peso Liquido']),
-      sacasBruto: parseNumero(l['Sacas Bruto']),
-      precofrete: parseNumero(l['precofrete'])
-    })).filter(d => d.pesoLiquidoKg > 0);
+    const normalizado = raw.map(l => {
+      const pesoLiq = parseNumero(l['Peso Liquido']);
+      const pesoBruto = parseNumero(l['Peso Bruto']);
+      const sacasBruto = parseNumero(l['Sacas Bruto']);
+      const sacasLiq = parseNumero(l['Sacas Liquida']);
+
+      return {
+        data: parseData(l['Data']),
+        ncontrato: String(l['ncontrato'] || '').trim(),
+        emitente: l['Emitente'],
+        tipoNF: l['Tipo NF'],
+        nfe: parseNumero(l['NFe']),
+        numero: parseNumero(l['Nº']),
+        armazem: l['Armazem'],
+        fazenda: l['Fazenda'],
+        motorista: l['Motorista'],
+        placa: l['Placa'],
+        pesoLiquidoKg: pesoLiq,
+        pesoBrutoKg: pesoBruto || (sacasBruto ? sacasBruto * 60 : pesoLiq),
+        sacasLiquida: sacasLiq || (pesoLiq ? pesoLiq / 60 : 0),
+        sacasBruto: sacasBruto || (pesoBruto ? pesoBruto / 60 : (pesoLiq ? pesoLiq / 60 : 0)),
+        umidade: parseNumero(l['Umid']) || 0,
+        impureza: parseNumero(l['Impu']) || 0,
+        ardido: parseNumero(l['Ardi']) || 0,
+        avariados: parseNumero(l['Avari']) || 0,
+        quebrados: parseNumero(l['Quebr']) || 0,
+        contaminantes: parseNumero(l['Contaminantes']) || 0,
+        precofrete: parseNumero(l['precofrete'])
+      };
+    }).filter(d => d.pesoLiquidoKg > 0 || d.sacasLiquida > 0);
     fs.writeFileSync(path.join(dataDir, 'romaneios_normalizados.json'), JSON.stringify(normalizado, null, 2));
   }
 
@@ -61,7 +76,7 @@ function normalizar(safraId) {
       data: parseData(l['DATA']),
       motorista: l['Motorista'],
       banco: l['Banco'] || 'N/A',
-      valor: parseNumero(l['VALOR'])
+      valor: parseNumero(l['VALOR']) || parseNumero(l[' VALOR '])
     })).filter(d => d.valor > 0);
     fs.writeFileSync(path.join(dataDir, 'adiantamentos_normalizados.json'), JSON.stringify(normalizado, null, 2));
   }
