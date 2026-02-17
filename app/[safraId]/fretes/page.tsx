@@ -227,7 +227,7 @@ export default function FretesPage() {
 
                       return (
                         <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
-                          <td className="px-8 py-4 text-slate-500">{formatarDataBR(r.data)}</td>
+                          <td className="px-8 py-4 text-slate-700 dark:text-slate-300">{formatarDataBR(r.data)}</td>
                           <td className="px-4 py-4">{r.numero || "-"}</td>
                           <td className="px-4 py-4">{r.nfe}</td>
                           <td className="px-4 py-4 uppercase text-[10px]">{r.placa || "-"}</td>
