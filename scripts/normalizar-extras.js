@@ -37,30 +37,47 @@ function normalizar(tipo, safraId, inputFileName) {
   let normalizado = [];
 
   if (tipo === 'adiantamentos') {
-    normalizado = rawData.map(linha => ({
-      motorista: String(linha['Motorista'] || '').trim(),
-      data: parseData(linha['DATA']),
-      valor: parseNumero(linha['VALOR']),
-      safra: String(linha['SAFRA'] || '').trim()
-    })).filter(d => d.motorista && d.valor > 0);
+    normalizado = rawData.map(linha => {
+      // Procura a coluna de valor mesmo que tenha espaços (ex: " VALOR ")
+      const valorKey = Object.keys(linha).find(k => k.trim() === 'VALOR');
+      const motoristaKey = Object.keys(linha).find(k => k.trim() === 'Motorista');
+      const dataKey = Object.keys(linha).find(k => k.trim() === 'DATA');
+      const safraKey = Object.keys(linha).find(k => k.trim() === 'SAFRA');
+
+      return {
+        motorista: String(linha[motoristaKey] || '').trim(),
+        data: parseData(linha[dataKey]),
+        valor: parseNumero(linha[valorKey]),
+        safra: String(linha[safraKey] || '').trim()
+      };
+    }).filter(d => d.motorista && d.valor > 0);
   } 
   else if (tipo === 'abastecimentos') {
-    normalizado = rawData.map(linha => ({
-      safra: String(linha['SAFRA'] || '').trim(),
-      data: parseData(linha['DATA']),
-      motorista: String(linha['Motorista'] || '').trim(),
-      litros: parseNumero(linha['Litros']),
-      preco: parseNumero(linha['Preço']),
-      total: parseNumero(linha['TOTAL'])
-    })).filter(d => d.motorista && d.total > 0);
+    normalizado = rawData.map(linha => {
+      const motoristaKey = Object.keys(linha).find(k => k.trim() === 'Motorista');
+      const dataKey = Object.keys(linha).find(k => k.trim() === 'DATA');
+      const safraKey = Object.keys(linha).find(k => k.trim() === 'SAFRA');
+      const litrosKey = Object.keys(linha).find(k => k.trim() === 'Litros');
+      const precoKey = Object.keys(linha).find(k => k.trim() === 'Preço');
+      const totalKey = Object.keys(linha).find(k => k.trim() === 'TOTAL');
+
+      return {
+        safra: String(linha[safraKey] || '').trim(),
+        data: parseData(linha[dataKey]),
+        motorista: String(linha[motoristaKey] || '').trim(),
+        litros: parseNumero(linha[litrosKey]),
+        preco: parseNumero(linha[precoKey]),
+        total: parseNumero(linha[totalKey])
+      };
+    }).filter(d => d.motorista && d.total > 0);
   }
 
   fs.writeFileSync(outputPath, JSON.stringify(normalizado, null, 2), 'utf-8');
-  console.log(`✅ Dados de ${tipo} normalizados em ${outputPath}`);
+  console.log(`✅ Dados de ${tipo} normalizados com sucesso em ${outputPath}`);
 }
 
-const tipo = process.argv[2]; // adiantamentos ou abastecimentos
-const safraId = process.argv[3]; // soja2526
+const tipo = process.argv[2]; 
+const safraId = process.argv[3]; 
 const inputFileName = process.argv[4];
 
 if (!tipo || !safraId || !inputFileName) {
