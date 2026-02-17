@@ -3,78 +3,84 @@
 import React, { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Truck, FileText, Calculator, Search, Filter, Printer, Settings2 } from 'lucide-react';
+import { ArrowLeft, Truck, FileText, Calculator, Search, Filter, Printer, Settings2, Wallet, Fuel, CheckCircle2 } from 'lucide-react';
 import { getSafraConfig } from '../../../src/data/safraConfig';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
 import UpdateDataButton from '../../../src/components/UpdateDataButton';
-import { Romaneio } from '../../../src/data/types';
+import { Romaneio, Adiantamento, Abastecimento } from '../../../src/data/types';
 
-const dataMap: Record<string, Romaneio[]> = {
-  'soja2526': require('../../../src/data/soja2526/romaneios_normalizados.json'),
-  'soja2425': require('../../../src/data/soja2425/romaneios_normalizados.json'),
-  'milho25': require('../../../src/data/milho25/romaneios_normalizados.json'),
-  'milho26': require('../../../src/data/milho26/romaneios_normalizados.json'),
+const dataMap: Record<string, any> = {
+  'soja2526': {
+    romaneios: require('../../../src/data/soja2526/romaneios_normalizados.json'),
+    adiantamentos: require('../../../src/data/soja2526/adiantamentos_normalizados.json'),
+    diesel: require('../../../src/data/soja2526/diesel_normalizados.json'),
+  },
+  'soja2425': { romaneios: require('../../../src/data/soja2425/romaneios_normalizados.json'), adiantamentos: [], diesel: [] },
+  'milho25': { romaneios: require('../../../src/data/milho25/romaneios_normalizados.json'), adiantamentos: [], diesel: [] },
 };
 
 export default function FretesPage() {
   const params = useParams();
   const safraId = params.safraId as string;
   const safraConfig = getSafraConfig(safraId);
-  const romaneios = dataMap[safraId] || [];
+  const safraData = dataMap[safraId] || { romaneios: [], adiantamentos: [], diesel: [] };
 
-  // Estados dos Filtros
   const [motoristaFiltro, setMotoristaFiltro] = useState("");
   const [placaFiltro, setPlacaFiltro] = useState("");
   const [armazemFiltro, setArmazemFiltro] = useState("");
   const [tipoCalculo, setTipoCalculo] = useState<'com' | 'sem'>('com');
+  const [aplicarDescontos, setAplicarDescontos] = useState<'Sim' | 'Não'>('Sim');
   const [showRelatorio, setShowRelatorio] = useState(false);
 
-  // Opções para os selects
-  const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => r.motorista).filter(Boolean))).sort(), [romaneios]);
-  const placas = useMemo(() => Array.from(new Set(romaneios.map(r => r.placa).filter(Boolean))).sort(), [romaneios]);
-  const armazens = useMemo(() => Array.from(new Set(romaneios.map(r => r.armazem).filter(Boolean))).sort(), [romaneios]);
+  const motoristas = useMemo(() => Array.from(new Set(safraData.romaneios.map((r: any) => r.motorista).filter(Boolean))).sort(), [safraData]);
+  const placas = useMemo(() => Array.from(new Set(safraData.romaneios.map((r: any) => r.placa).filter(Boolean))).sort(), [safraData]);
+  const armazens = useMemo(() => Array.from(new Set(safraData.romaneios.map((r: any) => r.armazem).filter(Boolean))).sort(), [safraData]);
 
-  // Lógica do Relatório
   const dadosRelatorio = useMemo(() => {
-    if (!showRelatorio) return [];
-    return romaneios.filter(r => {
+    if (!showRelatorio) return { fretes: [], adiantamentos: [], diesel: [] };
+    
+    const fretes = safraData.romaneios.filter((r: any) => {
       const matchM = !motoristaFiltro || r.motorista === motoristaFiltro;
       const matchP = !placaFiltro || r.placa === placaFiltro;
       const matchA = !armazemFiltro || r.armazem === armazemFiltro;
       return matchM && matchP && matchA;
     });
-  }, [showRelatorio, romaneios, motoristaFiltro, placaFiltro, armazemFiltro]);
 
-  // Cálculo dos totais baseado na escolha do usuário
+    const adiantamentos = aplicarDescontos === 'Sim' ? safraData.adiantamentos.filter((a: any) => {
+      const matchM = !motoristaFiltro || a.motorista === motoristaFiltro;
+      // Adiantamentos não têm placa no Excel fornecido, filtramos apenas por motorista
+      return matchM;
+    }) : [];
+
+    const diesel = aplicarDescontos === 'Sim' ? safraData.diesel.filter((d: any) => {
+      const matchM = !motoristaFiltro || d.motorista === motoristaFiltro;
+      return matchM;
+    }) : [];
+
+    return { fretes, adiantamentos, diesel };
+  }, [showRelatorio, safraData, motoristaFiltro, placaFiltro, armazemFiltro, aplicarDescontos]);
+
   const totais = useMemo(() => {
-    return dadosRelatorio.reduce((acc, r) => {
-      const sacasOriginal = Number(r.sacasBruto) || 0;
-      const sacasUsada = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : sacasOriginal;
-      const preco = Number(r.precofrete) || 0;
-      const subtotal = sacasUsada * preco;
+    const freteTotal = dadosRelatorio.fretes.reduce((acc: number, r: any) => {
+      const sacas = tipoCalculo === 'com' ? Math.floor(Number(r.sacasBruto) || 0) : (Number(r.sacasBruto) || 0);
+      return acc + (sacas * (Number(r.precofrete) || 0));
+    }, 0);
 
-      acc.sacas += sacasUsada;
-      acc.valor += subtotal;
-      return acc;
-    }, { sacas: 0, valor: 0 });
+    const adiantTotal = dadosRelatorio.adiantamentos.reduce((acc: number, a: any) => acc + (Number(a.valor) || 0), 0);
+    const dieselTotal = dadosRelatorio.diesel.reduce((acc: number, d: any) => acc + (Number(d.total) || 0), 0);
+    const dieselLitros = dadosRelatorio.diesel.reduce((acc: number, d: any) => acc + (Number(d.litros) || 0), 0);
+
+    return {
+      frete: freteTotal,
+      adiantamentos: adiantTotal,
+      diesel: dieselTotal,
+      dieselLitros,
+      saldo: freteTotal - adiantTotal - dieselTotal
+    };
   }, [dadosRelatorio, tipoCalculo]);
 
-  const handleLimpar = () => {
-    setMotoristaFiltro("");
-    setPlacaFiltro("");
-    setArmazemFiltro("");
-    setTipoCalculo('com');
-    setShowRelatorio(false);
-  };
-
-  // Helper para formatar data AAAA-MM-DD para DD-MM-AAAA
-  const formatarDataBR = (dataISO: string | null) => {
-    if (!dataISO) return "-";
-    const partes = dataISO.split('-');
-    if (partes.length !== 3) return dataISO;
-    return `${partes[2]}-${partes[1]}-${partes[0]}`;
-  };
+  const formatarDataBR = (d: string | null) => d ? d.split('-').reverse().join('-') : "-";
 
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
@@ -88,188 +94,218 @@ export default function FretesPage() {
           </div>
           <SafraSelector currentSafra={safraConfig} />
         </div>
-        
         <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
-          <Link href={`/${safraId}/saldos`} className="px-3 py-2 text-[10px] font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md">Saldos</Link>
           <UpdateDataButton />
           <ThemeToggle />
-          <button onClick={handleLimpar} className="text-[10px] font-black text-slate-400 hover:text-red-500 uppercase transition-colors">Limpar</button>
         </div>
       </header>
 
       <div className="max-w-[1200px] mx-auto space-y-8">
-        
-        {/* Tabela de Preços de Referência */}
-        <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden print:hidden">
-          <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
-            <Calculator size={18} className="text-blue-500" />
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Tabela de Preços (Referência)</h2>
-          </div>
-          <div className="p-6">
-            {safraConfig.TABELA_FRETES.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {safraConfig.TABELA_FRETES.map((item, i) => (
-                  <div key={i} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-700 text-center">
-                    <p className="text-[9px] font-black text-slate-400 uppercase mb-1 truncate">{item.local}</p>
-                    <p className="text-lg font-black text-blue-600 dark:text-blue-400">R$ {item.preco.toFixed(2)}</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase">por saca</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-8 text-center text-slate-400 text-[10px] font-bold uppercase italic border-2 border-dashed border-slate-100 dark:border-slate-700 rounded-3xl">
-                Tabela de preços não configurada para esta safra.
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Filtros do Relatório */}
+        {/* Filtros */}
         <section className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm print:hidden">
-          <div className="flex items-center gap-2 mb-6">
-            <Filter size={18} className="text-purple-500" />
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Gerar Relatório</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-end">
             <div className="space-y-1.5">
               <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Motorista</label>
-              <select 
-                value={motoristaFiltro} 
-                onChange={(e) => setMotoristaFiltro(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all"
-              >
-                <option value="">Todos os Motoristas</option>
+              <select value={motoristaFiltro} onChange={(e) => setMotoristaFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold">
+                <option value="">Todos</option>
                 {motoristas.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Placa</label>
-              <select 
-                value={placaFiltro} 
-                onChange={(e) => setPlacaFiltro(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all"
-              >
-                <option value="">Todas as Placas</option>
+              <select value={placaFiltro} onChange={(e) => setPlacaFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold">
+                <option value="">Todas</option>
                 {placas.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Armazém</label>
-              <select 
-                value={armazemFiltro} 
-                onChange={(e) => setArmazemFiltro(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all"
-              >
-                <option value="">Todos os Armazéns</option>
+              <select value={armazemFiltro} onChange={(e) => setArmazemFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold">
+                <option value="">Todos</option>
                 {armazens.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-1">
-                <Settings2 size={10} /> Cálculo
-              </label>
-              <select 
-                value={tipoCalculo} 
-                onChange={(e) => setTipoCalculo(e.target.value as 'com' | 'sem')}
-                className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all"
-              >
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Cálculo</label>
+              <select value={tipoCalculo} onChange={(e) => setTipoCalculo(e.target.value as any)} className="w-full bg-slate-50 dark:bg-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold">
                 <option value="com">Com Arredondamento</option>
                 <option value="sem">Sem Arredondamento</option>
               </select>
             </div>
-            <button 
-              onClick={() => setShowRelatorio(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
-            >
-              <Search size={16} /> Gerar Relatório
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Aplicar Descontos?</label>
+              <select value={aplicarDescontos} onChange={(e) => setAplicarDescontos(e.target.value as any)} className="w-full bg-slate-50 dark:bg-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold">
+                <option value="Sim">Sim</option>
+                <option value="Não">Não</option>
+              </select>
+            </div>
+            <button onClick={() => setShowRelatorio(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-xs py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
+              <Search size={16} /> Gerar
             </button>
           </div>
         </section>
 
-        {/* Relatório Gerado */}
         {showRelatorio && (
-          <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 print:shadow-none print:border-none print:rounded-none">
-            <div className="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start">
-              <div>
-                <h2 className="text-2xl font-black uppercase italic tracking-tighter text-slate-800 dark:text-white mb-1">Relatório de Fretes</h2>
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-black uppercase text-slate-400">
-                  <span>Safra: <span className="text-purple-600">{safraConfig.nome}</span></span>
-                  <span>Motorista: <span className="text-slate-600 dark:text-slate-200">{motoristaFiltro || "Geral"}</span></span>
-                  <span className="print:hidden">Lógica: <span className="text-blue-600">{tipoCalculo === 'com' ? 'Com Arredondamento' : 'Sem Arredondamento'}</span></span>
-                </div>
+          <div className="space-y-8">
+            {/* Bloco Fretes */}
+            <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
+              <div className="p-8 border-b dark:border-slate-700 flex justify-between items-center">
+                <h2 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-2"><Truck className="text-blue-500"/> Relatório de Fretes</h2>
+                <button onClick={() => window.print()} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full print:hidden"><Printer size={20}/></button>
               </div>
-              <button onClick={() => window.print()} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-500 hover:bg-slate-200 transition-all print:hidden">
-                <Printer size={20} />
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                    <th className="px-8 py-4">Data</th>
-                    <th className="px-4 py-4">Nº</th>
-                    <th className="px-4 py-4">NFe</th>
-                    <th className="px-4 py-4">Placa</th>
-                    <th className="px-4 py-4">Armazém</th>
-                    <th className="px-4 py-4 text-right">Sacas Bruto</th>
-                    <th className="px-4 py-4 text-right">Preço Frete</th>
-                    <th className="px-8 py-4 text-right">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="text-xs font-bold">
-                  {dadosRelatorio.length > 0 ? (
-                    dadosRelatorio.map((r, i) => {
-                      const sacasOriginal = Number(r.sacasBruto) || 0;
-                      const sacasUsada = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : sacasOriginal;
-                      const preco = Number(r.precofrete) || 0;
-                      const subtotal = sacasUsada * preco;
-
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-black uppercase text-slate-400">
+                      <th className="px-6 py-4">Data</th>
+                      <th className="px-4 py-4">Nº</th>
+                      <th className="px-4 py-4">NFe</th>
+                      <th className="px-4 py-4">Placa</th>
+                      <th className="px-4 py-4">Armazém</th>
+                      <th className="px-4 py-4 text-right">Sacas Bruto</th>
+                      <th className="px-4 py-4 text-right">Preço</th>
+                      <th className="px-6 py-4 text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-xs font-bold">
+                    {dadosRelatorio.fretes.map((r: any, i: number) => {
+                      const sacas = tipoCalculo === 'com' ? Math.floor(Number(r.sacasBruto) || 0) : (Number(r.sacasBruto) || 0);
+                      const sub = sacas * (Number(r.precofrete) || 0);
                       return (
-                        <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
-                          <td className="px-8 py-4 text-slate-700 dark:text-slate-300">{formatarDataBR(r.data)}</td>
+                        <tr key={i} className="border-b dark:border-slate-700/50">
+                          <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{formatarDataBR(r.data)}</td>
                           <td className="px-4 py-4">{r.numero || "-"}</td>
                           <td className="px-4 py-4">{r.nfe}</td>
-                          <td className="px-4 py-4 uppercase text-[10px]">{r.placa || "-"}</td>
+                          <td className="px-4 py-4 uppercase">{r.placa || "-"}</td>
                           <td className="px-4 py-4 uppercase text-[10px]">{r.armazem}</td>
-                          <td className="px-4 py-4 text-right">
-                            {sacasUsada.toLocaleString('pt-BR', { 
-                              maximumFractionDigits: tipoCalculo === 'com' ? 0 : 2,
-                              minimumFractionDigits: tipoCalculo === 'com' ? 0 : 2 
-                            })}
-                          </td>
-                          <td className="px-4 py-4 text-right text-blue-600">R$ {preco.toFixed(2)}</td>
-                          <td className="px-8 py-4 text-right font-black">R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-4 text-right">{sacas.toLocaleString('pt-BR', { minimumFractionDigits: tipoCalculo === 'com' ? 0 : 2 })}</td>
+                          <td className="px-4 py-4 text-right text-blue-600">R$ {(r.precofrete || 0).toFixed(2)}</td>
+                          <td className="px-6 py-4 text-right font-black">R$ {sub.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={8} className="py-20 text-center text-slate-400 uppercase italic font-black">Nenhum registro encontrado para os filtros selecionados.</td>
-                    </tr>
-                  )}
-                </tbody>
-                {dadosRelatorio.length > 0 && (
-                  <tfoot>
-                    <tr className="bg-slate-100 dark:bg-slate-900/80 font-black text-slate-800 dark:text-white">
-                      <td colSpan={5} className="px-8 py-6 text-right uppercase tracking-widest text-[10px]">Totais do Relatório</td>
-                      <td className="px-4 py-6 text-right text-lg">
-                        {totais.sacas.toLocaleString('pt-BR', { 
-                          maximumFractionDigits: tipoCalculo === 'com' ? 0 : 2,
-                          minimumFractionDigits: tipoCalculo === 'com' ? 0 : 2 
-                        })} 
-                        <span className="text-[10px] text-slate-400 ml-1">sc</span>
-                      </td>
-                      <td className="px-4 py-6 text-right">-</td>
-                      <td className="px-8 py-6 text-right text-xl text-green-600 dark:text-green-400">R$ {totais.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
-            </div>
-          </section>
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {aplicarDescontos === 'Sim' && (
+              <>
+                {/* Bloco Adiantamentos */}
+                <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
+                  <div className="p-6 border-b dark:border-slate-700 bg-orange-50/50 dark:bg-orange-900/10">
+                    <h2 className="text-lg font-black uppercase italic tracking-tighter flex items-center gap-2 text-orange-600"><Wallet size={20}/> Adiantamentos</h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-black uppercase text-slate-400">
+                          <th className="px-6 py-4">Data</th>
+                          <th className="px-6 py-4">Motorista</th>
+                          <th className="px-6 py-4">Banco</th>
+                          <th className="px-6 py-4 text-right">Valor</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-xs font-bold">
+                        {dadosRelatorio.adiantamentos.map((a: any, i: number) => (
+                          <tr key={i} className="border-b dark:border-slate-700/50">
+                            <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{formatarDataBR(a.data)}</td>
+                            <td className="px-6 py-4 uppercase">{a.motorista}</td>
+                            <td className="px-6 py-4 uppercase">{a.banco}</td>
+                            <td className="px-6 py-4 text-right text-red-600">R$ {(a.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-slate-50 dark:bg-slate-900/50 font-black">
+                        <tr>
+                          <td colSpan={3} className="px-6 py-4 text-right uppercase text-[10px]">Total Adiantamentos</td>
+                          <td className="px-6 py-4 text-right text-red-600">R$ {totais.adiantamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </section>
+
+                {/* Bloco Abastecimentos */}
+                <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
+                  <div className="p-6 border-b dark:border-slate-700 bg-amber-50/50 dark:bg-amber-900/10">
+                    <h2 className="text-lg font-black uppercase italic tracking-tighter flex items-center gap-2 text-amber-600"><Fuel size={20}/> Abastecimentos</h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-black uppercase text-slate-400">
+                          <th className="px-6 py-4">Data</th>
+                          <th className="px-6 py-4">Motorista</th>
+                          <th className="px-6 py-4 text-right">Litros</th>
+                          <th className="px-6 py-4 text-right">Preço Litro</th>
+                          <th className="px-6 py-4 text-right">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-xs font-bold">
+                        {dadosRelatorio.diesel.map((d: any, i: number) => (
+                          <tr key={i} className="border-b dark:border-slate-700/50">
+                            <td className="px-6 py-4 text-slate-700 dark:text-slate-300">{formatarDataBR(d.data)}</td>
+                            <td className="px-6 py-4 uppercase">{d.motorista}</td>
+                            <td className="px-6 py-4 text-right">{d.litros?.toLocaleString('pt-BR')} L</td>
+                            <td className="px-6 py-4 text-right">R$ {(d.preco || 0).toFixed(3)}</td>
+                            <td className="px-6 py-4 text-right text-red-600">R$ {(d.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-slate-50 dark:bg-slate-900/50 font-black">
+                        <tr>
+                          <td colSpan={2} className="px-6 py-4 text-right uppercase text-[10px]">Totais Diesel</td>
+                          <td className="px-6 py-4 text-right">{totais.dieselLitros.toLocaleString('pt-BR')} L</td>
+                          <td className="px-6 py-4 text-right">-</td>
+                          <td className="px-6 py-4 text-right text-red-600">R$ {totais.dieselTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </section>
+              </>
+            )}
+
+            {/* Resumo Final */}
+            <section className="bg-slate-900 text-white p-8 rounded-3xl shadow-2xl border-4 border-purple-500/30">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 bg-purple-500 rounded-2xl shadow-lg shadow-purple-500/20"><CheckCircle2 size={32}/></div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-purple-300">Fechamento de Saldo</p>
+                    <h3 className="text-2xl font-black uppercase italic tracking-tighter">{motoristaFiltro || "Geral"}</h3>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full md:w-auto">
+                  <div className="text-center md:text-right">
+                    <p className="text-[10px] font-black uppercase text-slate-400">Total Fretes</p>
+                    <p className="text-xl font-black text-blue-400">R$ {totais.frete.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="text-center md:text-right">
+                    <p className="text-[10px] font-black uppercase text-slate-400">Total Descontos</p>
+                    <p className="text-xl font-black text-red-400">R$ {(totais.adiantamentos + totais.diesel).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="text-center md:text-right p-4 bg-white/5 rounded-2xl border border-white/10">
+                    <p className="text-[10px] font-black uppercase text-purple-300">Saldo Líquido</p>
+                    <p className="text-3xl font-black text-green-400">R$ {totais.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         )}
       </div>
+
+      <style jsx global>{`
+        @media print {
+          .print\\:hidden { display: none !important; }
+          body { background: white !important; color: black !important; }
+          main { padding: 0 !important; }
+          section { border: 1px solid #eee !important; box-shadow: none !important; border-radius: 0 !important; margin-bottom: 20px !important; page-break-inside: avoid; }
+          tfoot { display: table-footer-group; }
+        }
+      `}</style>
     </main>
   );
 }
