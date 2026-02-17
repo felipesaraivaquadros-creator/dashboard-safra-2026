@@ -1,0 +1,50 @@
+[
+  {
+    "Motorista": "MAILSON",
+    "DATA": "2026-01-15T04:00:20.000Z",
+    " VALOR ": 2500,
+    "SAFRA": "SOJA25/26"
+  },
+  {
+    "Motorista": "SADI",
+    "DATA": "2026-01-22T04:00:20.000Z",
+    " VALOR ": 10000,
+    "SAFRA": "SOJA25/26"
+  },
+  {
+    "Motorista": "MAILSON",
+    "DATA": "2026-01-23T04:00:20.000Z",
+    " VALOR ": 8723.9,
+    "SAFRA": "SOJA25/26"
+  },
+  {
+    "Motorista": "MAILSON",
+    "DATA": "2026-02-07T04:00:20.000Z",
+    " VALOR ": 5000,
+    "SAFRA": "SOJA25/26"
+  },
+  {
+    "Motorista": "SADI",
+    "DATA": "2026-02-09T04:00:20.000Z",
+    " VALOR ": 6000,
+    "SAFRA": "SOJA25/26"
+  },
+  {
+    "Motorista": null,
+    "DATA": null,
+    " VALOR ": null,
+    "SAFRA": "SOJA25/26"
+  },
+  {
+    "Motorista": null,
+    "DATA": null,
+    " VALOR ": null,
+    "SAFRA": "SOJA25/26"
+  },
+  {
+    "Motorista": null,
+    "DATA": null,
+    " VALOR ": null,
+    "SAFRA": "SOJA25/26"
+  }
+]

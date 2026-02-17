@@ -9,6 +9,7 @@
     "lint": "next lint",
     "exportar:soja2526": "node scripts/exportar-safra.js soja2526 && node scripts/normalizar-romaneios.js soja2526 romaneios_soja_25_26.json",
     "exportar:extras2526": "node scripts/exportar-safra.js adiantamentos2526 && node scripts/normalizar-extras.js adiantamentos soja2526 adiantamentos_soja_25_26.json && node scripts/exportar-safra.js abastecimentos2526 && node scripts/normalizar-extras.js abastecimentos soja2526 abastecimentos_soja_25_26.json",
+    "exportar:tudo2526": "npm run exportar:soja2526 && npm run exportar:extras2526",
     "exportar:soja2425": "node scripts/exportar-safra.js soja2425 && node scripts/normalizar-romaneios.js soja2425 romaneios_soja_24_25.json",
     "exportar:milho25": "node scripts/exportar-safra.js milho25 && node scripts/normalizar-romaneios.js milho25 romaneios_milho_25.json"
   },
