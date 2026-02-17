@@ -112,7 +112,7 @@ export default function FretesPage() {
   };
 
   return (
-    <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
+    <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 print:bg-white print:p-0 print:min-h-0">
       <header className="max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
         <div className="flex items-center justify-between w-full md:w-auto gap-4">
           <div className="flex items-center gap-4 min-w-0">
@@ -131,7 +131,7 @@ export default function FretesPage() {
         </div>
       </header>
 
-      <div className="max-w-[1200px] mx-auto space-y-8">
+      <div className="max-w-[1200px] mx-auto space-y-8 print:space-y-6">
         
         {/* Filtros */}
         <section className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm print:hidden">
@@ -175,28 +175,28 @@ export default function FretesPage() {
         </section>
 
         {showRelatorio && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 print:space-y-6">
             
             {/* BLOCO 1: RELATÓRIO DE FRETES */}
-            <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden print:shadow-none print:border-slate-300">
-              <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20">
+            <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden print:shadow-none print:border-slate-300 print:rounded-none">
+              <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/20 print:bg-white print:p-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg"><Truck size={20}/></div>
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg print:hidden"><Truck size={20}/></div>
                   <h2 className="text-lg font-black uppercase italic tracking-tighter">1. Relatório de Fretes (Ganhos)</h2>
                 </div>
                 <button onClick={() => window.print()} className="p-2 bg-white dark:bg-slate-700 rounded-full text-slate-400 hover:text-slate-600 transition-all print:hidden shadow-sm border dark:border-slate-600"><Printer size={18} /></button>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[800px]">
+                <table className="w-full text-left border-collapse min-w-[800px] print:min-w-full">
                   <thead>
                     <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
-                      <th className="px-6 py-4">Data</th>
-                      <th className="px-4 py-4">NFe</th>
-                      <th className="px-4 py-4">Placa</th>
-                      <th className="px-4 py-4">Armazém</th>
-                      <th className="px-4 py-4 text-right">Sacas Bruto</th>
-                      <th className="px-4 py-4 text-right">Preço</th>
-                      <th className="px-6 py-4 text-right">Subtotal</th>
+                      <th className="px-6 py-4 print:px-2">Data</th>
+                      <th className="px-4 py-4 print:px-2">NFe</th>
+                      <th className="px-4 py-4 print:px-2">Placa</th>
+                      <th className="px-4 py-4 print:px-2">Armazém</th>
+                      <th className="px-4 py-4 text-right print:px-2">Sacas Bruto</th>
+                      <th className="px-4 py-4 text-right print:px-2">Preço</th>
+                      <th className="px-6 py-4 text-right print:px-2">Subtotal</th>
                     </tr>
                   </thead>
                   <tbody className="text-xs font-bold">
@@ -205,23 +205,23 @@ export default function FretesPage() {
                       const subtotal = sacas * (Number(r.precofrete) || 0);
                       return (
                         <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/30 dark:hover:bg-slate-700/20">
-                          <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{formatarDataBR(r.data)}</td>
-                          <td className="px-4 py-4">{r.nfe}</td>
-                          <td className="px-4 py-4 uppercase text-[10px]">{r.placa}</td>
-                          <td className="px-4 py-4 uppercase text-[10px]">{r.armazem}</td>
-                          <td className="px-4 py-4 text-right">{sacas.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}</td>
-                          <td className="px-4 py-4 text-right text-blue-600">R$ {(Number(r.precofrete) || 0).toFixed(2)}</td>
-                          <td className="px-6 py-4 text-right font-black">R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                          <td className="px-6 py-4 text-slate-500 dark:text-slate-400 print:px-2">{formatarDataBR(r.data)}</td>
+                          <td className="px-4 py-4 print:px-2">{r.nfe}</td>
+                          <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.placa}</td>
+                          <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.armazem}</td>
+                          <td className="px-4 py-4 text-right print:px-2">{sacas.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 py-4 text-right text-blue-600 print:px-2">R$ {(Number(r.precofrete) || 0).toFixed(2)}</td>
+                          <td className="px-6 py-4 text-right font-black print:px-2">R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                         </tr>
                       );
                     })}
                   </tbody>
                   <tfoot className="print:table-row-group">
                     <tr className="bg-blue-50/50 dark:bg-blue-900/10 font-black text-blue-700 dark:text-blue-300">
-                      <td colSpan={4} className="px-6 py-4 text-right uppercase text-[10px]">Total Fretes</td>
-                      <td className="px-4 py-4 text-right">{totaisFrete.sacas.toLocaleString('pt-BR')} sc</td>
-                      <td className="px-4 py-4">-</td>
-                      <td className="px-6 py-4 text-right text-base">R$ {totaisFrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                      <td colSpan={4} className="px-6 py-4 text-right uppercase text-[10px] print:px-2">Total Fretes</td>
+                      <td className="px-4 py-4 text-right print:px-2">{totaisFrete.sacas.toLocaleString('pt-BR')} sc</td>
+                      <td className="px-4 py-4 print:px-2">-</td>
+                      <td className="px-6 py-4 text-right text-base print:px-2">R$ {totaisFrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -230,29 +230,29 @@ export default function FretesPage() {
 
             {isSoja2526 && (
               <>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:gap-6">
                   
                   {/* BLOCO 2: ADIANTAMENTOS */}
-                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300">
-                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-orange-50/30 dark:bg-orange-900/10">
-                      <div className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg"><HandCoins size={20}/></div>
+                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300 print:rounded-none">
+                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-orange-50/30 dark:bg-orange-900/10 print:bg-white print:p-4">
+                      <div className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 rounded-lg print:hidden"><HandCoins size={20}/></div>
                       <h2 className="text-sm font-black uppercase italic tracking-tighter">2. Adiantamentos</h2>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse min-w-[400px]">
+                      <table className="w-full text-left border-collapse min-w-[400px] print:min-w-full">
                         <thead>
                           <tr className="text-[9px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
-                            <th className="px-6 py-3">Data</th>
-                            <th className="px-4 py-3">Motorista</th>
-                            <th className="px-6 py-3 text-right">Valor</th>
+                            <th className="px-6 py-3 print:px-2">Data</th>
+                            <th className="px-4 py-3 print:px-2">Motorista</th>
+                            <th className="px-6 py-3 text-right print:px-2">Valor</th>
                           </tr>
                         </thead>
                         <tbody className="text-xs font-bold">
                           {dadosAdiantamentos.length > 0 ? dadosAdiantamentos.map((a, i) => (
                             <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50">
-                              <td className="px-6 py-3 text-slate-500 dark:text-slate-400">{formatarDataBR(a.data)}</td>
-                              <td className="px-4 py-3 uppercase text-[10px]">{a.motorista}</td>
-                              <td className="px-6 py-3 text-right text-red-600">R$ {(Number(a.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                              <td className="px-6 py-3 text-slate-500 dark:text-slate-400 print:px-2">{formatarDataBR(a.data)}</td>
+                              <td className="px-4 py-3 uppercase text-[10px] print:px-2">{a.motorista}</td>
+                              <td className="px-6 py-3 text-right text-red-600 print:px-2">R$ {(Number(a.valor) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                             </tr>
                           )) : (
                             <tr><td colSpan={3} className="py-8 text-center text-slate-400 italic text-[10px] uppercase">Nenhum adiantamento</td></tr>
@@ -261,8 +261,8 @@ export default function FretesPage() {
                         {dadosAdiantamentos.length > 0 && (
                           <tfoot>
                             <tr className="bg-orange-50/50 dark:bg-orange-900/10 font-black text-orange-700 dark:text-orange-400">
-                              <td colSpan={2} className="px-6 py-3 text-right uppercase text-[9px]">Total Adiantamentos</td>
-                              <td className="px-6 py-3 text-right">R$ {totalAdiantamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                              <td colSpan={2} className="px-6 py-3 text-right uppercase text-[9px] print:px-2">Total Adiantamentos</td>
+                              <td className="px-6 py-3 text-right print:px-2">R$ {totalAdiantamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                             </tr>
                           </tfoot>
                         )}
@@ -271,28 +271,28 @@ export default function FretesPage() {
                   </section>
 
                   {/* BLOCO 3: ABASTECIMENTOS */}
-                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300">
-                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-red-50/30 dark:bg-red-900/10">
-                      <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg"><Fuel size={20}/></div>
+                  <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-lg overflow-hidden print:break-inside-avoid print:shadow-none print:border-slate-300 print:rounded-none">
+                    <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3 bg-red-50/30 dark:bg-red-900/10 print:bg-white print:p-4">
+                      <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg print:hidden"><Fuel size={20}/></div>
                       <h2 className="text-sm font-black uppercase italic tracking-tighter">3. Abastecimentos (Diesel)</h2>
                     </div>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse min-w-[400px]">
+                      <table className="w-full text-left border-collapse min-w-[400px] print:min-w-full">
                         <thead>
                           <tr className="text-[9px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
-                            <th className="px-6 py-3">Data</th>
-                            <th className="px-4 py-3 text-right">Litros</th>
-                            <th className="px-4 py-3 text-right">Preço</th>
-                            <th className="px-6 py-3 text-right">Total</th>
+                            <th className="px-6 py-3 print:px-2">Data</th>
+                            <th className="px-4 py-3 text-right print:px-2">Litros</th>
+                            <th className="px-4 py-3 text-right print:px-2">Preço</th>
+                            <th className="px-6 py-3 text-right print:px-2">Total</th>
                           </tr>
                         </thead>
                         <tbody className="text-xs font-bold">
                           {dadosAbastecimentos.length > 0 ? dadosAbastecimentos.map((a, i) => (
                             <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50">
-                              <td className="px-6 py-3 text-slate-500 dark:text-slate-400">{formatarDataBR(a.data)}</td>
-                              <td className="px-4 py-3 text-right">{(Number(a.litros) || 0).toLocaleString('pt-BR')} L</td>
-                              <td className="px-4 py-3 text-right text-slate-400">R$ {(Number(a.preco) || 0).toFixed(2)}</td>
-                              <td className="px-6 py-3 text-right text-red-600">R$ {(Number(a.total) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                              <td className="px-6 py-3 text-slate-500 dark:text-slate-400 print:px-2">{formatarDataBR(a.data)}</td>
+                              <td className="px-4 py-3 text-right print:px-2">{(Number(a.litros) || 0).toLocaleString('pt-BR')} L</td>
+                              <td className="px-4 py-3 text-right text-slate-400 print:px-2">R$ {(Number(a.preco) || 0).toFixed(2)}</td>
+                              <td className="px-6 py-3 text-right text-red-600 print:px-2">R$ {(Number(a.total) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                             </tr>
                           )) : (
                             <tr><td colSpan={4} className="py-8 text-center text-slate-400 italic text-[10px] uppercase">Nenhum abastecimento</td></tr>
@@ -301,10 +301,10 @@ export default function FretesPage() {
                         {dadosAbastecimentos.length > 0 && (
                           <tfoot>
                             <tr className="bg-red-50/50 dark:bg-red-900/10 font-black text-red-700 dark:text-red-400">
-                              <td className="px-6 py-3 text-right uppercase text-[9px]">Totais</td>
-                              <td className="px-4 py-3 text-right">{totaisAbastecimento.litros.toLocaleString('pt-BR')} L</td>
-                              <td className="px-4 py-3">-</td>
-                              <td className="px-6 py-3 text-right">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                              <td colSpan={2} className="px-6 py-3 text-right uppercase text-[9px] print:px-2">Totais</td>
+                              <td className="px-4 py-3 text-right print:px-2">{totaisAbastecimento.litros.toLocaleString('pt-BR')} L</td>
+                              <td className="px-4 py-3 print:px-2">-</td>
+                              <td className="px-6 py-3 text-right print:px-2">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                             </tr>
                           </tfoot>
                         )}
@@ -314,21 +314,21 @@ export default function FretesPage() {
                 </div>
 
                 {/* BLOCO 4: TOTALIZADOR DE SALDO MOTORISTA */}
-                <section className="bg-slate-900 dark:bg-purple-950 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden group print:bg-slate-100 print:text-slate-900 print:shadow-none print:border print:border-slate-300 print:break-inside-avoid">
+                <section className="bg-slate-900 dark:bg-purple-950 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden group print:bg-white print:text-slate-900 print:shadow-none print:border print:border-slate-300 print:break-inside-avoid print:rounded-none print:p-6">
                   <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700 print:hidden">
                     <Wallet size={180} />
                   </div>
                   
                   <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-8">
-                      <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md print:bg-slate-200"><Wallet size={32} className="print:text-slate-600"/></div>
+                    <div className="flex items-center gap-3 mb-8 print:mb-4">
+                      <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md print:hidden"><Wallet size={32} /></div>
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-300 print:text-slate-500">Resumo Financeiro</p>
                         <h2 className="text-3xl font-black uppercase italic tracking-tighter print:text-slate-900">Saldo Líquido do Motorista</h2>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-center print:grid-cols-3 print:gap-4">
                       <div className="space-y-1">
                         <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingUp size={12} className="text-green-400"/> Total Fretes (+)</p>
                         <p className="text-2xl font-black print:text-slate-900">R$ {totaisFrete.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
@@ -336,7 +336,7 @@ export default function FretesPage() {
                       
                       <div className="text-white/30 hidden md:block print:hidden"><ArrowRight size={24}/></div>
 
-                      <div className="space-y-4">
+                      <div className="space-y-4 print:space-y-2">
                         <div className="space-y-1">
                           <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingDown size={12} className="text-orange-400"/> Adiantamentos (-)</p>
                           <p className="text-xl font-bold text-orange-200 print:text-orange-600">R$ {totalAdiantamentos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
@@ -347,12 +347,12 @@ export default function FretesPage() {
                         </div>
                       </div>
 
-                      <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1 print:bg-white print:border-slate-300">
+                      <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1 print:bg-slate-50 print:border-slate-300 print:rounded-xl print:p-4">
                         <p className="text-[10px] font-black uppercase text-purple-300 mb-1 print:text-slate-500">Valor a Pagar</p>
                         <p className={`text-4xl font-black tracking-tighter ${saldoFinal >= 0 ? 'text-green-400 print:text-green-600' : 'text-red-400 print:text-red-600'}`}>
                           R$ {saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </p>
-                        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center print:border-slate-100">
+                        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center print:border-slate-200 print:mt-2 print:pt-2">
                           <span className="text-[9px] font-bold uppercase text-white/40 italic print:text-slate-400">* Sujeito a conferência final</span>
                           <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${saldoFinal >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                             {saldoFinal >= 0 ? 'Credor' : 'Devedor'}
@@ -372,12 +372,20 @@ export default function FretesPage() {
       <style jsx global>{`
         @media print {
           @page {
-            margin: 1.5cm;
+            margin: 1cm;
             size: auto;
           }
           body {
             background: white !important;
             color: black !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          /* Remove paddings do container principal */
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: auto !important;
           }
           /* Força o tfoot a se comportar como um grupo de linhas normal para não repetir */
           tfoot {
@@ -387,12 +395,19 @@ export default function FretesPage() {
           section {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
+            margin-top: 0 !important;
+            margin-bottom: 1.5rem !important;
           }
           /* Ajuste de cores para economia de tinta e clareza */
-          .bg-slate-900 {
-            background-color: #f8fafc !important;
-            color: #0f172a !important;
+          .bg-slate-900, .dark\\:bg-purple-950 {
+            background-color: white !important;
+            color: black !important;
             border: 1px solid #e2e8f0 !important;
+          }
+          /* Garante que o relatório comece no topo */
+          .max-w-\\[1200px\\] {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
           }
         }
       `}</style>
