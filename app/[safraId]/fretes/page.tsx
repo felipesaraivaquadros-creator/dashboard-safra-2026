@@ -10,26 +10,40 @@ import SafraSelector from '../../../src/components/SafraSelector';
 import UpdateDataButton from '../../../src/components/UpdateDataButton';
 
 // Mapeamento estático para evitar erro de require dinâmico no cliente
-const DATA_MAP: Record<string, any> = {
-  'soja2526': {
-    romaneios: require('../../../src/data/soja2526/romaneios_normalizados.json'),
-    adiantamentos: require('../../../src/data/soja2526/adiantamentos_normalizados.json'),
-    diesel: require('../../../src/data/soja2526/diesel_normalizados.json'),
-  },
-  'soja2425': {
-    romaneios: require('../../../src/data/soja2425/romaneios_normalizados.json'),
-    adiantamentos: require('../../../src/data/soja2425/adiantamentos_normalizados.json'),
-    diesel: require('../../../src/data/soja2425/diesel_normalizados.json'),
-  },
-  'milho25': {
-    romaneios: require('../../../src/data/milho25/romaneios_normalizados.json'),
-    adiantamentos: require('../../../src/data/milho25/adiantamentos_normalizados.json'),
-    diesel: require('../../../src/data/milho25/diesel_normalizados.json'),
-  },
-  'milho26': {
-    romaneios: require('../../../src/data/milho26/romaneios_normalizados.json'),
-    adiantamentos: [],
-    diesel: [],
+// Adicionado blocos try/catch ou verificações para garantir que a página não quebre
+const getSafeData = (safraId: string) => {
+  try {
+    switch(safraId) {
+      case 'soja2526':
+        return {
+          romaneios: require('../../../src/data/soja2526/romaneios_normalizados.json'),
+          adiantamentos: require('../../../src/data/soja2526/adiantamentos_normalizados.json'),
+          diesel: require('../../../src/data/soja2526/diesel_normalizados.json'),
+        };
+      case 'soja2425':
+        return {
+          romaneios: require('../../../src/data/soja2425/romaneios_normalizados.json'),
+          adiantamentos: require('../../../src/data/soja2425/adiantamentos_normalizados.json'),
+          diesel: require('../../../src/data/soja2425/diesel_normalizados.json'),
+        };
+      case 'milho25':
+        return {
+          romaneios: require('../../../src/data/milho25/romaneios_normalizados.json'),
+          adiantamentos: require('../../../src/data/milho25/adiantamentos_normalizados.json'),
+          diesel: require('../../../src/data/milho25/diesel_normalizados.json'),
+        };
+      case 'milho26':
+        return {
+          romaneios: require('../../../src/data/milho26/romaneios_normalizados.json'),
+          adiantamentos: require('../../../src/data/milho26/adiantamentos_normalizados.json'),
+          diesel: require('../../../src/data/milho26/diesel_normalizados.json'),
+        };
+      default:
+        return { romaneios: [], adiantamentos: [], diesel: [] };
+    }
+  } catch (e) {
+    console.error("Erro ao carregar dados da safra:", e);
+    return { romaneios: [], adiantamentos: [], diesel: [] };
   }
 };
 
@@ -38,9 +52,7 @@ export default function FretesPage() {
   const safraId = params.safraId as string;
   const safraConfig = getSafraConfig(safraId);
 
-  const safraData = useMemo(() => {
-    return DATA_MAP[safraId] || { romaneios: [], adiantamentos: [], diesel: [] };
-  }, [safraId]);
+  const safraData = useMemo(() => getSafeData(safraId), [safraId]);
 
   const [motoristaFiltro, setMotoristaFiltro] = useState("");
   const [placaFiltro, setPlacaFiltro] = useState("");
@@ -49,9 +61,20 @@ export default function FretesPage() {
   const [aplicarDescontos, setAplicarDescontos] = useState<'Sim' | 'Não'>('Sim');
   const [showRelatorio, setShowRelatorio] = useState(false);
 
-  const motoristas = useMemo(() => Array.from(new Set(safraData.romaneios.map((r: any) => r.motorista).filter(Boolean))).sort(), [safraData]);
-  const placas = useMemo(() => Array.from(new Set(safraData.romaneios.map((r: any) => r.placa).filter(Boolean))).sort(), [safraData]);
-  const armazens = useMemo(() => Array.from(new Set(safraData.romaneios.map((r: any) => r.armazem).filter(Boolean))).sort(), [safraData]);
+  const motoristas = useMemo(() => {
+    const list = safraData.romaneios.map((r: any) => r.motorista).filter(Boolean);
+    return Array.from(new Set(list)).sort() as string[];
+  }, [safraData]);
+
+  const placas = useMemo(() => {
+    const list = safraData.romaneios.map((r: any) => r.placa).filter(Boolean);
+    return Array.from(new Set(list)).sort() as string[];
+  }, [safraData]);
+
+  const armazens = useMemo(() => {
+    const list = safraData.romaneios.map((r: any) => r.armazem).filter(Boolean);
+    return Array.from(new Set(list)).sort() as string[];
+  }, [safraData]);
 
   const dadosRelatorio = useMemo(() => {
     if (!showRelatorio) return { fretes: [], adiantamentos: [], diesel: [] };
