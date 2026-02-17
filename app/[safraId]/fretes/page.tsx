@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { 
   ArrowLeft, Truck, FileText, Calculator, Search, Filter, 
   Printer, Settings2, HandCoins, Fuel, Wallet, ArrowRight,
-  TrendingDown, TrendingUp
+  TrendingDown, TrendingUp, MapPin, DollarSign
 } from 'lucide-react';
 import { getSafraConfig } from '../../../src/data/safraConfig';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
@@ -133,46 +133,71 @@ export default function FretesPage() {
 
       <div className="max-w-[1200px] mx-auto space-y-8 print:space-y-0">
         
-        {/* Filtros */}
-        <section className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm print:hidden">
-          <div className="flex items-center gap-2 mb-6">
-            <Filter size={18} className="text-purple-500" />
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Configurar Fechamento</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-end">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Motorista</label>
-              <select value={motoristaFiltro} onChange={(e) => setMotoristaFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all">
-                <option value="">Todos os Motoristas</option>
-                {motoristas.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
+        {/* Filtros e Tabela de Preços */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:hidden">
+          <section className="lg:col-span-8 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="flex items-center gap-2 mb-6">
+              <Filter size={18} className="text-purple-500" />
+              <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Configurar Fechamento</h2>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Placa</label>
-              <select value={placaFiltro} onChange={(e) => setPlacaFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all">
-                <option value="">Todas as Placas</option>
-                {placas.map(p => <option key={p} value={p}>{p}</option>)}
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Motorista</label>
+                <select value={motoristaFiltro} onChange={(e) => setMotoristaFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all">
+                  <option value="">Todos os Motoristas</option>
+                  {motoristas.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Placa</label>
+                <select value={placaFiltro} onChange={(e) => setPlacaFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all">
+                  <option value="">Todas as Placas</option>
+                  {placas.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Armazém</label>
+                <select value={armazemFiltro} onChange={(e) => setArmazemFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all">
+                  <option value="">Todos os Armazéns</option>
+                  {armazens.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-1"><Settings2 size={10} /> Cálculo</label>
+                <select value={tipoCalculo} onChange={(e) => setTipoCalculo(e.target.value as 'com' | 'sem')} className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all">
+                  <option value="com">Com Arredondamento</option>
+                  <option value="sem">Sem Arredondamento</option>
+                </select>
+              </div>
+              <button onClick={() => setShowRelatorio(true)} className="sm:col-span-2 bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2">
+                <Search size={16} /> Gerar Fechamento
+              </button>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Armazém</label>
-              <select value={armazemFiltro} onChange={(e) => setArmazemFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all">
-                <option value="">Todos os Armazéns</option>
-                {armazens.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
+          </section>
+
+          {/* Tabela de Preços de Referência */}
+          <section className="lg:col-span-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign size={18} className="text-green-500" />
+              <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Preços por Cidade</h2>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-1"><Settings2 size={10} /> Cálculo</label>
-              <select value={tipoCalculo} onChange={(e) => setTipoCalculo(e.target.value as 'com' | 'sem')} className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all">
-                <option value="com">Com Arredondamento</option>
-                <option value="sem">Sem Arredondamento</option>
-              </select>
+            <div className="space-y-2">
+              {safraConfig.TABELA_FRETES.length > 0 ? (
+                safraConfig.TABELA_FRETES.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center gap-2">
+                      <MapPin size={12} className="text-slate-400" />
+                      <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">{item.local}</span>
+                    </div>
+                    <span className="text-xs font-black text-green-600 dark:text-green-400">R$ {item.preco.toFixed(2)}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-[10px] text-slate-400 italic text-center py-4">Nenhum preço configurado para esta safra.</p>
+              )}
             </div>
-            <button onClick={() => setShowRelatorio(true)} className="bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2">
-              <Search size={16} /> Gerar Fechamento
-            </button>
-          </div>
-        </section>
+          </section>
+        </div>
 
         {showRelatorio && (
           <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-500 print:space-y-0">
