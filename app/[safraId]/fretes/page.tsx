@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Truck, FileText, Calculator, Search, Filter, Printer } from 'lucide-react';
+import { ArrowLeft, Truck, FileText, Calculator, Search, Filter, Printer, Settings2 } from 'lucide-react';
 import { getSafraConfig } from '../../../src/data/safraConfig';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
@@ -27,9 +27,10 @@ export default function FretesPage() {
   const [motoristaFiltro, setMotoristaFiltro] = useState("");
   const [placaFiltro, setPlacaFiltro] = useState("");
   const [armazemFiltro, setArmazemFiltro] = useState("");
+  const [tipoCalculo, setTipoCalculo] = useState<'com' | 'sem'>('com');
   const [showRelatorio, setShowRelatorio] = useState(false);
 
-  // Opções para os selects (usando nomes normalizados)
+  // Opções para os selects
   const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => r.motorista).filter(Boolean))).sort(), [romaneios]);
   const placas = useMemo(() => Array.from(new Set(romaneios.map(r => r.placa).filter(Boolean))).sort(), [romaneios]);
   const armazens = useMemo(() => Array.from(new Set(romaneios.map(r => r.armazem).filter(Boolean))).sort(), [romaneios]);
@@ -45,24 +46,26 @@ export default function FretesPage() {
     });
   }, [showRelatorio, romaneios, motoristaFiltro, placaFiltro, armazemFiltro]);
 
-  // Cálculo dos totais com a nova regra de arredondamento
+  // Cálculo dos totais baseado na escolha do usuário
   const totais = useMemo(() => {
     return dadosRelatorio.reduce((acc, r) => {
       const sacasOriginal = Number(r.sacasBruto) || 0;
-      const sacasArredondada = Math.floor(sacasOriginal); // Arredonda para baixo (inteiro)
+      // Se 'com', arredonda para baixo. Se 'sem', usa o valor original.
+      const sacasUsada = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : sacasOriginal;
       const preco = Number(r.precofrete) || 0;
-      const subtotal = sacasArredondada * preco;
+      const subtotal = sacasUsada * preco;
 
-      acc.sacas += sacasArredondada;
+      acc.sacas += sacasUsada;
       acc.valor += subtotal;
       return acc;
     }, { sacas: 0, valor: 0 });
-  }, [dadosRelatorio]);
+  }, [dadosRelatorio, tipoCalculo]);
 
   const handleLimpar = () => {
     setMotoristaFiltro("");
     setPlacaFiltro("");
     setArmazemFiltro("");
+    setTipoCalculo('com');
     setShowRelatorio(false);
   };
 
@@ -120,7 +123,7 @@ export default function FretesPage() {
             <Filter size={18} className="text-purple-500" />
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Gerar Relatório</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 items-end">
             <div className="space-y-1.5">
               <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Motorista</label>
               <select 
@@ -154,6 +157,19 @@ export default function FretesPage() {
                 {armazens.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
             </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-1">
+                <Settings2 size={10} /> Cálculo
+              </label>
+              <select 
+                value={tipoCalculo} 
+                onChange={(e) => setTipoCalculo(e.target.value as 'com' | 'sem')}
+                className="w-full bg-slate-50 dark:bg-slate-700 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all"
+              >
+                <option value="com">Com Arredondamento</option>
+                <option value="sem">Sem Arredondamento</option>
+              </select>
+            </div>
             <button 
               onClick={() => setShowRelatorio(true)}
               className="bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
@@ -169,9 +185,10 @@ export default function FretesPage() {
             <div className="p-8 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start">
               <div>
                 <h2 className="text-2xl font-black uppercase italic tracking-tighter text-slate-800 dark:text-white mb-1">Relatório de Fretes</h2>
-                <div className="flex gap-4 text-[10px] font-black uppercase text-slate-400">
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-black uppercase text-slate-400">
                   <span>Safra: <span className="text-purple-600">{safraConfig.nome}</span></span>
                   <span>Motorista: <span className="text-slate-600 dark:text-slate-200">{motoristaFiltro || "Geral"}</span></span>
+                  <span>Lógica: <span className="text-blue-600">{tipoCalculo === 'com' ? 'Com Arredondamento' : 'Sem Arredondamento'}</span></span>
                 </div>
               </div>
               <button onClick={() => window.print()} className="p-3 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-500 hover:bg-slate-200 transition-all">
@@ -196,9 +213,9 @@ export default function FretesPage() {
                   {dadosRelatorio.length > 0 ? (
                     dadosRelatorio.map((r, i) => {
                       const sacasOriginal = Number(r.sacasBruto) || 0;
-                      const sacasArredondada = Math.floor(sacasOriginal); // Regra: Arredondar para baixo
+                      const sacasUsada = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : sacasOriginal;
                       const preco = Number(r.precofrete) || 0;
-                      const subtotal = sacasArredondada * preco;
+                      const subtotal = sacasUsada * preco;
 
                       return (
                         <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
@@ -206,7 +223,12 @@ export default function FretesPage() {
                           <td className="px-4 py-4">{(r as any).Nº || "-"}</td>
                           <td className="px-4 py-4">{r.nfe}</td>
                           <td className="px-4 py-4 uppercase text-[10px]">{r.armazem}</td>
-                          <td className="px-4 py-4 text-right">{sacasArredondada.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</td>
+                          <td className="px-4 py-4 text-right">
+                            {sacasUsada.toLocaleString('pt-BR', { 
+                              maximumFractionDigits: tipoCalculo === 'com' ? 0 : 2,
+                              minimumFractionDigits: tipoCalculo === 'com' ? 0 : 2 
+                            })}
+                          </td>
                           <td className="px-4 py-4 text-right text-blue-600">R$ {preco.toFixed(2)}</td>
                           <td className="px-8 py-4 text-right font-black">R$ {subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         </tr>
@@ -222,7 +244,13 @@ export default function FretesPage() {
                   <tfoot>
                     <tr className="bg-slate-100 dark:bg-slate-900/80 font-black text-slate-800 dark:text-white">
                       <td colSpan={4} className="px-8 py-6 text-right uppercase tracking-widest text-[10px]">Totais do Relatório</td>
-                      <td className="px-4 py-6 text-right text-lg">{totais.sacas.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} <span className="text-[10px] text-slate-400">sc</span></td>
+                      <td className="px-4 py-6 text-right text-lg">
+                        {totais.sacas.toLocaleString('pt-BR', { 
+                          maximumFractionDigits: tipoCalculo === 'com' ? 0 : 2,
+                          minimumFractionDigits: tipoCalculo === 'com' ? 0 : 2 
+                        })} 
+                        <span className="text-[10px] text-slate-400 ml-1">sc</span>
+                      </td>
                       <td className="px-4 py-6 text-right">-</td>
                       <td className="px-8 py-6 text-right text-xl text-green-600 dark:text-green-400">R$ {totais.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
