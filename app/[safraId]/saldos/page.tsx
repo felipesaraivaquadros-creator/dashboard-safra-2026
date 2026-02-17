@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../../src/data/safraConfig';
 import { SaldoKpi } from '../../../src/data/saldoTypes';
 import SafraSelector from '../../../src/components/SafraSelector';
+import NavigationMenu from '../../../src/components/NavigationMenu';
 
 interface SaldoCardConfig {
   title: string;
@@ -107,9 +108,7 @@ export default function SaldoPage() {
       <header className="max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center justify-between w-full md:w-auto gap-4">
           <div className="flex items-center gap-4 min-w-0">
-            <Link href="/" className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors shrink-0">
-              <ArrowLeft size={24} />
-            </Link>
+            <NavigationMenu />
             
             <div className="min-w-0">
               <h1 className="text-xl md:text-3xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter truncate">Resumo de Saldos</h1>

@@ -14,6 +14,7 @@ import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../src/data/safraConfig';
 import { ArrowLeft } from 'lucide-react';
 import SafraSelector from '../../src/components/SafraSelector';
+import NavigationMenu from '../../src/components/NavigationMenu';
 
 export default function Dashboard() {
   const params = useParams();
@@ -53,9 +54,7 @@ export default function Dashboard() {
       <header className="max-w-[1400px] mx-auto mb-6 bg-white dark:bg-slate-800 p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center justify-between w-full md:w-auto gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <Link href="/" className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors shrink-0">
-              <ArrowLeft size={24} />
-            </Link>
+            <NavigationMenu />
             
             <div className="min-w-0">
               <h1 className="text-lg md:text-2xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter truncate">
