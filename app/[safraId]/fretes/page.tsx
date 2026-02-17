@@ -3,33 +3,18 @@
 import React, { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Truck, Wallet, Fuel, Search, Printer, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Truck, FileText, Calculator, Search, Filter, Printer, Settings2, Wallet, Fuel, CheckCircle2 } from 'lucide-react';
 import { getSafraConfig } from '../../../src/data/safraConfig';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
 import UpdateDataButton from '../../../src/components/UpdateDataButton';
 
-// Mapeamento estático para garantir que o Next.js consiga carregar os arquivos JSON
-const DATA_MAP: Record<string, any> = {
-  'soja2526': {
-    romaneios: require('../../../src/data/soja2526/romaneios_normalizados.json'),
-    adiantamentos: require('../../../src/data/soja2526/adiantamentos_normalizados.json'),
-    diesel: require('../../../src/data/soja2526/diesel_normalizados.json'),
-  },
-  'soja2425': {
-    romaneios: require('../../../src/data/soja2425/romaneios_normalizados.json'),
-    adiantamentos: [], // Adicionar arquivos se existirem
-    diesel: [],
-  },
-  'milho25': {
-    romaneios: require('../../../src/data/milho25/romaneios_normalizados.json'),
-    adiantamentos: [],
-    diesel: [],
-  },
-  'milho26': {
-    romaneios: require('../../../src/data/milho26/romaneios_normalizados.json'),
-    adiantamentos: [],
-    diesel: [],
+// Função auxiliar para carregar dados com segurança
+const safeRequire = (path: string) => {
+  try {
+    return require(`../../../src/data/${path}`);
+  } catch (e) {
+    return [];
   }
 };
 
@@ -38,13 +23,12 @@ export default function FretesPage() {
   const safraId = params.safraId as string;
   const safraConfig = getSafraConfig(safraId);
 
-  // Carregamento seguro dos dados usando o mapa estático
+  // Carregamento dinâmico e seguro dos dados
   const safraData = useMemo(() => {
-    const data = DATA_MAP[safraId] || { romaneios: [], adiantamentos: [], diesel: [] };
     return {
-      romaneios: Array.isArray(data.romaneios) ? data.romaneios : [],
-      adiantamentos: Array.isArray(data.adiantamentos) ? data.adiantamentos : [],
-      diesel: Array.isArray(data.diesel) ? data.diesel : [],
+      romaneios: safeRequire(`${safraId}/romaneios_normalizados.json`),
+      adiantamentos: safeRequire(`${safraId}/adiantamentos_normalizados.json`),
+      diesel: safeRequire(`${safraId}/diesel_normalizados.json`),
     };
   }, [safraId]);
 
@@ -105,7 +89,7 @@ export default function FretesPage() {
     if (!d) return "-";
     const partes = d.split('-');
     if (partes.length !== 3) return d;
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    return `${partes[2]}-${partes[1]}-${partes[0]}`;
   };
 
   return (
@@ -127,6 +111,7 @@ export default function FretesPage() {
       </header>
 
       <div className="max-w-[1200px] mx-auto space-y-8">
+        {/* Filtros */}
         <section className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm print:hidden">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 items-end">
             <div className="space-y-1.5">
@@ -172,6 +157,7 @@ export default function FretesPage() {
 
         {showRelatorio && (
           <div className="space-y-8">
+            {/* Bloco Fretes */}
             <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
               <div className="p-8 border-b dark:border-slate-700 flex justify-between items-center">
                 <h2 className="text-xl font-black uppercase italic tracking-tighter flex items-center gap-2"><Truck className="text-blue-500"/> Relatório de Fretes</h2>
@@ -215,6 +201,7 @@ export default function FretesPage() {
 
             {aplicarDescontos === 'Sim' && (
               <>
+                {/* Bloco Adiantamentos */}
                 <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
                   <div className="p-6 border-b dark:border-slate-700 bg-orange-50/50 dark:bg-orange-900/10">
                     <h2 className="text-lg font-black uppercase italic tracking-tighter flex items-center gap-2 text-orange-600"><Wallet size={20}/> Adiantamentos</h2>
@@ -249,6 +236,7 @@ export default function FretesPage() {
                   </div>
                 </section>
 
+                {/* Bloco Abastecimentos */}
                 <section className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden">
                   <div className="p-6 border-b dark:border-slate-700 bg-amber-50/50 dark:bg-amber-900/10">
                     <h2 className="text-lg font-black uppercase italic tracking-tighter flex items-center gap-2 text-amber-600"><Fuel size={20}/> Abastecimentos</h2>
@@ -289,6 +277,7 @@ export default function FretesPage() {
               </>
             )}
 
+            {/* Resumo Final */}
             <section className="bg-slate-900 text-white p-8 rounded-3xl shadow-2xl border-4 border-purple-500/30">
               <div className="flex flex-col md:flex-row justify-between items-center gap-8">
                 <div className="flex items-center gap-4">
