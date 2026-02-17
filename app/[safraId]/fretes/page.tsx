@@ -133,8 +133,33 @@ export default function FretesPage() {
 
       <div className="max-w-[1200px] mx-auto space-y-8 print:space-y-0">
         
-        {/* Filtros e Tabela de Preços */}
+        {/* Tabela de Preços e Filtros */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:hidden">
+          
+          {/* Tabela de Preços de Referência (Agora Superior) */}
+          <section className="lg:col-span-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign size={18} className="text-green-500" />
+              <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Preços por Cidade</h2>
+            </div>
+            <div className="space-y-2">
+              {safraConfig.TABELA_FRETES.length > 0 ? (
+                safraConfig.TABELA_FRETES.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center gap-2">
+                      <MapPin size={12} className="text-slate-400" />
+                      <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">{item.local}</span>
+                    </div>
+                    <span className="text-xs font-black text-green-600 dark:text-green-400">R$ {item.preco.toFixed(2)}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-[10px] text-slate-400 italic text-center py-4">Nenhum preço configurado para esta safra.</p>
+              )}
+            </div>
+          </section>
+
+          {/* Filtros de Configuração */}
           <section className="lg:col-span-8 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="flex items-center gap-2 mb-6">
               <Filter size={18} className="text-purple-500" />
@@ -172,29 +197,6 @@ export default function FretesPage() {
               <button onClick={() => setShowRelatorio(true)} className="sm:col-span-2 bg-purple-600 hover:bg-purple-700 text-white font-black uppercase text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2">
                 <Search size={16} /> Gerar Fechamento
               </button>
-            </div>
-          </section>
-
-          {/* Tabela de Preços de Referência */}
-          <section className="lg:col-span-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <DollarSign size={18} className="text-green-500" />
-              <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Preços por Cidade</h2>
-            </div>
-            <div className="space-y-2">
-              {safraConfig.TABELA_FRETES.length > 0 ? (
-                safraConfig.TABELA_FRETES.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700">
-                    <div className="flex items-center gap-2">
-                      <MapPin size={12} className="text-slate-400" />
-                      <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">{item.local}</span>
-                    </div>
-                    <span className="text-xs font-black text-green-600 dark:text-green-400">R$ {item.preco.toFixed(2)}</span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-[10px] text-slate-400 italic text-center py-4">Nenhum preço configurado para esta safra.</p>
-              )}
             </div>
           </section>
         </div>
