@@ -24,20 +24,7 @@ function loadSafraData(safraId: string): SafraData {
     dados = [];
   }
   
-  // Normalização on-the-fly para garantir que sacasLiquida e sacasBruto existam
-  const dadosProcessados = dados.map(d => {
-    const pesoLiq = Number(d.pesoLiquidoKg) || 0;
-    const pesoBruto = Number(d.pesoBrutoKg) || Number(d.sacasBruto) * 60 || pesoLiq;
-    
-    return {
-      ...d,
-      sacasLiquida: d.sacasLiquida || pesoLiq / 60,
-      sacasBruto: d.sacasBruto || pesoBruto / 60,
-      pesoBrutoKg: d.pesoBrutoKg || (d.sacasBruto ? d.sacasBruto * 60 : pesoLiq)
-    };
-  });
-
-  const romaneiosValidos = dadosProcessados.filter(d => (Number(d.sacasLiquida) > 0 || Number(d.pesoLiquidoKg) > 0) && d.data !== null);
+  const romaneiosValidos = dados.filter(d => d.sacasLiquida > 0 && d.data !== null);
 
   return { dados: romaneiosValidos, config };
 }
@@ -92,6 +79,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
       Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
 
+    // Cálculos de Operação e Tendência
     const diasMap: Record<string, { kg: number, sc: number }> = {};
     dadosFiltrados.forEach(d => {
       if (d.data) {
@@ -124,6 +112,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       totalBruta: bruta,
       totalBrutaKg: brutaKg,
       areaHa: area,
+      // Alterado para 4 casas decimais conforme solicitado
       prodLiq: area > 0 ? (liq / area).toFixed(4) : '0.0000', 
       prodLiqKg: area > 0 ? (liqKg / area).toFixed(4) : '0.0000',
       prodBruta: area > 0 ? (bruta / area).toFixed(4) : '0.0000',
@@ -157,7 +146,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       melhorDiaKg,
       melhorDiaSc,
       melhorDiaData,
-      percentualColhido: area > 0 ? ((liq / (area * 65)) * 100).toFixed(1) : '0.0',
+      percentualColhido: area > 0 ? ((liq / (area * 65)) * 100).toFixed(1) : '0.0', // Estimativa baseada em 65 sc/ha
       metaPercentual: totalContratado > 0 ? ((liq / totalContratado) * 100).toFixed(1) : '0.0'
     };
 
