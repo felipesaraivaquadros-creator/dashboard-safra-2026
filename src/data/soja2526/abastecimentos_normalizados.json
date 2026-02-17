@@ -4,40 +4,40 @@
     "data": "2026-01-05",
     "motorista": "MAURO",
     "litros": 91,
-    "preco": 5.74,
-    "total": 522.34
+    "preco": 5.75,
+    "total": 523.25
   },
   {
     "safra": "Soja 25/26",
     "data": "2026-01-13",
     "motorista": "SADI",
     "litros": 640,
-    "preco": 5.74,
-    "total": 3673.6
+    "preco": 5.75,
+    "total": 3680
   },
   {
     "safra": "Soja 25/26",
     "data": "2026-01-13",
     "motorista": "RICARDO",
     "litros": 763,
-    "preco": 5.74,
-    "total": 4379.62
+    "preco": 5.75,
+    "total": 4387.25
   },
   {
     "safra": "Soja 25/26",
     "data": "2026-01-16",
     "motorista": "MAILSON",
     "litros": 483,
-    "preco": 5.74,
-    "total": 2772.42
+    "preco": 5.75,
+    "total": 2777.25
   },
   {
     "safra": "Soja 25/26",
     "data": "2026-01-18",
     "motorista": "MAURO",
     "litros": 550,
-    "preco": 5.68,
-    "total": 3124
+    "preco": 5.75,
+    "total": 3162.5
   },
   {
     "safra": "Soja 25/26",
