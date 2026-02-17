@@ -112,10 +112,11 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       totalBruta: bruta,
       totalBrutaKg: brutaKg,
       areaHa: area,
-      prodLiq: area > 0 ? (liq / area).toFixed(2) : '0.00', 
-      prodLiqKg: area > 0 ? (liqKg / area).toFixed(2) : '0.00',
-      prodBruta: area > 0 ? (bruta / area).toFixed(2) : '0.00',
-      prodBrutaKg: area > 0 ? (brutaKg / area).toFixed(2) : '0.00',
+      // Alterado para 4 casas decimais conforme solicitado
+      prodLiq: area > 0 ? (liq / area).toFixed(4) : '0.0000', 
+      prodLiqKg: area > 0 ? (liqKg / area).toFixed(4) : '0.0000',
+      prodBruta: area > 0 ? (bruta / area).toFixed(4) : '0.0000',
+      prodBrutaKg: area > 0 ? (brutaKg / area).toFixed(4) : '0.0000',
       umidade: percDesconto
     };
 
