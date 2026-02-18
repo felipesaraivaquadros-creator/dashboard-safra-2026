@@ -28,7 +28,7 @@ const abastecimentosMap: Record<string, any[]> = {
   'soja2526': soja2526Abastecimentos,
 };
 
-export type SortKey = 'data' | 'sacasBruto' | 'placa' | 'nfe' | 'armazem';
+export type SortKey = 'data' | 'sacasBruto' | 'placa' | 'nfe' | 'armazem' | 'motorista';
 export type SortOrder = 'asc' | 'desc';
 
 export function useFretesData(safraId: string) {
@@ -39,10 +39,9 @@ export function useFretesData(safraId: string) {
   const [placaFiltro, setPlacaFiltro] = useState("");
   const [armazemFiltro, setArmazemFiltro] = useState("");
   const [tipoCalculo, setTipoCalculo] = useState<'com' | 'sem'>('com');
-  const [modeloRelatorio, setModeloRelatorio] = useState<'simples' | 'fazenda'>('simples');
+  const [modeloRelatorio, setModeloRelatorio] = useState<'simples' | 'fazenda' | 'consolidado'>('simples');
   const [showRelatorio, setShowRelatorio] = useState(false);
   
-  // Estado de ordenação: Padrão por data ascendente
   const [sortConfig, setSortConfig] = useState<{ key: SortKey, order: SortOrder }>({ 
     key: 'data', 
     order: 'asc' 
@@ -66,7 +65,6 @@ export function useFretesData(safraId: string) {
   const dadosFretes = useMemo(() => {
     if (!showRelatorio) return [];
     
-    // 1. Filtrar
     const filtrados = romaneios.filter(r => {
       const matchM = !motoristaFiltro || r.motorista === motoristaFiltro;
       const matchP = !placaFiltro || r.placa === placaFiltro;
@@ -74,7 +72,6 @@ export function useFretesData(safraId: string) {
       return matchM && matchP && matchA;
     });
 
-    // 2. Ordenar
     return [...filtrados].sort((a, b) => {
       const { key, order } = sortConfig;
       let valA: any = a[key as keyof Romaneio] ?? '';
@@ -101,6 +98,25 @@ export function useFretesData(safraId: string) {
     });
     return groups;
   }, [dadosFretes, modeloRelatorio]);
+
+  const fretesConsolidados = useMemo(() => {
+    if (modeloRelatorio !== 'consolidado') return [];
+    const groups: Record<string, { motorista: string, sacasBruto: number, valorTotal: number }> = {};
+    
+    dadosFretes.forEach(r => {
+      const m = r.motorista || "Não Informado";
+      if (!groups[m]) groups[m] = { motorista: m, sacasBruto: 0, valorTotal: 0 };
+      
+      const sacasOriginal = Number(r.sacasBruto) || 0;
+      const sacasUsada = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : Number(sacasOriginal.toFixed(2));
+      const preco = Number(r.precofrete) || 0;
+      
+      groups[m].sacasBruto += sacasUsada;
+      groups[m].valorTotal += sacasUsada * preco;
+    });
+
+    return Object.values(groups).sort((a, b) => b.valorTotal - a.valorTotal);
+  }, [dadosFretes, modeloRelatorio, tipoCalculo]);
 
   const dadosAdiantamentos = useMemo(() => {
     if (!showRelatorio || !isSoja2526) return [];
@@ -150,7 +166,7 @@ export function useFretesData(safraId: string) {
     showRelatorio, setShowRelatorio,
     sortConfig, handleSort,
     motoristas, placas, armazens,
-    dadosFretes, fretesPorFazenda,
+    dadosFretes, fretesPorFazenda, fretesConsolidados,
     dadosAdiantamentos, dadosAbastecimentos,
     totaisFreteGlobal, totalAdiantamentos, totaisAbastecimento,
     saldoFinal,

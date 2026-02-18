@@ -17,6 +17,7 @@ import TabelaAdiantamentos from '../../../src/components/fretes/TabelaAdiantamen
 import TabelaAbastecimentos from '../../../src/components/fretes/TabelaAbastecimentos';
 import ResumoFinanceiro from '../../../src/components/fretes/ResumoFinanceiro';
 import AcoesRelatorio from '../../../src/components/fretes/AcoesRelatorio';
+import TabelaConsolidada from '../../../src/components/fretes/TabelaConsolidada';
 
 export default function FretesPage() {
   const params = useParams();
@@ -34,7 +35,7 @@ export default function FretesPage() {
     showRelatorio, setShowRelatorio,
     sortConfig, handleSort,
     motoristas, placas, armazens,
-    dadosFretes, fretesPorFazenda,
+    dadosFretes, fretesPorFazenda, fretesConsolidados,
     dadosAdiantamentos, dadosAbastecimentos,
     totaisFreteGlobal, totalAdiantamentos, totaisAbastecimento,
     saldoFinal,
@@ -121,11 +122,11 @@ export default function FretesPage() {
                 <p><span className="text-slate-500">Safra:</span> {safraConfig.nome}</p>
                 {placaFiltro && <p><span className="text-slate-500">Placa:</span> {placaFiltro}</p>}
                 {armazemFiltro && <p><span className="text-slate-500">Armazém:</span> {armazemFiltro}</p>}
-                <p><span className="text-slate-500">Modelo:</span> {modeloRelatorio === 'simples' ? 'Simples' : 'Agrupado por Fazenda'}</p>
+                <p><span className="text-slate-500">Modelo:</span> {modeloRelatorio === 'simples' ? 'Simples' : modeloRelatorio === 'fazenda' ? 'Agrupado por Fazenda' : 'Consolidado por Motorista'}</p>
               </div>
             </div>
 
-            {modeloRelatorio === 'simples' ? (
+            {modeloRelatorio === 'simples' && (
               <TabelaFretes 
                 lista={dadosFretes} 
                 tipoCalculo={tipoCalculo} 
@@ -133,7 +134,9 @@ export default function FretesPage() {
                 onSort={handleSort}
                 calcularTotais={calcularTotais} 
               />
-            ) : (
+            )}
+
+            {modeloRelatorio === 'fazenda' && (
               <div className="space-y-8 print:space-y-0">
                 {Object.entries(fretesPorFazenda).map(([fazenda, lista], idx) => (
                   <TabelaFretes 
@@ -159,6 +162,10 @@ export default function FretesPage() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {modeloRelatorio === 'consolidado' && (
+              <TabelaConsolidada lista={fretesConsolidados} />
             )}
 
             {isSoja2526 && (
