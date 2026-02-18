@@ -31,6 +31,7 @@ export default function FretesPage() {
     tipoCalculo, setTipoCalculo,
     modeloRelatorio, setModeloRelatorio,
     showRelatorio, setShowRelatorio,
+    sortConfig, handleSort,
     motoristas, placas, armazens,
     dadosFretes, fretesPorFazenda,
     dadosAdiantamentos, dadosAbastecimentos,
@@ -113,7 +114,13 @@ export default function FretesPage() {
             </div>
 
             {modeloRelatorio === 'simples' ? (
-              <TabelaFretes lista={dadosFretes} tipoCalculo={tipoCalculo} calcularTotais={calcularTotais} />
+              <TabelaFretes 
+                lista={dadosFretes} 
+                tipoCalculo={tipoCalculo} 
+                sortConfig={sortConfig}
+                onSort={handleSort}
+                calcularTotais={calcularTotais} 
+              />
             ) : (
               <div className="space-y-8 print:space-y-0">
                 {Object.entries(fretesPorFazenda).map(([fazenda, lista], idx) => (
@@ -123,6 +130,8 @@ export default function FretesPage() {
                     titulo={`${idx + 1}. Fazenda: ${fazenda}`} 
                     subtotal 
                     tipoCalculo={tipoCalculo}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
                     calcularTotais={calcularTotais}
                   />
                 ))}
