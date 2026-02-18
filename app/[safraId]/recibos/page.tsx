@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import { Printer, FileText, ArrowLeft, Save } from 'lucide-react';
+import { Printer, FileText, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import NavigationMenu from '../../../src/components/NavigationMenu';
 import { getSafraConfig } from '../../../src/data/safraConfig';
+import { numeroPorExtenso } from '../../../src/utils/numeroPorExtenso';
 
 export default function RecibosPage() {
   const params = useParams();
@@ -14,10 +15,14 @@ export default function RecibosPage() {
   const safraId = params.safraId as string;
   const safraConfig = getSafraConfig(safraId);
 
-  // Dados vindos da URL (opcional)
+  // Dados vindos da URL
   const valorUrl = searchParams.get('valor') || "";
   const motoristaUrl = searchParams.get('motorista') || "";
   const fazendasUrl = searchParams.get('fazendas') || "";
+
+  // Converte o valor para extenso
+  const valorNumerico = parseFloat(valorUrl.replace(/\./g, '').replace(',', '.'));
+  const valorExtenso = isNaN(valorNumerico) ? "" : numeroPorExtenso(valorNumerico);
 
   const dataAtual = new Date().toLocaleDateString('pt-BR', {
     day: '2-digit',
@@ -27,7 +32,7 @@ export default function RecibosPage() {
 
   const templateInicial = `RECIBO DE PAGAMENTO
 
-Recebi de ILDO ROMANCINI - CPF 247.471.140-68, a importância de R$ ${valorUrl} (__________________________________________________________________), referente à SERVIÇOS DE FRETE DE PRODUÇÃO DE ${safraConfig.tipo.toUpperCase()} SAFRA ${safraConfig.nome.toUpperCase()} ${fazendasUrl ? `DAS FAZENDAS ${fazendasUrl.toUpperCase()}` : ''}.
+Recebi de ILDO ROMANCINI - CPF 247.471.140-68, a importância de R$ ${valorUrl} (${valorExtenso}), referente à SERVIÇOS DE FRETE DE PRODUÇÃO DE ${safraConfig.tipo.toUpperCase()} SAFRA ${safraConfig.nome.toUpperCase()} ${fazendasUrl ? `DAS FAZENDAS ${fazendasUrl.toUpperCase()}` : ''}.
 
 Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado, concedendo quitação plena, geral e irrevogável pela quantia recebida.
 
@@ -40,13 +45,18 @@ Fone: `;
 
   const [textoRecibo, setTextoRecibo] = useState(templateInicial);
 
+  // Atualiza o texto se os parâmetros da URL mudarem
+  useEffect(() => {
+    setTextoRecibo(templateInicial);
+  }, [valorUrl, motoristaUrl, fazendasUrl, safraConfig.nome]);
+
   const handlePrint = () => {
     window.print();
   };
 
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 print:bg-white print:p-0">
-      <header className="max-w-[900px] mx-auto mb-8 flex flex-col md:row justify-between items-start md:items-center gap-4 print:hidden">
+      <header className="max-w-[900px] mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
         <div className="flex items-center gap-4">
           <NavigationMenu />
           <h1 className="text-xl md:text-3xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter">Gerador de Recibo</h1>
@@ -60,7 +70,6 @@ Fone: `;
       </header>
 
       <div className="max-w-[900px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Editor */}
         <div className="lg:col-span-7 space-y-4 print:hidden">
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <h2 className="text-xs font-black uppercase text-slate-400 mb-4 flex items-center gap-2">
@@ -76,7 +85,6 @@ Fone: `;
           </div>
         </div>
 
-        {/* Preview / Print Area */}
         <div className="lg:col-span-5 space-y-4">
           <div className="bg-white dark:bg-slate-800 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm print:hidden">
             <button 
@@ -87,7 +95,6 @@ Fone: `;
             </button>
           </div>
 
-          {/* Folha do Recibo */}
           <div className="bg-white text-black p-12 shadow-2xl border border-slate-200 min-h-[600px] relative print:shadow-none print:border-none print:p-8 print:min-h-0">
             <div className="absolute top-0 left-0 w-full h-2 bg-purple-600 print:hidden" />
             
