@@ -5,14 +5,12 @@ import { useDataProcessing } from '../../src/lib/useDataProcessing';
 import KpiSection, { ProductivityModal } from '../../src/components/KpiSection';
 import ChartSection from '../../src/components/ChartSection';
 import ContractSection from '../../src/components/ContractSection';
-import UpdateDataButton from '../../src/components/UpdateDataButton';
 import UmidadeModal from '../../src/components/UmidadeModal';
 import VolumeModal from '../../src/components/VolumeModal';
 import { ThemeToggle } from '../../src/components/ThemeToggle';
 import Link from 'next/link'; 
 import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../src/data/safraConfig';
-import { ArrowLeft } from 'lucide-react';
 import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
 
@@ -84,7 +82,6 @@ export default function Dashboard() {
             >
               Saldos
             </Link>
-            <UpdateDataButton />
           </div>
           
           <div className="flex items-center gap-3">

@@ -6,7 +6,6 @@ import { Layers } from 'lucide-react';
 import { useFretesData } from '../../../src/lib/useFretesData';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
-import UpdateDataButton from '../../../src/components/UpdateDataButton';
 import NavigationMenu from '../../../src/components/NavigationMenu';
 
 // Novos Componentes Modulares
@@ -73,7 +72,6 @@ export default function FretesPage() {
         </div>
         
         <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
-          <UpdateDataButton />
           <ThemeToggle />
           <button onClick={handleLimpar} className="text-[10px] font-black text-slate-400 hover:text-red-500 uppercase transition-colors">Limpar</button>
         </div>
