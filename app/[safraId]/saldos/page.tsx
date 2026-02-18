@@ -207,11 +207,11 @@ export default function SaldoPage() {
       </div>
 
       {!isSafraPassada && (
-        <div className="max-[1200px] mx-auto mb-10">
+        <div className="max-w-[1200px] mx-auto mb-10">
           <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
             <Warehouse size={14} /> Saldo em Outros Armazéns (Total: {data.estoqueTotalOutrosArmazens.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc)
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {data.kpisArmazemOutros.length > 0 ? (
               data.kpisArmazemOutros.map((kpi, i) => {
                 return (
