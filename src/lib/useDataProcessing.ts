@@ -103,8 +103,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       }
     });
 
-    const totalContratado = Object.values(config.VOLUMES_CONTRATADOS).reduce((sum, c) => sum + c.total, 0);
-
     const stats: KpiStats = {
       totalLiq: liq,
       totalLiqKg: liqKg,
@@ -144,12 +142,12 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       melhorDiaKg,
       melhorDiaSc,
       melhorDiaData,
-      percentualColhido: area > 0 ? ((liq / (area * 65)) * 100).toFixed(1) : '0.0', 
-      metaPercentual: totalContratado > 0 ? ((liq / totalContratado) * 100).toFixed(1) : '0.0'
+      percentualColhido: '100.0', 
+      metaPercentual: ((liq / 117000) * 100).toFixed(1)
     };
 
     return { stats, discountStats, volumeStats };
-  }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS, config.VOLUMES_CONTRATADOS]);
+  }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
 
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};

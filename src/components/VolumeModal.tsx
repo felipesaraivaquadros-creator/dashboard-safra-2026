@@ -78,7 +78,7 @@ export default function VolumeModal({ show, onClose, stats, volumeStats, discoun
                 <span className="text-[10px] font-bold text-green-600 uppercase">Líquido Final</span>
                 <div className="flex items-baseline gap-2 sm:justify-end">
                   <span className="text-sm font-black text-green-700 dark:text-green-300">{formatSc(stats.totalLiq)} sc</span>
-                  <span className="text-[10px] font-bold text-green-400">({formatKg(stats.totalLiqKg)} kg)</span>
+                  <span className="text-[10px] font-bold text-slate-400">({formatKg(stats.totalLiqKg)} kg)</span>
                 </div>
               </div>
             </div>
@@ -118,26 +118,6 @@ export default function VolumeModal({ show, onClose, stats, volumeStats, discoun
                 <h4 className="text-lg md:text-xl font-black text-slate-800 dark:text-white truncate">
                   {formatSc(volumeStats.melhorDiaSc)} sc <span className="text-[10px] md:text-xs font-bold text-slate-400 ml-1 md:ml-2">({volumeStats.melhorDiaData})</span>
                 </h4>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 md:p-5 rounded-2xl border border-blue-100 dark:border-blue-800">
-              <h4 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase mb-3 flex items-center gap-2">
-                <Target size={14} /> Projeção de Meta
-              </h4>
-              <div className="space-y-2 text-[10px] md:text-[11px] font-medium text-blue-800 dark:text-blue-300">
-                <p className="flex items-start gap-2">
-                  <ArrowRight size={12} className="shrink-0 mt-0.5" /> 
-                  <span>Meta: Entregar 5 cargas/dia (Média 48.000kg bruto / 40.000kg líq.)</span>
-                </p>
-                <p className="flex items-start gap-2">
-                  <ArrowRight size={12} className="shrink-0 mt-0.5" /> 
-                  <span>Faltam aproximadamente <span className="font-black">840.000 kg</span> para colher e entregar.</span>
-                </p>
-                <p className="flex items-start gap-2 font-black text-blue-700 dark:text-blue-200 mt-2">
-                  <Calendar size={12} className="shrink-0 mt-0.5" /> 
-                  <span>Estimativa: 4 dias para conclusão da meta.</span>
-                </p>
               </div>
             </div>
           </div>
