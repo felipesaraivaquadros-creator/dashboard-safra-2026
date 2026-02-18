@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight, ArrowLeft, FileText } from 'lucide-react';
 
 export default function NavigationMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -44,6 +44,12 @@ export default function NavigationMenu() {
       href: `/${safraId}/fretes`, 
       icon: Truck,
       active: pathname.includes('/fretes')
+    },
+    { 
+      label: 'Recibos', 
+      href: `/${safraId}/recibos`, 
+      icon: FileText,
+      active: pathname.includes('/recibos')
     },
   ];
 

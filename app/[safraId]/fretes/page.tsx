@@ -16,6 +16,7 @@ import TabelaFretes from '../../../src/components/fretes/TabelaFretes';
 import TabelaAdiantamentos from '../../../src/components/fretes/TabelaAdiantamentos';
 import TabelaAbastecimentos from '../../../src/components/fretes/TabelaAbastecimentos';
 import ResumoFinanceiro from '../../../src/components/fretes/ResumoFinanceiro';
+import AcoesRelatorio from '../../../src/components/fretes/AcoesRelatorio';
 
 export default function FretesPage() {
   const params = useParams();
@@ -175,6 +176,14 @@ export default function FretesPage() {
                 />
               </>
             )}
+
+            {/* Botões de Ação Finais */}
+            <AcoesRelatorio 
+              dados={dadosFretes} 
+              motorista={motoristaFiltro} 
+              totalValor={isSoja2526 ? saldoFinal : totaisFreteGlobal.valor}
+              fazendas={dadosFretes.map(r => r.fazenda || "")}
+            />
           </div>
         )}
       </div>
