@@ -28,7 +28,7 @@ export default function NavigationMenu() {
 
   const menuItems = [
     { 
-      label: 'Dashboard', 
+      label: 'Painel', 
       href: `/${safraId}`, 
       icon: LayoutDashboard,
       active: pathname === `/${safraId}`

@@ -83,7 +83,7 @@ export default function FretesPage() {
             href={`/${safraId}`} 
             className="flex items-center gap-2 px-4 py-2 text-xs font-black uppercase rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-sm"
           >
-            Dashboard
+            Painel
           </Link>
           <ThemeToggle />
           <button onClick={handleLimpar} className="text-[10px] font-black text-slate-400 hover:text-red-500 uppercase transition-colors">Limpar</button>
