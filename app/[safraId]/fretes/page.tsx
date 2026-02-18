@@ -414,7 +414,7 @@ export default function FretesPage() {
                               </tbody>
                               <tfoot>
                                 <tr className="bg-red-50/50 dark:bg-red-900/10 font-black text-red-700 dark:text-red-400">
-                                  <td colSpan={2} className="px-6 py-3 text-right uppercase text-[9px] print:px-2">Totais</td>
+                                  <td className="px-6 py-3 text-right uppercase text-[9px] print:px-2">Totais</td>
                                   <td className="px-4 py-3 text-right print:px-2">{totaisAbastecimento.litros.toLocaleString('pt-BR')} L</td>
                                   <td className="px-4 py-3 print:px-2">-</td>
                                   <td className="px-6 py-3 text-right print:px-2">R$ {totaisAbastecimento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
