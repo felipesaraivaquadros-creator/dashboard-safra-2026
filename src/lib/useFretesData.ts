@@ -4,19 +4,28 @@ import { useMemo, useState } from 'react';
 import { Romaneio } from '../data/types';
 import { getSafraConfig } from '../data/safraConfig';
 
-const dataMap: Record<string, Romaneio[]> = {
-  'soja2526': require('../data/soja2526/romaneios_normalizados.json'),
-  'soja2425': require('../data/soja2425/romaneios_normalizados.json'),
-  'milho25': require('../data/milho25/romaneios_normalizados.json'),
-  'milho26': require('../data/milho26/romaneios_normalizados.json'),
+// Importações estáticas para evitar problemas com require dinâmico
+import soja2526Data from '../data/soja2526/romaneios_normalizados.json';
+import soja2425Data from '../data/soja2425/romaneios_normalizados.json';
+import milho25Data from '../data/milho25/romaneios_normalizados.json';
+import milho26Data from '../data/milho26/romaneios_normalizados.json';
+
+import soja2526Adiantamentos from '../data/soja2526/adiantamentos_normalizados.json';
+import soja2526Abastecimentos from '../data/soja2526/abastecimentos_normalizados.json';
+
+const dataMap: Record<string, any[]> = {
+  'soja2526': soja2526Data,
+  'soja2425': soja2425Data,
+  'milho25': milho25Data,
+  'milho26': milho26Data,
 };
 
 const adiantamentosMap: Record<string, any[]> = {
-  'soja2526': require('../data/soja2526/adiantamentos_normalizados.json'),
+  'soja2526': soja2526Adiantamentos,
 };
 
 const abastecimentosMap: Record<string, any[]> = {
-  'soja2526': require('../data/soja2526/abastecimentos_normalizados.json'),
+  'soja2526': soja2526Abastecimentos,
 };
 
 export function useFretesData(safraId: string) {
@@ -30,13 +39,13 @@ export function useFretesData(safraId: string) {
   const [modeloRelatorio, setModeloRelatorio] = useState<'simples' | 'fazenda'>('simples');
   const [showRelatorio, setShowRelatorio] = useState(false);
 
-  const romaneios = useMemo(() => dataMap[safraId] || [], [safraId]);
+  const romaneios = useMemo(() => (dataMap[safraId] || []) as Romaneio[], [safraId]);
   const adiantamentosRaw = useMemo(() => adiantamentosMap[safraId] || [], [safraId]);
   const abastecimentosRaw = useMemo(() => abastecimentosMap[safraId] || [], [safraId]);
 
-  const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => r.motorista).filter(Boolean))).sort(), [romaneios]);
-  const placas = useMemo(() => Array.from(new Set(romaneios.map(r => r.placa).filter(Boolean))).sort(), [romaneios]);
-  const armazens = useMemo(() => Array.from(new Set(romaneios.map(r => r.armazem).filter(Boolean))).sort(), [romaneios]);
+  const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => r.motorista).filter(Boolean))).sort() as string[], [romaneios]);
+  const placas = useMemo(() => Array.from(new Set(romaneios.map(r => r.placa).filter(Boolean))).sort() as string[], [romaneios]);
+  const armazens = useMemo(() => Array.from(new Set(romaneios.map(r => r.armazem).filter(Boolean))).sort() as string[], [romaneios]);
 
   const dadosFretes = useMemo(() => {
     if (!showRelatorio) return [];
@@ -46,7 +55,7 @@ export function useFretesData(safraId: string) {
       const matchA = !armazemFiltro || r.armazem === armazemFiltro;
       return matchM && matchP && matchA;
     });
-  }, [showRelatorio, romaneios, motoristaFiltro, placaFiltro, armazemFiltem]);
+  }, [showRelatorio, romaneios, motoristaFiltro, placaFiltro, armazemFiltro]);
 
   const fretesPorFazenda = useMemo(() => {
     if (modeloRelatorio !== 'fazenda') return {};
