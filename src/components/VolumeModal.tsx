@@ -20,6 +20,13 @@ export default function VolumeModal({ show, onClose, stats, volumeStats, discoun
   const formatKg = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
   const formatSc = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
 
+  const formatarDataBR = (dataISO: string) => {
+    if (!dataISO) return "";
+    const partes = dataISO.split('-');
+    if (partes.length !== 3) return dataISO;
+    return `${partes[2]}-${partes[1]}-${partes[0]}`;
+  };
+
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
@@ -116,7 +123,7 @@ export default function VolumeModal({ show, onClose, stats, volumeStats, discoun
               <div className="min-w-0">
                 <p className="text-[9px] font-black text-slate-400 uppercase">Melhor Dia de Colheita</p>
                 <h4 className="text-lg md:text-xl font-black text-slate-800 dark:text-white truncate">
-                  {formatSc(volumeStats.melhorDiaSc)} sc <span className="text-[10px] md:text-xs font-bold text-slate-400 ml-1 md:ml-2">({volumeStats.melhorDiaData})</span>
+                  {formatSc(volumeStats.melhorDiaSc)} sc <span className="text-[10px] md:text-xs font-bold text-slate-400 ml-1 md:ml-2">({formatarDataBR(volumeStats.melhorDiaData)})</span>
                 </h4>
               </div>
             </div>
