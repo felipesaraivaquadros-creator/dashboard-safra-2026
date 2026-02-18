@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { Layers } from 'lucide-react';
 import { useFretesData } from '../../../src/lib/useFretesData';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
@@ -72,6 +73,18 @@ export default function FretesPage() {
         </div>
         
         <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
+          <Link 
+            href={`/${safraId}/saldos`} 
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md"
+          >
+            Saldos
+          </Link>
+          <Link 
+            href={`/${safraId}`} 
+            className="flex items-center gap-2 px-4 py-2 text-xs font-black uppercase rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-sm"
+          >
+            Dashboard
+          </Link>
           <ThemeToggle />
           <button onClick={handleLimpar} className="text-[10px] font-black text-slate-400 hover:text-red-500 uppercase transition-colors">Limpar</button>
         </div>
