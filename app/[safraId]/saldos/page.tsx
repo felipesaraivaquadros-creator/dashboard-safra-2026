@@ -183,11 +183,13 @@ export default function SaldoPage() {
               <TrendingIconComponent size={120} />
             </div>
             
-            <div className="flex justify-between items-start relative z-10">
+            <div className="flex items-center gap-3 relative z-10">
               <div className={`p-3 rounded-xl ${saldoCardConfig.iconBg}`}>
                 <IconComponent size={24} />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest italic" style={{ color: saldoCardConfig.subText.split(' ')[0] }}>{saldoCardConfig.title}</span>
+              <span className="text-[10px] font-black uppercase tracking-widest italic" style={{ color: saldoCardConfig.subText.split(' ')[0] }}>
+                {saldoCardConfig.title}
+              </span>
             </div>
 
             <div className="relative z-10 mt-4">
@@ -205,7 +207,7 @@ export default function SaldoPage() {
       </div>
 
       {!isSafraPassada && (
-        <div className="max-w-[1200px] mx-auto mb-10">
+        <div className="max-[1200px] mx-auto mb-10">
           <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
             <Warehouse size={14} /> Saldo em Outros Armazéns (Total: {data.estoqueTotalOutrosArmazens.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc)
           </h2>
