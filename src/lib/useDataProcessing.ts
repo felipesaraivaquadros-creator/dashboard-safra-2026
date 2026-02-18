@@ -79,7 +79,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
       Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
 
-    // Cálculos de Operação e Tendência
     const diasMap: Record<string, { kg: number, sc: number }> = {};
     dadosFiltrados.forEach(d => {
       if (d.data) {
@@ -112,7 +111,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       totalBruta: bruta,
       totalBrutaKg: brutaKg,
       areaHa: area,
-      // Alterado para 4 casas decimais conforme solicitado
       prodLiq: area > 0 ? (liq / area).toFixed(4) : '0.0000', 
       prodLiqKg: area > 0 ? (liqKg / area).toFixed(4) : '0.0000',
       prodBruta: area > 0 ? (bruta / area).toFixed(4) : '0.0000',
@@ -146,7 +144,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       melhorDiaKg,
       melhorDiaSc,
       melhorDiaData,
-      percentualColhido: area > 0 ? ((liq / (area * 65)) * 100).toFixed(1) : '0.0', // Estimativa baseada em 65 sc/ha
+      percentualColhido: area > 0 ? ((liq / (area * 65)) * 100).toFixed(1) : '0.0', 
       metaPercentual: totalContratado > 0 ? ((liq / totalContratado) * 100).toFixed(1) : '0.0'
     };
 
@@ -156,7 +154,8 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};
     typedDadosOriginal.forEach(d => {
-      const id = String(d.ncontrato).trim();
+      // Normalização idêntica ao script de exportação para garantir o vínculo
+      const id = String(d.ncontrato || '').trim().replace(/\.0$/, '').toUpperCase();
       if (id && id !== "S/C") {
         entregasMap[id] = (entregasMap[id] || 0) + (Number(d.sacasLiquida) || 0);
       }
@@ -164,9 +163,11 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
     const isSafraPassadaCumprida = safraId === 'soja2425' || safraId === 'milho25';
 
-    const todos: ProcessedContract[] = Object.keys(config.VOLUMES_CONTRATADOS).map(id => {
-      const c = config.VOLUMES_CONTRATADOS[id];
-      const cumprido = entregasMap[id] || 0;
+    const todos: ProcessedContract[] = Object.keys(config.VOLUMES_CONTRATADOS).map(idKey => {
+      const c = config.VOLUMES_CONTRATADOS[idKey];
+      // Busca no mapa usando a chave normalizada
+      const idNormalizado = String(idKey).trim().replace(/\.0$/, '').toUpperCase();
+      const cumprido = entregasMap[idNormalizado] || 0;
       
       let isConcluido = false;
       let aCumprir = 0;
@@ -187,7 +188,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       }
       
       return { 
-        id, 
+        id: idKey, 
         nome: c.nome, 
         contratado: c.total, 
         cumprido: parseFloat(cumprido.toFixed(2)), 

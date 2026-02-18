@@ -1,7 +1,7 @@
 import { ContractVolume } from './types';
 
 export interface FreteItem {
-  local: string; // Alterado de armazem para local para abranger cidades
+  local: string; 
   preco: number;
 }
 
@@ -32,7 +32,7 @@ const SOJA2526_CONFIG: SafraConfig = {
   },
   VOLUMES_CONTRATADOS: {
     "72208": { nome: "Venda Sipal 20 Mil Sacas", total: 20000 },
-    "7.650SC": { nome: "BEDIN", total: 7650 },
+    "7650SC": { nome: "BEDIN", total: 7650 },
     "290925M339": { nome: "Troca Adubo Sipal 29.500 Sacas", total: 29500 },
     "ARR-CST-USIMAT": { nome: "Arrendamento CT", total: 10000 },
     "ARR-SLZ-COFCO": { nome: "Arrendamento SL", total: 4050 },
@@ -41,6 +41,7 @@ const SOJA2526_CONFIG: SafraConfig = {
     "DEP-LRV-SIPAL": { nome: "Depósito Sipal LRV", total: 0 },
     "DEP-CLA-SIPAL": { nome: "Depósito Sipal Cláudia", total: 0 },
     "VENDA-ADM-FIXAR": { nome: "Venda ADM a Fixar", total: 0 },
+    "DEP-NSH-GOAGRO": { nome: "Depósito Go Agro NSH", total: 0 },
   },
   TABELA_FRETES: [
     { local: "LRV", preco: 1.70 },

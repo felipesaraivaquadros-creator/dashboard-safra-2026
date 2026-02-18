@@ -57,14 +57,17 @@ function normalizar(safraId, inputFileName) {
       const pesoLiquidoKg = parseNumero(linha['Peso Liquido']);
       const sacasLiquida = parseNumero(linha['Sacas Liquida']);
       
+      // Normalização robusta do ncontrato: String -> Trim -> Remove .0 -> UpperCase
+      let ncontrato = String(linha['ncontrato'] || '').trim().replace(/\.0$/, '').toUpperCase();
+
       return {
         data: parseData(linha['Data']),
         contrato: linha['Contrato'] || 'S/C',
-        ncontrato: String(linha['ncontrato'] || '').trim(),
+        ncontrato: ncontrato || 'S/C',
         emitente: linha['Emitente'] || null,
         tipoNF: linha['Tipo NF'] || null,
         nfe: parseNumero(linha['NFe']),
-        numero: parseNumero(linha['Nº']), // Adicionado campo Numero
+        numero: parseNumero(linha['Nº']),
         cidadeEntrega: linha['Cidade de Entrega'] || null,
         armazem: linha['Armazem'] || null,
         armazemsaldo: linha['armazemsaldo'] || null,
