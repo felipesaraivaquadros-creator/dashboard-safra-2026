@@ -92,7 +92,8 @@ export default function FretesPage() {
   const calcularTotais = (lista: Romaneio[]) => {
     return lista.reduce((acc, r) => {
       const sacasOriginal = Number(r.sacasBruto) || 0;
-      const sacasUsada = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : sacasOriginal;
+      // Garante que o valor usado no cálculo tenha no máximo 2 casas decimais se não for arredondado
+      const sacasUsada = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : Number(sacasOriginal.toFixed(2));
       const preco = Number(r.precofrete) || 0;
       acc.sacas += sacasUsada;
       acc.valor += sacasUsada * preco;
@@ -161,7 +162,8 @@ export default function FretesPage() {
             </thead>
             <tbody className="text-xs font-bold">
               {lista.map((r, i) => {
-                const sacas = tipoCalculo === 'com' ? Math.floor(Number(r.sacasBruto) || 0) : (Number(r.sacasBruto) || 0);
+                const sacasOriginal = Number(r.sacasBruto) || 0;
+                const sacas = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : Number(sacasOriginal.toFixed(2));
                 const subtotalValor = sacas * (Number(r.precofrete) || 0);
                 return (
                   <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/30 dark:hover:bg-slate-700/20">
@@ -169,9 +171,9 @@ export default function FretesPage() {
                     <td className="px-4 py-4 print:px-2">{r.nfe}</td>
                     <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.placa}</td>
                     <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.armazem}</td>
-                    <td className="px-4 py-4 text-right print:px-2">{sacas.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}</td>
+                    <td className="px-4 py-4 text-right print:px-2">{sacas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td className="px-4 py-4 text-right text-blue-600 print:px-2">R$ {(Number(r.precofrete) || 0).toFixed(2)}</td>
-                    <td className="px-6 py-4 text-right font-black print:px-2">R$ {subtotalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td className="px-6 py-4 text-right font-black print:px-2">R$ {subtotalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 );
               })}
@@ -179,9 +181,9 @@ export default function FretesPage() {
             <tfoot className="print:table-row-group">
               <tr className="bg-blue-50/50 dark:bg-blue-900/10 font-black text-blue-700 dark:text-blue-300">
                 <td colSpan={4} className="px-6 py-4 text-right uppercase text-[10px] print:px-2">{subtotal ? "Subtotal Fazenda" : "Total Fretes"}</td>
-                <td className="px-4 py-4 text-right print:px-2">{totais.sacas.toLocaleString('pt-BR')} sc</td>
+                <td className="px-4 py-4 text-right print:px-2">{totais.sacas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} sc</td>
                 <td className="px-4 py-4 print:px-2">-</td>
-                <td className="px-6 py-4 text-right text-base print:px-2">R$ {totais.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                <td className="px-6 py-4 text-right text-base print:px-2">R$ {totais.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
             </tfoot>
           </table>
@@ -337,7 +339,7 @@ export default function FretesPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] font-black uppercase opacity-70">Soma dos Subtotais</p>
-                        <p className="text-2xl font-black">R$ {totaisFreteGlobal.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        <p className="text-2xl font-black">R$ {totaisFreteGlobal.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                       </div>
                     </div>
                   </div>
@@ -442,7 +444,7 @@ export default function FretesPage() {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-start print:grid-cols-3 print:gap-4">
                           <div className="space-y-1">
                             <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-slate-500"><TrendingUp size={12} className="text-green-400"/> Total Fretes (+)</p>
-                            <p className="text-2xl font-black print:text-slate-900">R$ {totaisFreteGlobal.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                            <p className="text-2xl font-black print:text-slate-900">R$ {totaisFreteGlobal.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                           </div>
                           
                           <div className="text-white/30 hidden md:block print:hidden pt-4"><ArrowRight size={24}/></div>
@@ -465,7 +467,7 @@ export default function FretesPage() {
                           <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1 print:bg-slate-50 print:border-slate-300 print:rounded-xl print:p-4">
                             <p className="text-[10px] font-black uppercase text-purple-300 mb-1 print:text-slate-500">Valor a Pagar</p>
                             <p className={`text-4xl font-black tracking-tighter ${saldoFinal >= 0 ? 'text-green-400 print:text-green-600' : 'text-red-400 print:text-red-600'}`}>
-                              R$ {saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              R$ {saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                             <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center print:border-slate-200 print:mt-2 print:pt-2">
                               <span className="text-[9px] font-bold uppercase text-white/40 italic print:text-slate-400">* Sujeito a conferência final</span>
