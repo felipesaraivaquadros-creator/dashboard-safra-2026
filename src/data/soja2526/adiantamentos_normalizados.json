@@ -28,5 +28,11 @@
     "data": "2026-02-09",
     "valor": 6000,
     "safra": "SOJA25/26"
+  },
+  {
+    "motorista": "SADI",
+    "data": "2026-02-20",
+    "valor": 5000,
+    "safra": "SOJA25/26"
   }
 ]
