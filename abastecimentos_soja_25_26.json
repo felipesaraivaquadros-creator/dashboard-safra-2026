@@ -70,5 +70,13 @@
     "Litros": 523,
     "Preço": 5.75,
     "TOTAL": 3007.25
+  },
+  {
+    "SAFRA": "Soja 25/26",
+    "DATA": "2026-02-17T04:00:20.000Z",
+    "Motorista": "SADI",
+    "Litros": 435,
+    "Preço": 5.75,
+    "TOTAL": 2501.25
   }
 ]
