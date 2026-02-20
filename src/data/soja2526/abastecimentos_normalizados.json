@@ -51,9 +51,17 @@
     "safra": "Soja 25/26",
     "data": "2026-02-06",
     "motorista": "SADI",
-    "litros": 730,
+    "litros": 680,
     "preco": 5.75,
-    "total": 4197.5
+    "total": 3910
+  },
+  {
+    "safra": "Soja 25/26",
+    "data": "2026-02-07",
+    "motorista": "SADI",
+    "litros": 50,
+    "preco": 2.8,
+    "total": 140
   },
   {
     "safra": "Soja 25/26",
