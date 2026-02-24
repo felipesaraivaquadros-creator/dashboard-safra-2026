@@ -36,9 +36,9 @@
     "SAFRA": "SOJA25/26"
   },
   {
-    "Motorista": null,
-    "DATA": null,
-    " VALOR ": null,
+    "Motorista": "SADI",
+    "DATA": "2026-02-24T04:00:20.000Z",
+    " VALOR ": 3500,
     "SAFRA": "SOJA25/26"
   },
   {
