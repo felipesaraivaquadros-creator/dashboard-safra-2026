@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Filter, Settings2, LayoutList, Layers, Search, Users } from 'lucide-react';
+import { Filter, Settings2, LayoutList, Layers, Search, Users, Warehouse } from 'lucide-react';
 
 interface FiltrosFreteProps {
   motoristaFiltro: string;
@@ -12,8 +12,8 @@ interface FiltrosFreteProps {
   setArmazemFiltro: (v: string) => void;
   tipoCalculo: 'com' | 'sem';
   setTipoCalculo: (v: 'com' | 'sem') => void;
-  modeloRelatorio: 'simples' | 'fazenda' | 'consolidado';
-  setModeloRelatorio: (v: 'simples' | 'fazenda' | 'consolidado') => void;
+  modeloRelatorio: 'simples' | 'fazenda' | 'consolidado' | 'armazem';
+  setModeloRelatorio: (v: 'simples' | 'fazenda' | 'consolidado' | 'armazem') => void;
   motoristas: string[];
   placas: string[];
   armazens: string[];
@@ -67,22 +67,28 @@ export default function FiltrosFrete({
         
         <div className="sm:col-span-2 space-y-1.5">
           <label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-1"><LayoutList size={10} /> Modelo de Relatório</label>
-          <div className="flex bg-slate-50 dark:bg-slate-900 p-1 rounded-xl">
+          <div className="flex flex-wrap bg-slate-50 dark:bg-slate-900 p-1 rounded-xl gap-1">
             <button 
               onClick={() => setModeloRelatorio('simples')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${modeloRelatorio === 'simples' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`flex-1 min-w-[80px] flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${modeloRelatorio === 'simples' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
               <LayoutList size={14} /> Simples
             </button>
             <button 
               onClick={() => setModeloRelatorio('fazenda')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${modeloRelatorio === 'fazenda' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`flex-1 min-w-[80px] flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${modeloRelatorio === 'fazenda' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              <Layers size={14} /> Por Fazenda
+              <Layers size={14} /> Fazenda
+            </button>
+            <button 
+              onClick={() => setModeloRelatorio('armazem')}
+              className={`flex-1 min-w-[80px] flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${modeloRelatorio === 'armazem' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <Warehouse size={14} /> Armazém
             </button>
             <button 
               onClick={() => setModeloRelatorio('consolidado')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${modeloRelatorio === 'consolidado' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              className={`flex-1 min-w-[80px] flex items-center justify-center gap-2 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${modeloRelatorio === 'consolidado' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
               <Users size={14} /> Consolidado
             </button>

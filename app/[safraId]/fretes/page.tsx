@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Layers } from 'lucide-react';
+import { Layers, Warehouse } from 'lucide-react';
 import { useFretesData } from '../../../src/lib/useFretesData';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
@@ -35,7 +35,7 @@ export default function FretesPage() {
     showRelatorio, setShowRelatorio,
     sortConfig, handleSort,
     motoristas, placas, armazens,
-    dadosFretes, fretesPorFazenda, fretesConsolidados,
+    dadosFretes, fretesPorFazenda, fretesPorArmazem, fretesConsolidados,
     dadosAdiantamentos, dadosAbastecimentos,
     totaisFreteGlobal, totalAdiantamentos, totaisAbastecimento,
     saldoFinal,
@@ -122,7 +122,12 @@ export default function FretesPage() {
                 <p><span className="text-slate-500">Safra:</span> {safraConfig.nome}</p>
                 {placaFiltro && <p><span className="text-slate-500">Placa:</span> {placaFiltro}</p>}
                 {armazemFiltro && <p><span className="text-slate-500">Armazém:</span> {armazemFiltro}</p>}
-                <p><span className="text-slate-500">Modelo:</span> {modeloRelatorio === 'simples' ? 'Simples' : modeloRelatorio === 'fazenda' ? 'Agrupado por Fazenda' : 'Consolidado por Motorista'}</p>
+                <p><span className="text-slate-500">Modelo:</span> {
+                  modeloRelatorio === 'simples' ? 'Simples' : 
+                  modeloRelatorio === 'fazenda' ? 'Agrupado por Fazenda' : 
+                  modeloRelatorio === 'armazem' ? 'Agrupado por Armazém' :
+                  'Consolidado por Motorista'
+                }</p>
               </div>
             </div>
 
@@ -155,6 +160,34 @@ export default function FretesPage() {
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-white/20 rounded-lg print:hidden"><Layers size={20}/></div>
                     <h2 className="text-lg font-black uppercase italic tracking-tighter">Total Geral de Fretes (Todas as Fazendas)</h2>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase opacity-70">Soma dos Subtotais</p>
+                    <p className="text-2xl font-black">R$ {totaisFreteGlobal.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {modeloRelatorio === 'armazem' && (
+              <div className="space-y-8 print:space-y-0">
+                {Object.entries(fretesPorArmazem).map(([armazem, lista], idx) => (
+                  <TabelaFretes 
+                    key={armazem} 
+                    lista={lista} 
+                    titulo={`${idx + 1}. Armazém: ${armazem}`} 
+                    subtotal 
+                    tipoCalculo={tipoCalculo}
+                    sortConfig={sortConfig}
+                    onSort={handleSort}
+                    calcularTotais={calcularTotais}
+                  />
+                ))}
+                
+                <div className="bg-blue-600 text-white p-6 rounded-3xl shadow-lg flex justify-between items-center print:bg-white print:text-slate-900 print:border-2 print:border-blue-600 print:rounded-none print:mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/20 rounded-lg print:hidden"><Warehouse size={20}/></div>
+                    <h2 className="text-lg font-black uppercase italic tracking-tighter">Total Geral de Fretes (Todos os Armazéns)</h2>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-black uppercase opacity-70">Soma dos Subtotais</p>
