@@ -55,7 +55,14 @@ export default function ChartSection({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartFazendas}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-700" />
-              <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} className="dark:text-slate-300" />
+              <XAxis 
+                dataKey="name" 
+                fontSize={9} 
+                axisLine={false} 
+                tickLine={false} 
+                interval={0}
+                className="dark:text-slate-300 font-bold" 
+              />
               <YAxis fontSize={10} axisLine={false} tickLine={false} tickFormatter={(value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} className="dark:text-slate-300" />
               <Tooltip 
                 cursor={{fill: 'transparent'}} 
@@ -64,13 +71,11 @@ export default function ChartSection({
                   backgroundColor: 'var(--bg-tooltip)', 
                   border: '1px solid var(--border-tooltip)', 
                   borderRadius: '8px',
-                  color: 'var(--text-color)' // Adiciona a variável de cor do texto
+                  color: 'var(--text-color)' 
                 }} 
               />
               <Bar dataKey="sacas" radius={[4, 4, 0, 0]} cursor="pointer" onClick={(data) => handleBarClick(data, true)}>
                 {chartFazendas.map((entry, index) => {
-                  // Se não houver filtro, ou se esta for a fazenda selecionada, usa a cor da fazenda.
-                  // Caso contrário, usa a cor cinza (defaultColor).
                   const isSelected = !fazendaFiltro || fazendaFiltro === entry.name;
                   return <Cell key={`cell-fazenda-${index}`} fill={isSelected ? getCorFazenda(entry.name) : defaultColor} />;
                 })}
@@ -96,13 +101,11 @@ export default function ChartSection({
                   backgroundColor: 'var(--bg-tooltip)', 
                   border: '1px solid var(--border-tooltip)', 
                   borderRadius: '8px',
-                  color: 'var(--text-color)' // Adiciona a variável de cor do texto
+                  color: 'var(--text-color)' 
                 }} 
               />
               <Bar dataKey="sacas" radius={[0, 4, 4, 0]} cursor="pointer" onClick={(data) => handleBarClick(data, false)}>
                 {chartArmazens.map((entry, index) => {
-                  // Se não houver filtro, ou se este for o armazém selecionado, usa a cor do armazém.
-                  // Caso contrário, usa a cor cinza (defaultColor).
                   const isSelected = !armazemFiltro || armazemFiltro === entry.name;
                   return <Cell key={`cell-armazem-${index}`} fill={isSelected ? getCorArmazem(entry.name) : defaultColor} />;
                 })}
@@ -138,7 +141,7 @@ export default function ChartSection({
                   backgroundColor: 'var(--bg-tooltip)', 
                   border: '1px solid var(--border-tooltip)', 
                   borderRadius: '8px',
-                  color: 'var(--text-color)' // Adiciona a variável de cor do texto
+                  color: 'var(--text-color)' 
                 }} 
               />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: 'var(--text-color)' }} />
@@ -158,9 +161,8 @@ export default function ChartSection({
           --text-color: #0f172a; /* slate-900 */
         }
         .dark .recharts-text {
-          fill: #e2e8f0 !important; /* Garante que o texto do gráfico seja claro no modo escuro */
+          fill: #e2e8f0 !important; 
         }
-        /* Garante que o texto dentro do tooltip também seja claro no modo escuro */
         .dark .recharts-tooltip-item {
           color: #f1f5f9 !important;
         }
