@@ -68,7 +68,6 @@ export function calculateSaldoDashboard(safraId: string) {
       totalEstoque,
       totalContratos,
       saldoGeral,
-      // Mantendo compatibilidade com grupos se necessário
       estoqueArmazensFixos: listaSaldos,
       contratosFixos: listaContratos,
       saldoContratosFixos: saldoGeral,
@@ -82,22 +81,23 @@ export function calculateSaldoDashboard(safraId: string) {
   
   // Lógica para Safra Atual (Dinâmica)
   const { dados: typedDadosOriginal, config } = loadSafraData(safraId);
-  const isSoja2526 = safraId === 'soja2526';
 
   const saldosMap: Record<string, { sc: number, kg: number }> = {};
   
+  // Contabiliza TODAS as entregas para compor o saldo físico nos armazéns
   typedDadosOriginal.forEach(d => {
-    if (d.tipoNF !== "DEP" && d.tipoNF !== "VEN-FIXAR") return; 
-    if (d.emitente === "Ildo Romancini") {
-      const armazem = d.armazem || "Outros";
-      if (!saldosMap[armazem]) saldosMap[armazem] = { sc: 0, kg: 0 };
-      saldosMap[armazem].sc += Number(d.sacasLiquida) || 0;
-      saldosMap[armazem].kg += Number(d.pesoLiquidoKg) || 0;
-    }
+    const armazem = d.armazem || "Outros";
+    if (!saldosMap[armazem]) saldosMap[armazem] = { sc: 0, kg: 0 };
+    saldosMap[armazem].sc += Number(d.sacasLiquida) || 0;
+    saldosMap[armazem].kg += Number(d.pesoLiquidoKg) || 0;
   });
 
   const listaSaldos: SaldoKpi[] = Object.entries(saldosMap)
-    .map(([nome, val]) => ({ nome, total: parseFloat(val.sc.toFixed(2)), totalKg: val.kg }))
+    .map(([nome, val]) => ({ 
+      nome, 
+      total: parseFloat(val.sc.toFixed(2)), 
+      totalKg: Math.round(val.kg) 
+    }))
     .sort((a, b) => b.total - a.total);
 
   const listaContratos: SaldoKpi[] = Object.keys(config.VOLUMES_CONTRATADOS).map(id => ({
@@ -111,7 +111,7 @@ export function calculateSaldoDashboard(safraId: string) {
   const totalContratos = listaContratos.reduce((acc, item) => acc + item.total, 0);
   const saldoGeral = totalEstoque - totalContratos;
 
-  // Lógica de Grupos (Sipal vs Outros) para a aba Disponível
+  // Lógica de Grupos para a aba Disponível
   const estoqueSipal = listaSaldos
     .filter(s => ARMAZENS_CONTRATOS_FIXOS.includes(s.nome))
     .reduce((acc, s) => acc + s.total, 0);
@@ -126,7 +126,6 @@ export function calculateSaldoDashboard(safraId: string) {
     totalEstoque,
     totalContratos,
     saldoGeral,
-    // Dados para grupos específicos
     estoqueArmazensFixos: listaSaldos.filter(s => ARMAZENS_CONTRATOS_FIXOS.includes(s.nome)),
     contratosFixos: listaContratos.filter(c => CONTRATOS_FIXOS_SOJA2526_IDS.includes(c.id || "")),
     estoqueTotalContratosFixos: estoqueSipal,
