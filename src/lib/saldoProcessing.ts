@@ -23,7 +23,7 @@ const dataMap: Record<string, Romaneio[]> = {
   'milho26': require('../data/milho26/romaneios_normalizados.json'),
 };
 
-const CONTRATOS_FIXOS_SOJA2526_IDS = ["72208", "290925M339"];
+const CONTRATOS_FIXOS_SOJA2526_IDS = ["72208", "290925M339", "COMISSAO-FIXAR"];
 const ARMAZENS_CONTRATOS_FIXOS = ["COFCO NSH", "SIPAL MATUPÁ"];
 
 function loadSafraData(safraId: string): { dados: Romaneio[], config: any } {
@@ -100,12 +100,15 @@ export function calculateSaldoDashboard(safraId: string) {
     }))
     .sort((a, b) => b.total - a.total);
 
-  const listaContratos: SaldoKpi[] = Object.keys(config.VOLUMES_CONTRATADOS).map(id => ({
-    id,
-    nome: config.VOLUMES_CONTRATADOS[id].nome,
-    total: config.VOLUMES_CONTRATADOS[id].total,
-    totalKg: config.VOLUMES_CONTRATADOS[id].total * 60
-  })).sort((a, b) => b.total - a.total);
+  const listaContratos: SaldoKpi[] = Object.keys(config.VOLUMES_CONTRATADOS)
+    .map(id => ({
+      id,
+      nome: config.VOLUMES_CONTRATADOS[id].nome,
+      total: config.VOLUMES_CONTRATADOS[id].total,
+      totalKg: config.VOLUMES_CONTRATADOS[id].total * 60
+    }))
+    .filter(c => c.total > 0) // Esconde contratos zerados (como os DEP vazios)
+    .sort((a, b) => b.total - a.total);
 
   const totalEstoque = listaSaldos.reduce((acc, item) => acc + item.total, 0);
   const totalContratos = listaContratos.reduce((acc, item) => acc + item.total, 0);

@@ -36,6 +36,7 @@ const SOJA2526_CONFIG: SafraConfig = {
     "290925M339": { nome: "Troca Adubo Sipal 29.500 Sacas", total: 29500 },
     "ARR-CST-USIMAT": { nome: "Arrendamento CT", total: 10000 },
     "ARR-SLZ-COFCO": { nome: "Arrendamento SL", total: 4050 },
+    "COMISSAO-FIXAR": { nome: "Comissões a Fixar", total: 1000 },
     "Comissoes": { nome: "Venda 800 Sacas Comissão", total: 800 },
     "DEP-MAT-AMAGGI": { nome: "Depósito Amaggi Matupá", total: 0 }, 
     "DEP-LRV-SIPAL": { nome: "Depósito Sipal LRV", total: 0 },
