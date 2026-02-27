@@ -177,7 +177,7 @@ export function useFretesData(safraId: string) {
     showRelatorio, setShowRelatorio,
     sortConfig, handleSort,
     motoristas, placas, armazens,
-    dadosFretes, fretesPorFazenda, fretesConsolidados,
+    dadosFretes, fretesPorFazenda, fretesPorArmazem, fretesConsolidados,
     dadosAdiantamentos, dadosAbastecimentos,
     totaisFreteGlobal, totalAdiantamentos, totaisAbastecimento,
     saldoFinal,
