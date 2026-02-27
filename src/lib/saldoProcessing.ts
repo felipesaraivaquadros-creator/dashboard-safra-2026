@@ -26,194 +26,114 @@ const dataMap: Record<string, Romaneio[]> = {
 const CONTRATOS_FIXOS_SOJA2526_IDS = ["72208", "290925M339"];
 const ARMAZENS_CONTRATOS_FIXOS = ["COFCO NSH", "SIPAL MATUPÁ"];
 
-function loadSafraData(safraId: string): { dados: Romaneio[], config: ReturnType<typeof getSafraConfig> } {
+function loadSafraData(safraId: string): { dados: Romaneio[], config: any } {
   const config = getSafraConfig(safraId);
   let dados = dataMap[safraId];
   
   if (!Array.isArray(dados)) {
-    console.error(`Erro ao carregar dados para a safra ${safraId} no saldo processing. Retornando array vazio.`);
     dados = [];
   }
   
   const romaneiosValidos = dados.filter(d => d.sacasLiquida > 0 && d.data !== null);
-
   return { dados: romaneiosValidos, config };
 }
 
 export function calculateSaldoDashboard(safraId: string) {
-  
-  if (safraId === 'soja2425') {
-    const estoqueTotal = ESTOQUE_TOTAL_SOJA2425;
-    const volumeFixoTotal = CONTRATO_TOTAL_SOJA2425;
-    const saldoContratosFixos = SALDO_FINAL_SOJA2425;
-
-    const estoqueArmazensFixos: SaldoKpi[] = ESTOQUE_FINAL_SOJA2425.map(item => ({
+  // Lógica para Safras Passadas (Dados Estáticos)
+  if (safraId === 'soja2425' || safraId === 'milho25') {
+    const isSoja = safraId === 'soja2425';
+    const estoqueFinal = isSoja ? ESTOQUE_FINAL_SOJA2425 : ESTOQUE_FINAL_MILHO25;
+    const contratosFinal = isSoja ? CONTRATOS_SOJA2425 : CONTRATOS_MILHO25;
+    
+    const listaSaldos: SaldoKpi[] = estoqueFinal.map(item => ({
       nome: item.nome,
       total: item.estoqueLiquido,
       totalKg: item.estoqueLiquido * 60
     }));
 
-    const contratosFixos: SaldoKpi[] = CONTRATOS_SOJA2425.map(item => ({
+    const listaContratos: SaldoKpi[] = contratosFinal.map(item => ({
       nome: item.nome,
       total: item.total,
       totalKg: item.total * 60,
       id: item.id,
     }));
 
+    const totalEstoque = isSoja ? ESTOQUE_TOTAL_SOJA2425 : ESTOQUE_TOTAL_MILHO25;
+    const totalContratos = isSoja ? CONTRATO_TOTAL_SOJA2425 : CONTRATO_TOTAL_MILHO25;
+    const saldoGeral = isSoja ? SALDO_FINAL_SOJA2425 : SALDO_FINAL_MILHO25;
+
     return {
-      estoqueTotalContratosFixos: estoqueTotal,
-      estoqueTotalContratosFixosKg: estoqueTotal * 60,
-      volumeFixoTotal,
-      volumeFixoTotalKg: volumeFixoTotal * 60,
-      saldoContratosFixos,
-      saldoContratosFixosKg: saldoContratosFixos * 60,
-      contratosFixos,
-      estoqueTotalOutrosArmazens: 0,
-      estoqueTotalOutrosArmazensKg: 0,
+      listaSaldos,
+      listaContratos,
+      totalEstoque,
+      totalContratos,
+      saldoGeral,
+      // Mantendo compatibilidade com grupos se necessário
+      estoqueArmazensFixos: listaSaldos,
+      contratosFixos: listaContratos,
+      saldoContratosFixos: saldoGeral,
+      estoqueTotalContratosFixos: totalEstoque,
+      volumeFixoTotal: totalContratos,
       kpisArmazemOutros: [],
-      estoqueArmazensFixos,
       outrosContratos: [],
-      volumeOutrosTotal: 0,
-      volumeOutrosTotalKg: 0,
-      saldoOutros: 0,
-      saldoOutrosKg: 0
+      saldoOutros: 0
     };
   }
   
-  if (safraId === 'milho25') {
-    const estoqueTotal = ESTOQUE_TOTAL_MILHO25;
-    const volumeFixoTotal = CONTRATO_TOTAL_MILHO25;
-    const saldoContratosFixos = SALDO_FINAL_MILHO25;
-
-    const estoqueArmazensFixos: SaldoKpi[] = ESTOQUE_FINAL_MILHO25.map(item => ({
-      nome: item.nome,
-      total: item.estoqueLiquido,
-      totalKg: item.estoqueLiquido * 60
-    }));
-
-    const contratosFixos: SaldoKpi[] = CONTRATOS_MILHO25.map(item => ({
-      nome: item.nome,
-      total: item.total,
-      totalKg: item.total * 60,
-      id: item.id,
-    }));
-
-    return {
-      estoqueTotalContratosFixos: estoqueTotal,
-      estoqueTotalContratosFixosKg: estoqueTotal * 60,
-      volumeFixoTotal,
-      volumeFixoTotalKg: volumeFixoTotal * 60,
-      saldoContratosFixos,
-      saldoContratosFixosKg: saldoContratosFixos * 60,
-      contratosFixos,
-      estoqueTotalOutrosArmazens: 0,
-      estoqueTotalOutrosArmazensKg: 0,
-      kpisArmazemOutros: [],
-      estoqueArmazensFixos,
-      outrosContratos: [],
-      volumeOutrosTotal: 0,
-      volumeOutrosTotalKg: 0,
-      saldoOutros: 0,
-      saldoOutrosKg: 0
-    };
-  }
-  
+  // Lógica para Safra Atual (Dinâmica)
   const { dados: typedDadosOriginal, config } = loadSafraData(safraId);
-  
   const isSoja2526 = safraId === 'soja2526';
-  const contratosFixosIds = isSoja2526 ? CONTRATOS_FIXOS_SOJA2526_IDS : [];
 
-  let estoqueTotalContratosFixos = 0;
-  let estoqueTotalContratosFixosKg = 0;
-  let estoqueTotalOutrosArmazens = 0;
-  let estoqueTotalOutrosArmazensKg = 0;
+  const saldosMap: Record<string, { sc: number, kg: number }> = {};
   
-  const estoqueArmazensFixosMap: Record<string, { sc: number, kg: number }> = {};
-  const kpisArmazemOutrosMap: Record<string, { sc: number, kg: number }> = {};
-
-  const volumeFixoTotal = contratosFixosIds.reduce((acc, id) => {
-    const contrato = config.VOLUMES_CONTRATADOS[id];
-    return acc + (contrato ? contrato.total : 0);
-  }, 0);
-
-  // Cálculo de Outros Contratos (os que não estão na lista fixa)
-  const outrosContratosIds = Object.keys(config.VOLUMES_CONTRATADOS).filter(id => !contratosFixosIds.includes(id));
-  const volumeOutrosTotal = outrosContratosIds.reduce((acc, id) => {
-    const contrato = config.VOLUMES_CONTRATADOS[id];
-    return acc + (contrato ? contrato.total : 0);
-  }, 0);
-
   typedDadosOriginal.forEach(d => {
     if (d.tipoNF !== "DEP" && d.tipoNF !== "VEN-FIXAR") return; 
-    
     if (d.emitente === "Ildo Romancini") {
-      const sacas = Number(d.sacasLiquida) || 0;
-      const kg = Number(d.pesoLiquidoKg) || 0;
       const armazem = d.armazem || "Outros";
-
-      if (isSoja2526 && ARMAZENS_CONTRATOS_FIXOS.includes(armazem)) {
-        estoqueTotalContratosFixos += sacas;
-        estoqueTotalContratosFixosKg += kg;
-        if (!estoqueArmazensFixosMap[armazem]) estoqueArmazensFixosMap[armazem] = { sc: 0, kg: 0 };
-        estoqueArmazensFixosMap[armazem].sc += sacas;
-        estoqueArmazensFixosMap[armazem].kg += kg;
-      } else {
-        estoqueTotalOutrosArmazens += sacas;
-        estoqueTotalOutrosArmazensKg += kg;
-        if (!kpisArmazemOutrosMap[armazem]) kpisArmazemOutrosMap[armazem] = { sc: 0, kg: 0 };
-        kpisArmazemOutrosMap[armazem].sc += sacas;
-        kpisArmazemOutrosMap[armazem].kg += kg;
-      }
+      if (!saldosMap[armazem]) saldosMap[armazem] = { sc: 0, kg: 0 };
+      saldosMap[armazem].sc += Number(d.sacasLiquida) || 0;
+      saldosMap[armazem].kg += Number(d.pesoLiquidoKg) || 0;
     }
   });
 
-  const saldoContratosFixos = estoqueTotalContratosFixos - volumeFixoTotal;
-  const saldoContratosFixosKg = estoqueTotalContratosFixosKg - (volumeFixoTotal * 60);
-
-  const saldoOutros = estoqueTotalOutrosArmazens - volumeOutrosTotal;
-  const saldoOutrosKg = estoqueTotalOutrosArmazensKg - (volumeOutrosTotal * 60);
-
-  const kpisArmazemOutros: SaldoKpi[] = Object.entries(kpisArmazemOutrosMap)
-    .map(([nome, val]) => ({ nome, total: parseFloat(val.sc.toFixed(2)), totalKg: val.kg }))
-    .sort((a, b) => b.total - a.total);
-    
-  const estoqueArmazensFixos: SaldoKpi[] = Object.entries(estoqueArmazensFixosMap)
+  const listaSaldos: SaldoKpi[] = Object.entries(saldosMap)
     .map(([nome, val]) => ({ nome, total: parseFloat(val.sc.toFixed(2)), totalKg: val.kg }))
     .sort((a, b) => b.total - a.total);
 
-  const contratosFixos: SaldoKpi[] = contratosFixosIds
-    .map(id => ({
-      id,
-      nome: config.VOLUMES_CONTRATADOS[id].nome,
-      total: config.VOLUMES_CONTRATADOS[id].total,
-      totalKg: config.VOLUMES_CONTRATADOS[id].total * 60
-    }));
+  const listaContratos: SaldoKpi[] = Object.keys(config.VOLUMES_CONTRATADOS).map(id => ({
+    id,
+    nome: config.VOLUMES_CONTRATADOS[id].nome,
+    total: config.VOLUMES_CONTRATADOS[id].total,
+    totalKg: config.VOLUMES_CONTRATADOS[id].total * 60
+  })).sort((a, b) => b.total - a.total);
 
-  const outrosContratos: SaldoKpi[] = outrosContratosIds
-    .map(id => ({
-      id,
-      nome: config.VOLUMES_CONTRATADOS[id].nome,
-      total: config.VOLUMES_CONTRATADOS[id].total,
-      totalKg: config.VOLUMES_CONTRATADOS[id].total * 60
-    }));
+  const totalEstoque = listaSaldos.reduce((acc, item) => acc + item.total, 0);
+  const totalContratos = listaContratos.reduce((acc, item) => acc + item.total, 0);
+  const saldoGeral = totalEstoque - totalContratos;
 
+  // Lógica de Grupos (Sipal vs Outros) para a aba Disponível
+  const estoqueSipal = listaSaldos
+    .filter(s => ARMAZENS_CONTRATOS_FIXOS.includes(s.nome))
+    .reduce((acc, s) => acc + s.total, 0);
+  
+  const contratosSipal = listaContratos
+    .filter(c => CONTRATOS_FIXOS_SOJA2526_IDS.includes(c.id || ""))
+    .reduce((acc, c) => acc + c.total, 0);
 
   return {
-    estoqueTotalContratosFixos: parseFloat(estoqueTotalContratosFixos.toFixed(2)),
-    estoqueTotalContratosFixosKg,
-    volumeFixoTotal,
-    volumeFixoTotalKg: volumeFixoTotal * 60,
-    saldoContratosFixos: parseFloat(saldoContratosFixos.toFixed(2)),
-    saldoContratosFixosKg,
-    contratosFixos,
-    estoqueTotalOutrosArmazens: parseFloat(estoqueTotalOutrosArmazens.toFixed(2)),
-    estoqueTotalOutrosArmazensKg,
-    kpisArmazemOutros,
-    estoqueArmazensFixos,
-    outrosContratos,
-    volumeOutrosTotal,
-    volumeOutrosTotalKg: volumeOutrosTotal * 60,
-    saldoOutros: parseFloat(saldoOutros.toFixed(2)),
-    saldoOutrosKg
+    listaSaldos,
+    listaContratos,
+    totalEstoque,
+    totalContratos,
+    saldoGeral,
+    // Dados para grupos específicos
+    estoqueArmazensFixos: listaSaldos.filter(s => ARMAZENS_CONTRATOS_FIXOS.includes(s.nome)),
+    contratosFixos: listaContratos.filter(c => CONTRATOS_FIXOS_SOJA2526_IDS.includes(c.id || "")),
+    estoqueTotalContratosFixos: estoqueSipal,
+    volumeFixoTotal: contratosSipal,
+    saldoContratosFixos: estoqueSipal - contratosSipal,
+    kpisArmazemOutros: listaSaldos.filter(s => !ARMAZENS_CONTRATOS_FIXOS.includes(s.nome)),
+    outrosContratos: listaContratos.filter(c => !CONTRATOS_FIXOS_SOJA2526_IDS.includes(c.id || "")),
+    saldoOutros: (totalEstoque - estoqueSipal) - (totalContratos - contratosSipal)
   };
 }
