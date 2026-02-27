@@ -72,6 +72,11 @@ export function calculateSaldoDashboard(safraId: string) {
       estoqueTotalOutrosArmazensKg: 0,
       kpisArmazemOutros: [],
       estoqueArmazensFixos,
+      outrosContratos: [],
+      volumeOutrosTotal: 0,
+      volumeOutrosTotalKg: 0,
+      saldoOutros: 0,
+      saldoOutrosKg: 0
     };
   }
   
@@ -105,6 +110,11 @@ export function calculateSaldoDashboard(safraId: string) {
       estoqueTotalOutrosArmazensKg: 0,
       kpisArmazemOutros: [],
       estoqueArmazensFixos,
+      outrosContratos: [],
+      volumeOutrosTotal: 0,
+      volumeOutrosTotalKg: 0,
+      saldoOutros: 0,
+      saldoOutrosKg: 0
     };
   }
   
@@ -122,6 +132,13 @@ export function calculateSaldoDashboard(safraId: string) {
   const kpisArmazemOutrosMap: Record<string, { sc: number, kg: number }> = {};
 
   const volumeFixoTotal = contratosFixosIds.reduce((acc, id) => {
+    const contrato = config.VOLUMES_CONTRATADOS[id];
+    return acc + (contrato ? contrato.total : 0);
+  }, 0);
+
+  // Cálculo de Outros Contratos (os que não estão na lista fixa)
+  const outrosContratosIds = Object.keys(config.VOLUMES_CONTRATADOS).filter(id => !contratosFixosIds.includes(id));
+  const volumeOutrosTotal = outrosContratosIds.reduce((acc, id) => {
     const contrato = config.VOLUMES_CONTRATADOS[id];
     return acc + (contrato ? contrato.total : 0);
   }, 0);
@@ -153,6 +170,9 @@ export function calculateSaldoDashboard(safraId: string) {
   const saldoContratosFixos = estoqueTotalContratosFixos - volumeFixoTotal;
   const saldoContratosFixosKg = estoqueTotalContratosFixosKg - (volumeFixoTotal * 60);
 
+  const saldoOutros = estoqueTotalOutrosArmazens - volumeOutrosTotal;
+  const saldoOutrosKg = estoqueTotalOutrosArmazensKg - (volumeOutrosTotal * 60);
+
   const kpisArmazemOutros: SaldoKpi[] = Object.entries(kpisArmazemOutrosMap)
     .map(([nome, val]) => ({ nome, total: parseFloat(val.sc.toFixed(2)), totalKg: val.kg }))
     .sort((a, b) => b.total - a.total);
@@ -162,6 +182,14 @@ export function calculateSaldoDashboard(safraId: string) {
     .sort((a, b) => b.total - a.total);
 
   const contratosFixos: SaldoKpi[] = contratosFixosIds
+    .map(id => ({
+      id,
+      nome: config.VOLUMES_CONTRATADOS[id].nome,
+      total: config.VOLUMES_CONTRATADOS[id].total,
+      totalKg: config.VOLUMES_CONTRATADOS[id].total * 60
+    }));
+
+  const outrosContratos: SaldoKpi[] = outrosContratosIds
     .map(id => ({
       id,
       nome: config.VOLUMES_CONTRATADOS[id].nome,
@@ -181,6 +209,11 @@ export function calculateSaldoDashboard(safraId: string) {
     estoqueTotalOutrosArmazens: parseFloat(estoqueTotalOutrosArmazens.toFixed(2)),
     estoqueTotalOutrosArmazensKg,
     kpisArmazemOutros,
-    estoqueArmazensFixos
+    estoqueArmazensFixos,
+    outrosContratos,
+    volumeOutrosTotal,
+    volumeOutrosTotalKg: volumeOutrosTotal * 60,
+    saldoOutros: parseFloat(saldoOutros.toFixed(2)),
+    saldoOutrosKg
   };
 }

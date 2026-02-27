@@ -68,15 +68,12 @@ export default function SaldoPage() {
 
   const data = useMemo(() => calculateSaldoDashboard(safraId), [safraId]);
   
-  const saldo = data.saldoContratosFixos;
-  const saldoKg = data.saldoContratosFixosKg;
-  const isExcedente = saldo >= 0;
-  const saldoAbsoluto = Math.abs(saldo);
-  const saldoAbsolutoKg = Math.abs(saldoKg);
-  
   const isSafraPassada = safraId === 'soja2425' || safraId === 'milho25';
 
-  const saldoCardConfig: SaldoCardConfig = isExcedente ? {
+  // Configuração do Card de Saldo 1 (Sipal)
+  const saldo1 = data.saldoContratosFixos;
+  const isExcedente1 = saldo1 >= 0;
+  const saldoCard1: SaldoCardConfig = isExcedente1 ? {
     title: "Saldo Excedente",
     icon: CheckCircle,
     bg: "bg-green-100 dark:bg-green-900/30",
@@ -95,9 +92,29 @@ export default function SaldoPage() {
     iconBg: "bg-red-200 text-red-700 dark:bg-red-700 dark:text-white",
     trendingIcon: Scale,
   };
-  
-  const IconComponent = saldoCardConfig.icon;
-  const TrendingIconComponent = saldoCardConfig.trendingIcon;
+
+  // Configuração do Card de Saldo 2 (Outros)
+  const saldo2 = data.saldoOutros;
+  const isExcedente2 = saldo2 >= 0;
+  const saldoCard2: SaldoCardConfig = isExcedente2 ? {
+    title: "Saldo Excedente",
+    icon: CheckCircle,
+    bg: "bg-green-100 dark:bg-green-900/30",
+    border: "border-green-200 dark:border-green-800",
+    text: "text-green-900 dark:text-green-200",
+    subText: "text-green-700/70 dark:text-green-400/70",
+    iconBg: "bg-green-200 text-green-700 dark:bg-green-700 dark:text-white",
+    trendingIcon: TrendingUp,
+  } : {
+    title: "Déficit a Cumprir",
+    icon: AlertTriangle,
+    bg: "bg-red-100 dark:bg-red-900/30",
+    border: "border-red-200 dark:border-red-800",
+    text: "text-red-900 dark:text-red-200",
+    subText: "text-red-700/70 dark:text-green-400/70",
+    iconBg: "bg-red-200 text-red-700 dark:bg-red-700 dark:text-white",
+    trendingIcon: Scale,
+  };
 
   const section1Title = isSafraPassada 
     ? "Resumo de Estoque e Contratos (Final de Safra)"
@@ -135,22 +152,20 @@ export default function SaldoPage() {
         </div>
       </header>
 
-      <div className="max-w-[1200px] mx-auto mb-10">
+      {/* SEÇÃO 1: SIPAL / GERAL */}
+      <div className="max-w-[1200px] mx-auto mb-12">
         <h2 className="text-[10px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
           <FileText size={14} /> {section1Title}
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
           <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
                 <Package size={16} className="text-blue-500" /> Estoque Entregue
               </h3>
             </div>
-            
             <SaldoKpiList items={data.estoqueArmazensFixos} valueColor="text-blue-600 dark:text-blue-400" />
-
             <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-start">
               <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic mt-1">Total Entregue</span>
               <div className="text-right">
@@ -166,9 +181,7 @@ export default function SaldoPage() {
                 <FileText size={16} className="text-purple-500" /> Volume Contratado
               </h3>
             </div>
-            
             <SaldoKpiList items={data.contratosFixos} valueColor="text-purple-600 dark:text-purple-400" />
-
             <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-start">
               <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic mt-1">Total Contratado</span>
               <div className="text-right">
@@ -178,27 +191,25 @@ export default function SaldoPage() {
             </div>
           </div>
 
-          <div className={`${saldoCardConfig.bg} ${saldoCardConfig.border} border-2 p-6 rounded-3xl shadow-lg flex flex-col justify-between relative overflow-hidden group`}>
-            <div className={`absolute -right-4 -top-4 ${saldoCardConfig.text}/50 rotate-12 transition-transform group-hover:scale-110`}>
-              <TrendingIconComponent size={120} />
+          <div className={`${saldoCard1.bg} ${saldoCard1.border} border-2 p-6 rounded-3xl shadow-lg flex flex-col justify-between relative overflow-hidden group`}>
+            <div className={`absolute -right-4 -top-4 ${saldoCard1.text}/50 rotate-12 transition-transform group-hover:scale-110`}>
+              <saldoCard1.trendingIcon size={120} />
             </div>
-            
             <div className="flex items-center gap-3 relative z-10">
-              <div className={`p-3 rounded-xl ${saldoCardConfig.iconBg}`}>
-                <IconComponent size={24} />
+              <div className={`p-3 rounded-xl ${saldoCard1.iconBg}`}>
+                <saldoCard1.icon size={24} />
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest italic" style={{ color: saldoCardConfig.subText.split(' ')[0] }}>
-                {saldoCardConfig.title}
+              <span className="text-[10px] font-black uppercase tracking-widest italic">
+                {saldoCard1.title}
               </span>
             </div>
-
             <div className="relative z-10 mt-4">
-              <p className="text-xs font-black uppercase mb-1" style={{ color: saldoCardConfig.subText.split(' ')[0] }}>{isExcedente ? 'Volume Disponível' : 'Volume Pendente'}</p>
-              <h2 className={`text-4xl font-black tracking-tighter ${saldoCardConfig.text} leading-none`}>
-                {saldoAbsoluto.toLocaleString('pt-BR', { minimumFractionDigits: 0 })} <span className="text-lg">sc</span>
+              <p className="text-xs font-black uppercase mb-1">{isExcedente1 ? 'Volume Disponível' : 'Volume Pendente'}</p>
+              <h2 className={`text-4xl font-black tracking-tighter ${saldoCard1.text} leading-none`}>
+                {Math.abs(saldo1).toLocaleString('pt-BR', { minimumFractionDigits: 0 })} <span className="text-lg">sc</span>
               </h2>
-              <p className={`text-sm font-black mt-1 ${saldoCardConfig.text} opacity-80`}>{saldoAbsolutoKg.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</p>
-              <p className={`text-[10px] font-bold uppercase mt-4 flex items-center gap-1 italic ${saldoCardConfig.subText}`}>
+              <p className={`text-sm font-black mt-1 ${saldoCard1.text} opacity-80`}>{Math.abs(data.saldoContratosFixosKg).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</p>
+              <p className={`text-[10px] font-bold uppercase mt-4 flex items-center gap-1 italic ${saldoCard1.subText}`}>
                 * Cálculo: Entregue - Contratado
               </p>
             </div>
@@ -206,35 +217,72 @@ export default function SaldoPage() {
         </div>
       </div>
 
+      {/* SEÇÃO 2: OUTROS (Sem associação Sipal) - Apenas se houver dados ou for safra atual */}
       {!isSafraPassada && (
-        <div className="max-w-[1200px] mx-auto mb-10">
-          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-            <Warehouse size={14} /> Saldo em Outros Armazéns (Total: {data.estoqueTotalOutrosArmazens.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc)
+        <div className="max-w-[1200px] mx-auto mb-12">
+          <h2 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+            <Warehouse size={14} /> Saldos e Contratos sem associação/destino Sipal
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {data.kpisArmazemOutros.length > 0 ? (
-              data.kpisArmazemOutros.map((kpi, i) => {
-                return (
-                  <div 
-                    key={i} 
-                    className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md transition-all hover:scale-[1.02] hover:border-blue-500 dark:hover:border-blue-500 cursor-default"
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Warehouse size={16} className="text-blue-500 dark:text-blue-400" />
-                      <p className="text-[10px] font-black uppercase truncate text-slate-500 dark:text-slate-400">{kpi.nome}</p>
-                    </div>
-                    <h4 className="text-2xl font-black text-slate-800 dark:text-white leading-none">
-                      {kpi.total.toLocaleString('pt-BR')} <span className="text-sm font-bold text-slate-400">sc</span>
-                    </h4>
-                    <p className="text-[10px] font-bold text-slate-400 mt-1">{kpi.totalKg?.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</p>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="col-span-full py-10 text-center text-slate-400 text-[10px] font-bold uppercase italic border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl">
-                Nenhuma carga encontrada em outros armazéns.
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1: Estoque em Outros Armazéns */}
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
+                  <Warehouse size={16} className="text-blue-500" /> Estoque Outros
+                </h3>
               </div>
-            )}
+              <SaldoKpiList items={data.kpisArmazemOutros} valueColor="text-blue-600 dark:text-blue-400" />
+              <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-start">
+                <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic mt-1">Total Outros</span>
+                <div className="text-right">
+                  <span className="text-xl font-black text-blue-600 block leading-none">{data.estoqueTotalOutrosArmazens.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+                  <span className="text-[10px] font-bold text-slate-400">{data.estoqueTotalOutrosArmazensKg.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Outros Contratos */}
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xs font-black text-slate-400 uppercase flex items-center gap-2 tracking-widest">
+                  <FileText size={16} className="text-purple-500" /> Contratos Diversos
+                </h3>
+              </div>
+              <SaldoKpiList items={data.outrosContratos} valueColor="text-purple-600 dark:text-purple-400" />
+              <div className="pt-3 border-t border-dashed border-slate-100 dark:border-slate-700 flex justify-between items-start">
+                <span className="text-xs font-black text-slate-800 dark:text-white uppercase italic mt-1">Total Contratos</span>
+                <div className="text-right">
+                  <span className="text-xl font-black text-purple-600 block leading-none">{data.volumeOutrosTotal.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} sc</span>
+                  <span className="text-[10px] font-bold text-slate-400">{data.volumeOutrosTotalKg.toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Saldo Geral Outros */}
+            <div className={`${saldoCard2.bg} ${saldoCard2.border} border-2 p-6 rounded-3xl shadow-lg flex flex-col justify-between relative overflow-hidden group`}>
+              <div className={`absolute -right-4 -top-4 ${saldoCard2.text}/50 rotate-12 transition-transform group-hover:scale-110`}>
+                <saldoCard2.trendingIcon size={120} />
+              </div>
+              <div className="flex items-center gap-3 relative z-10">
+                <div className={`p-3 rounded-xl ${saldoCard2.iconBg}`}>
+                  <saldoCard2.icon size={24} />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest italic">
+                  {saldoCard2.title}
+                </span>
+              </div>
+              <div className="relative z-10 mt-4">
+                <p className="text-xs font-black uppercase mb-1">{isExcedente2 ? 'Volume Disponível' : 'Volume Pendente'}</p>
+                <h2 className={`text-4xl font-black tracking-tighter ${saldoCard2.text} leading-none`}>
+                  {Math.abs(saldo2).toLocaleString('pt-BR', { minimumFractionDigits: 0 })} <span className="text-lg">sc</span>
+                </h2>
+                <p className={`text-sm font-black mt-1 ${saldoCard2.text} opacity-80`}>{Math.abs(data.saldoOutrosKg).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} kg</p>
+                <p className={`text-[10px] font-bold uppercase mt-4 flex items-center gap-1 italic ${saldoCard2.subText}`}>
+                  * Cálculo: Estoque Outros - Contratos Diversos
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
