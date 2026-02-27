@@ -1186,7 +1186,7 @@
   {
     "Data": "2026-01-16T04:00:20.000Z",
     "Tipo NF": "VEN",
-    "Nº": null,
+    "Nº": 315,
     "NFe": 432,
     "Emitente": "Ivo Pierin",
     "Destinatário": "COFCO NSH",
@@ -1218,7 +1218,7 @@
   {
     "Data": "2026-01-17T04:00:20.000Z",
     "Tipo NF": "VEN",
-    "Nº": null,
+    "Nº": 345,
     "NFe": 435,
     "Emitente": "Ivo Pierin",
     "Destinatário": "COFCO NSH",
@@ -1250,7 +1250,7 @@
   {
     "Data": "2026-01-17T04:00:20.000Z",
     "Tipo NF": "VEN",
-    "Nº": null,
+    "Nº": 349,
     "NFe": 436,
     "Emitente": "Ivo Pierin",
     "Destinatário": "COFCO NSH",
@@ -1506,7 +1506,7 @@
   {
     "Data": "2026-01-18T04:00:20.000Z",
     "Tipo NF": "VEN",
-    "Nº": null,
+    "Nº": 424,
     "NFe": 437,
     "Emitente": "Ivo Pierin",
     "Destinatário": "COFCO NSH",
@@ -1730,7 +1730,7 @@
   {
     "Data": "2026-01-25T04:00:20.000Z",
     "Tipo NF": "VEN",
-    "Nº": null,
+    "Nº": 705,
     "NFe": 458,
     "Emitente": "Ivo Pierin",
     "Destinatário": "COFCO NSH",
@@ -1794,7 +1794,7 @@
   {
     "Data": "2026-01-25T04:00:20.000Z",
     "Tipo NF": "VEN",
-    "Nº": null,
+    "Nº": 705,
     "NFe": 261,
     "Emitente": "Ildo Romancini",
     "Destinatário": "COFCO NSH",
@@ -2755,7 +2755,7 @@
     "Data": "2026-01-31T04:00:20.000Z",
     "Tipo NF": "DEP",
     "Nº": 371,
-    "NFe": 1,
+    "NFe": 350,
     "Emitente": "Ildo Romancini",
     "Destinatário": "Usimat Campos de Julio",
     "Placa": "SDY9E09",
