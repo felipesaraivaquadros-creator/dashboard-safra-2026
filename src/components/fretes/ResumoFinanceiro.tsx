@@ -54,14 +54,14 @@ export default function ResumoFinanceiro({
             )}
           </div>
 
-          <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1 print:bg-slate-50 print:border-slate-300 print:rounded-xl print:p-4">
+          <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1 print:bg-slate-50 print:border-slate-400 print:border-2 print:rounded-xl print:p-4">
             <p className="text-[10px] font-black uppercase text-purple-300 mb-1 print:text-slate-500">Valor a Pagar</p>
             <p className={`text-4xl font-black tracking-tighter ${saldoFinal >= 0 ? 'text-green-400 print:text-green-600' : 'text-red-400 print:text-red-600'}`}>
               R$ {saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center print:border-slate-200 print:mt-2 print:pt-2">
               <span className="text-[9px] font-bold uppercase text-white/40 italic print:text-slate-400">* Sujeito a conferência final</span>
-              <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${saldoFinal >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+              <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${saldoFinal >= 0 ? 'bg-green-500/20 text-green-400 print:bg-green-100 print:text-green-700' : 'bg-red-500/20 text-red-400 print:bg-red-100 print:text-red-700'}`}>
                 {saldoFinal >= 0 ? 'Credor' : 'Devedor'}
               </div>
             </div>
