@@ -39,7 +39,7 @@ export function useFretesData(safraId: string) {
   const [placaFiltro, setPlacaFiltro] = useState("");
   const [armazemFiltro, setArmazemFiltro] = useState("");
   const [tipoCalculo, setTipoCalculo] = useState<'com' | 'sem'>('com');
-  const [modeloRelatorio, setModeloRelatorio] = useState<'simples' | 'fazenda' | 'consolidado'>('simples');
+  const [modeloRelatorio, setModeloRelatorio] = useState<'simples' | 'fazenda' | 'consolidado' | 'armazem'>('simples');
   const [showRelatorio, setShowRelatorio] = useState(false);
   
   const [sortConfig, setSortConfig] = useState<{ key: SortKey, order: SortOrder }>({ 
@@ -95,6 +95,17 @@ export function useFretesData(safraId: string) {
       const f = r.fazenda || "Não Informada";
       if (!groups[f]) groups[f] = [];
       groups[f].push(r);
+    });
+    return groups;
+  }, [dadosFretes, modeloRelatorio]);
+
+  const fretesPorArmazem = useMemo(() => {
+    if (modeloRelatorio !== 'armazem') return {};
+    const groups: Record<string, Romaneio[]> = {};
+    dadosFretes.forEach(r => {
+      const a = r.armazem || "Não Informado";
+      if (!groups[a]) groups[a] = [];
+      groups[a].push(r);
     });
     return groups;
   }, [dadosFretes, modeloRelatorio]);
