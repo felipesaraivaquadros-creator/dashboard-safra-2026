@@ -47,7 +47,7 @@ const SOJA2526_CONFIG: SafraConfig = {
   TABELA_FRETES: [
     { local: "LRV", preco: 2.00 },
     { local: "CLÁUDIA", preco: 2.70 },
-    { local: "NOVA STA HELENA", preco: 2.50 },
+    { local: "NOVA STA HELENA", preco: 2.70 },
     { local: "MATUPÁ", preco: 2.00 },
   ],
 };
