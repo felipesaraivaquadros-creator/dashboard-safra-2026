@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { FileText, Hash } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { SaldoKpi } from '../../data/saldoTypes';
 
 interface ContratosTabProps {
@@ -12,7 +12,7 @@ interface ContratosTabProps {
 
 export default function ContratosTab({ lista, totalSacas, totalKg }: ContratosTabProps) {
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 max-w-5xl mx-auto">
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 flex items-center gap-3">
           <div className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 rounded-lg"><FileText size={20}/></div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Warehouse, Package } from 'lucide-react';
+import { Warehouse } from 'lucide-react';
 import { SaldoKpi } from '../../data/saldoTypes';
 
 interface SaldosTabProps {
@@ -12,7 +12,7 @@ interface SaldosTabProps {
 
 export default function SaldosTab({ lista, totalSacas, totalKg }: SaldosTabProps) {
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 max-w-4xl mx-auto">
       <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 flex items-center gap-3">
           <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg"><Warehouse size={20}/></div>
