@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useRef, useState } from 'react';
-import { FileUp, Loader2, AlertCircle } from 'lucide-react';
+import { FileUp, Loader2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { showSuccess, showError, showLoading, dismissToast } from '../utils/toast';
 import { syncRomaneiosToSupabase } from '../lib/supabaseSync';
 import { useParams } from 'next/navigation';
 import { Romaneio } from '../data/types';
 
-// Mapeamento rigoroso de abas por Safra
 const ABA_POR_SAFRA: Record<string, string> = {
   'soja2526': 'ROMANEIOS_SOJA',
   'milho26': 'ROMANEIOS_MILHO',
@@ -25,34 +24,21 @@ export default function ImportExcelButton() {
     if (!file) return;
 
     setIsImporting(true);
-    const toastId = showLoading("Lendo arquivo Excel...");
+    let toastId = showLoading("Lendo arquivo Excel...");
 
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       
-      // 1. Identifica a aba alvo baseada na safra atual
       const abaAlvo = ABA_POR_SAFRA[safraId];
-      
-      if (!abaAlvo) {
-        throw new Error(`Não há uma aba de romaneios configurada para a safra "${safraId}".`);
-      }
+      if (!abaAlvo) throw new Error(`Safra ${safraId} não configurada.`);
 
-      // 2. Tenta acessar a aba específica
       const worksheet = workbook.Sheets[abaAlvo];
-      
-      if (!worksheet) {
-        throw new Error(`A aba obrigatória "${abaAlvo}" não foi encontrada nesta planilha. Verifique se o nome da aba está correto.`);
-      }
+      if (!worksheet) throw new Error(`Aba "${abaAlvo}" não encontrada na planilha.`);
 
-      // 3. Converte apenas a aba alvo para JSON
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      if (jsonData.length === 0) throw new Error(`A aba "${abaAlvo}" está vazia.`);
 
-      if (jsonData.length === 0) {
-        throw new Error(`A aba "${abaAlvo}" está vazia ou não contém dados válidos.`);
-      }
-
-      // 4. Mapeia os dados para o formato do sistema
       const romaneiosFormatados: Romaneio[] = jsonData.map((linha: any) => ({
         data: linha['Data'] || linha['DATA'] || null,
         contrato: linha['Contrato'] || linha['CONTRATO'] || 'S/C',
@@ -81,22 +67,23 @@ export default function ImportExcelButton() {
         precofrete: Number(linha['precofrete'] || linha['PRECO FRETE']) || null
       }));
 
+      // Atualiza o status do toast
       dismissToast(toastId);
-      showLoading(`Sincronizando ${romaneiosFormatados.length} registros da aba "${abaAlvo}"...`);
+      toastId = showLoading(`Sincronizando ${romaneiosFormatados.length} registros no banco...`);
       
-      // 5. Envia para o Supabase
       const total = await syncRomaneiosToSupabase(safraId, romaneiosFormatados);
       
-      showSuccess(`${total} romaneios da aba "${abaAlvo}" importados com sucesso!`);
+      dismissToast(toastId);
+      showSuccess(`${total} romaneios importados com sucesso!`);
       
-      // Recarrega a página para atualizar os gráficos e tabelas
-      setTimeout(() => window.location.reload(), 1500);
+      setTimeout(() => window.location.reload(), 1000);
       
     } catch (err: any) {
-      showError("Erro na importação: " + err.message);
+      dismissToast(toastId);
+      showError(err.message || "Erro desconhecido na importação.");
+      console.error("Erro Importação:", err);
     } finally {
       setIsImporting(false);
-      dismissToast(toastId);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -114,7 +101,6 @@ export default function ImportExcelButton() {
         disabled={isImporting}
         onClick={() => fileInputRef.current?.click()}
         className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-black uppercase rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50"
-        title={`Importar aba ${ABA_POR_SAFRA[safraId] || 'de romaneios'}`}
       >
         {isImporting ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
         Importar Planilha
