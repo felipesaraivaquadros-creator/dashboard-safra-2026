@@ -11,14 +11,14 @@ import SafraSelector from '../../../src/components/SafraSelector';
 import NavigationMenu from '../../../src/components/NavigationMenu';
 import { supabase } from '../../../src/integrations/supabase/client';
 import { showSuccess, showError } from '../../../src/utils/toast';
+import { useDataProcessing } from '../../../src/lib/useDataProcessing';
 
-// Componentes de Aba
+// Importação dos componentes de abas e formulários
 import SaldosTab from '../../../src/components/saldos/SaldosTab';
 import ContratosTab from '../../../src/components/saldos/ContratosTab';
 import DisponivelTab from '../../../src/components/saldos/DisponivelTab';
 import ContratoForm from '../../../src/components/saldos/ContratoForm';
 import ArmazemGrupoForm from '../../../src/components/saldos/ArmazemGrupoForm';
-import { useDataProcessing } from '../../../src/lib/useDataProcessing';
 
 // Carregamento dinâmico do componente de Drag & Drop para evitar erros de SSR
 const SaldosPorArmazem = dynamic(
@@ -61,6 +61,7 @@ export default function SaldoPage() {
   const [dbContratos, setDbContratos] = useState<any[]>([]);
 
   const fetchContratos = useCallback(async () => {
+    if (!safraId) return;
     const { data } = await supabase
       .from('contratos')
       .select('*, armazens(nome, grupo)')
