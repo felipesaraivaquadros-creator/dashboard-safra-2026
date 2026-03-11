@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { Scale, Plus, Layers, Save, Loader2 } from 'lucide-react';
 import DraggableItem from './DraggableItem';
@@ -22,27 +22,30 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeData, setActiveData] = useState<any>(null);
   
-  // Inicializa o estado local diretamente das props
-  const [localSaldos, setLocalSaldos] = useState<any[]>(() => 
-    listaSaldos.map(s => ({
-      ...s,
-      uiId: s.isCustom ? `custom-${s.db_id}` : `real-${s.id}`,
-      databaseId: s.db_id
-    }))
-  );
-
-  const [localContratos, setLocalContratos] = useState<any[]>(() => 
-    listaContratos.map(c => ({
-      ...c,
-      uiId: `contrato-${c.db_id || c.id}`,
-      databaseId: c.db_id || c.id
-    }))
-  );
-
+  // Estado local para refletir as mudanças de drag & drop antes de salvar
+  const [localSaldos, setLocalSaldos] = useState<any[]>([]);
+  const [localContratos, setLocalContratos] = useState<any[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [gruposVazios, setGruposVazios] = useState<string[]>([]);
   const [splitTarget, setSplitTarget] = useState<any>(null);
+
+  // Sincroniza o estado local quando as props mudam (ex: após um refresh)
+  useEffect(() => {
+    setLocalSaldos(listaSaldos.map(s => ({
+      ...s,
+      uiId: s.isCustom ? `custom-${s.db_id}` : `real-${s.id}`,
+      databaseId: s.db_id
+    })));
+    
+    setLocalContratos(listaContratos.map(c => ({
+      ...c,
+      uiId: `contrato-${c.db_id || c.id}`,
+      databaseId: c.db_id || c.id
+    })));
+    
+    setIsDirty(false);
+  }, [listaSaldos, listaContratos]);
 
   const todosOsGrupos = useMemo(() => {
     const g = new Set<string>();
@@ -68,6 +71,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     const targetId = over.id as string; 
     const targetType = over.data.current?.type;
 
+    // Retornar para o banco (remover grupo)
     if (targetId === 'bank') {
       if (itemData?.type === 'armazem') {
         setLocalSaldos(prev => prev.map(s => s.uiId === active.id ? { ...s, grupo: null } : s));
@@ -78,6 +82,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
       return;
     }
 
+    // Validar se soltou no tipo correto
     if (targetType !== itemData?.type) {
       showError(`Arraste para o slot correto.`);
       return;
@@ -95,41 +100,44 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
+    
     setIsSaving(true);
-    const toastId = showLoading("Gravando alterações...");
+    const toastId = showLoading("Gravando alterações no banco...");
 
     try {
-      const promises = [];
-
-      for (const s of localSaldos) {
-        if (s.databaseId) {
+      // Executa as atualizações em paralelo
+      const updates = [
+        ...localSaldos.map(s => {
           const table = s.isCustom ? 'saldos_custom' : 'saldos';
-          promises.push(supabase.from(table).update({ grupo: s.grupo }).eq('id', s.databaseId));
-        }
-      }
+          return supabase.from(table).update({ grupo: s.grupo }).eq('id', s.databaseId);
+        }),
+        ...localContratos.map(c => 
+          supabase.from('contratos').update({ grupo: c.grupo }).eq('id', c.databaseId)
+        )
+      ];
 
-      for (const c of localContratos) {
-        if (c.databaseId) {
-          promises.push(supabase.from('contratos').update({ grupo: c.grupo }).eq('id', c.databaseId));
-        }
-      }
-
-      await Promise.all(promises);
-      dismissToast(toastId);
-      showSuccess("Organização salva!");
+      const results = await Promise.all(updates);
       
-      // Notifica o pai para atualizar os dados globais
-      // O pai atualizará a 'key', forçando este componente a remontar com novos dados
-      onRefresh();
-    } catch (err: any) {
+      // Verifica se houve erro em alguma das requisições
+      const firstError = results.find(r => r.error)?.error;
+      if (firstError) throw firstError;
+
       dismissToast(toastId);
-      showError(err.message);
+      showSuccess("Organização salva com sucesso!");
+      setIsDirty(false);
+      onRefresh(); // Atualiza os dados globais
+    } catch (err: any) {
+      console.error("Erro ao salvar:", err);
+      dismissToast(toastId);
+      showError("Falha ao gravar: " + (err.message || "Erro de conexão"));
+    } finally {
       setIsSaving(false);
     }
   };
 
   const handleCriarGrupo = () => {
-    const nome = prompt("Nome do novo Grupo:");
+    const nome = prompt("Nome do novo Grupo (ex: SIPAL, AMAGGI):");
     if (nome) {
       const nomeUpper = nome.trim().toUpperCase();
       if (todosOsGrupos.includes(nomeUpper)) return;
@@ -141,6 +149,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="space-y-10 pb-32">
         
+        {/* Barra de Ações Flutuante */}
         {isDirty && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] animate-in slide-in-from-bottom-10 duration-300">
             <div className="bg-slate-900 dark:bg-purple-900 text-white px-6 py-4 rounded-3xl shadow-2xl border border-white/10 flex items-center gap-6 backdrop-blur-xl">
@@ -149,8 +158,18 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                 <p className="text-xs font-bold">Clique em gravar para confirmar as mudanças.</p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => onRefresh()} className="px-4 py-2 text-[10px] font-black uppercase rounded-xl bg-white/10 hover:bg-white/20 transition-all">Descartar</button>
-                <button disabled={isSaving} onClick={handleSave} className="flex items-center gap-2 px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-green-500 hover:bg-green-400 text-slate-900 transition-all shadow-lg">
+                <button 
+                  disabled={isSaving}
+                  onClick={() => onRefresh()} 
+                  className="px-4 py-2 text-[10px] font-black uppercase rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+                >
+                  Descartar
+                </button>
+                <button 
+                  disabled={isSaving} 
+                  onClick={handleSave} 
+                  className="flex items-center gap-2 px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-green-500 hover:bg-green-400 text-slate-900 transition-all shadow-lg disabled:opacity-50"
+                >
                   {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                   Gravar Alterações
                 </button>
@@ -159,6 +178,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
           </div>
         )}
 
+        {/* Banco de Itens */}
         <section className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -201,6 +221,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
           </DroppableSlot>
         </section>
 
+        {/* Grupos de Alocação */}
         <div className="grid grid-cols-1 gap-12">
           {todosOsGrupos.map(grupoNome => {
             const saldosNoGrupo = localSaldos.filter(s => s.grupo === grupoNome);
