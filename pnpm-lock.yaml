@@ -15,7 +15,7 @@ importers:
         specifier: ^0.1.8
         version: 0.1.8(@supabase/supabase-js@2.97.0)
       '@supabase/supabase-js':
-        specifier: ^2.97.0
+        specifier: ^2.45.0
         version: 2.97.0
       autoprefixer:
         specifier: ^10.4.18
