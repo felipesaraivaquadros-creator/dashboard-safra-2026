@@ -34,7 +34,7 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
   const totalAlocadoSc = dadosCard1.reduce((sum, d) => sum + d.sc, 0);
   const saldoConciliacao = totalAlocadoSc - totalContratosSc;
 
-  // --- SEÇÃO 2: DETALHAMENTO SIPAL LRV (NOVO) ---
+  // --- SEÇÃO 2: DETALHAMENTO SIPAL LRV ---
   const sipalLRVReal = listaSaldos.find(s => s.nome === "SIPAL LRV")?.total || 28066;
   
   const compromissosLRV = [
@@ -48,8 +48,18 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
   const totalCompromissosLRV = compromissosLRV.reduce((sum, c) => sum + c.total, 0);
   const saldoFinalLRV = sipalLRVReal - totalCompromissosLRV;
 
+  // --- SEÇÃO 3: DETALHAMENTO SIPAL CLÁUDIA (NOVO) ---
+  const sipalClaudiaReal = listaSaldos.find(s => s.nome === "SIPAL CLÁUDIA")?.total || 0;
+  
+  const compromissosClaudia = [
+    { nome: "ARRENDAMENTO CT", total: 10000 },
+  ];
+
+  const totalCompromissosClaudia = compromissosClaudia.reduce((sum, c) => sum + c.total, 0);
+  const saldoFinalClaudia = sipalClaudiaReal - totalCompromissosClaudia;
+
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-12">
       
       {/* PRIMEIRA SEÇÃO: CONCILIAÇÃO GERAL */}
       <div className="space-y-6">
@@ -60,7 +70,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 1º Card: Saldos Armazéns */}
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-blue-50/30 dark:bg-blue-900/10 flex items-center gap-3">
               <Warehouse size={18} className="text-blue-600" />
@@ -83,7 +92,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
             </div>
           </div>
 
-          {/* 2º Card: Contratos */}
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-purple-50/30 dark:bg-purple-900/10 flex items-center gap-3">
               <FileText size={18} className="text-purple-600" />
@@ -106,7 +114,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
             </div>
           </div>
 
-          {/* 3º Card: Saldo de Conciliação */}
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 flex items-center gap-3">
               <Scale size={18} className="text-slate-600" />
@@ -126,7 +133,7 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
         </div>
       </div>
 
-      {/* SEGUNDA SEÇÃO: DETALHAMENTO SIPAL LRV (NOVA) */}
+      {/* SEGUNDA SEÇÃO: DETALHAMENTO SIPAL LRV */}
       <div className="space-y-6">
         <div className="flex items-center gap-2 px-2">
           <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
@@ -135,7 +142,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Card 1: Saldo Físico LRV */}
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-blue-50/30 dark:bg-blue-900/10 flex items-center gap-3">
               <Warehouse size={18} className="text-blue-600" />
@@ -151,7 +157,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
             </div>
           </div>
 
-          {/* Card 2: Compromissos LRV */}
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-orange-50/30 dark:bg-orange-900/10 flex items-center gap-3">
               <ArrowDown size={18} className="text-orange-600" />
@@ -171,7 +176,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
             </div>
           </div>
 
-          {/* Card 3: Saldo Final LRV */}
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-green-50/30 dark:bg-green-900/10 flex items-center gap-3">
               <Scale size={18} className="text-green-600" />
@@ -185,6 +189,71 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
               <p className="text-xs font-black uppercase italic mb-8">Sacas Livres</p>
               <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase ${saldoFinalLRV >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                 {saldoFinalLRV >= 0 ? <><CheckCircle2 size={14} /> Saldo Positivo</> : <><AlertCircle size={14} /> Saldo Negativo</>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* TERCEIRA SEÇÃO: DETALHAMENTO SIPAL CLÁUDIA (NOVA) */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 px-2">
+          <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Sipal Cláudia</h2>
+          <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Card 1: Saldo Físico Cláudia */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-blue-50/30 dark:bg-blue-900/10 flex items-center gap-3">
+              <Warehouse size={18} className="text-blue-600" />
+              <h3 className="text-xs font-black uppercase italic tracking-tighter">Saldo Físico</h3>
+            </div>
+            <div className="p-8 flex-1 flex flex-col items-center justify-center text-center">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">SIPAL CLÁUDIA</p>
+              <div className="text-5xl font-black text-blue-600 dark:text-blue-400 tracking-tighter mb-2">
+                {sipalClaudiaReal.toLocaleString('pt-BR')}
+              </div>
+              <p className="text-xs font-black uppercase italic text-slate-400">Sacas em Estoque</p>
+              <p className="text-[10px] font-bold text-slate-300 mt-4">{(sipalClaudiaReal * 60).toLocaleString('pt-BR')} KG</p>
+            </div>
+          </div>
+
+          {/* Card 2: Compromissos Cláudia */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-orange-50/30 dark:bg-orange-900/10 flex items-center gap-3">
+              <ArrowDown size={18} className="text-orange-600" />
+              <h3 className="text-xs font-black uppercase italic tracking-tighter">Compromissos / Saídas</h3>
+            </div>
+            <div className="p-4 flex-1 space-y-2">
+              {compromissosClaudia.map((item, i) => (
+                <div key={i} className="flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
+                  <span className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400">{item.nome}</span>
+                  <span className="text-xs font-black text-orange-600 dark:text-orange-400">{item.total.toLocaleString('pt-BR')} sc</span>
+                </div>
+              ))}
+            </div>
+            <div className="p-4 bg-orange-50/50 dark:bg-orange-900/20 border-t border-orange-100 dark:border-orange-800 flex justify-between items-center">
+              <span className="text-[10px] font-black uppercase text-orange-700 dark:text-orange-300">Total Compromissos</span>
+              <span className="text-sm font-black text-orange-800 dark:text-orange-200">{totalCompromissosClaudia.toLocaleString('pt-BR')} sc</span>
+            </div>
+          </div>
+
+          {/* Card 3: Saldo Final Cláudia */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-green-50/30 dark:bg-green-900/10 flex items-center gap-3">
+              <Scale size={18} className="text-green-600" />
+              <h3 className="text-xs font-black uppercase italic tracking-tighter">Saldo Disponível (Cláudia)</h3>
+            </div>
+            <div className="p-8 flex-1 flex flex-col items-center justify-center text-center">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Resultado Líquido</p>
+              <div className={`text-6xl font-black tracking-tighter mb-4 ${saldoFinalClaudia >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {saldoFinalClaudia.toLocaleString('pt-BR')}
+              </div>
+              <p className="text-xs font-black uppercase italic mb-8">Sacas Livres</p>
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase ${saldoFinalClaudia >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {saldoFinalClaudia >= 0 ? <><CheckCircle2 size={14} /> Saldo Positivo</> : <><AlertCircle size={14} /> Saldo Negativo</>}
               </div>
             </div>
           </div>
