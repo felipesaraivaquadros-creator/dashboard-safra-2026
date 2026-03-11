@@ -8,6 +8,7 @@ import { supabase } from '../integrations/supabase/client';
 
 export const useDataProcessing = (safraId: string): DataContextType => {
   const [rawDados, setRawDados] = useState<Romaneio[]>([]);
+  const [dbContratos, setDbContratos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
@@ -22,21 +23,29 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Só mostra o loading principal na primeira carga
       if (refreshTick === 0) setLoading(true);
       
       try {
+        // Busca Romaneios
         const { data: romaneios } = await supabase
           .from('romaneios')
           .select(`*, fazendas(nome), armazens(id, nome, grupo), contratos(numero)`)
           .eq('safra_id', safraId);
         
+        // Busca Contratos do Banco
+        const { data: contratos } = await supabase
+          .from('contratos')
+          .select('*')
+          .eq('safra_id', safraId);
+
+        // Busca Saldos Customizados (Desmembramentos)
         const { data: customSaldos } = await supabase
           .from('saldos_custom')
           .select('*, armazens(nome)')
           .eq('safra_id', safraId);
 
         setCustomBalances(customSaldos || []);
+        setDbContratos(contratos || []);
 
         if (romaneios) {
           const mapped: Romaneio[] = romaneios.map(d => ({
@@ -154,21 +163,27 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       }
     });
 
-    const todos: ProcessedContract[] = Object.keys(config.VOLUMES_CONTRATADOS).map(idKey => {
-      const c = config.VOLUMES_CONTRATADOS[idKey];
-      const idNormalizado = String(idKey).trim().replace(/\.0$/, '').toUpperCase();
+    // Usa contratos do banco se existirem, senão usa o config estático
+    const sourceContratos = dbContratos.length > 0 
+      ? dbContratos.map(c => ({ id: String(c.numero), nome: c.nome, total: c.volume_total, db_id: c.id, grupo: c.grupo }))
+      : Object.keys(config.VOLUMES_CONTRATADOS).map(id => ({ id, ...config.VOLUMES_CONTRATADOS[id], db_id: id, grupo: null }));
+
+    const todos: ProcessedContract[] = sourceContratos.map(c => {
+      const idNormalizado = String(c.id).trim().replace(/\.0$/, '').toUpperCase();
       const cumprido = entregasMap[idNormalizado] || 0;
       const aCumprir = Math.max(c.total - cumprido, 0);
       const perc = c.total > 0 ? (cumprido / c.total) * 100 : (cumprido > 0 ? 100 : 0);
       
       return { 
-        id: idKey, 
+        id: c.id, 
+        db_id: c.db_id,
         nome: c.nome, 
         contratado: c.total, 
         cumprido: parseFloat(cumprido.toFixed(2)), 
         aCumprir: parseFloat(aCumprir.toFixed(2)), 
         porcentagem: Math.min(perc, 100).toFixed(1), 
-        isConcluido: aCumprir < 1 
+        isConcluido: aCumprir < 1,
+        grupo: c.grupo
       };
     });
 
@@ -176,7 +191,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       pendentes: todos.filter(x => !x.isConcluido && x.contratado > 0).sort((a,b) => b.cumprido - a.cumprido),
       cumpridos: todos.filter(x => x.isConcluido || x.contratado === 0).sort((a,b) => b.cumprido - a.cumprido)
     };
-  }, [rawDados, config.VOLUMES_CONTRATADOS]);
+  }, [rawDados, dbContratos, config.VOLUMES_CONTRATADOS]);
 
   const listaSaldos = useMemo(() => {
     const saldosReaisMap: Record<string, { sc: number, kg: number, id: string, grupo: string | null }> = {};

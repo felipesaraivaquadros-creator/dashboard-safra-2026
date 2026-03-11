@@ -53,7 +53,6 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     if (targetId === 'bank') {
       try {
         if (itemData?.type === 'armazem') {
-          // Se for custom, atualizamos pelo ID do registro custom
           const saldoObj = listaSaldos.find(s => s.nome === itemData.nome);
           if (saldoObj?.isCustom) {
             await supabase.from('saldos_custom').update({ grupo: null }).eq('id', saldoObj.db_id);
@@ -93,10 +92,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
         await supabase.from('contratos').update({ grupo: novoGrupo }).eq('id', itemData?.dbId);
       }
       
-      if (novoGrupo && gruposVazios.includes(novoGrupo)) {
-        setGruposVazios(gruposVazios.filter(g => g !== novoGrupo));
-      }
-
+      // Não removemos do gruposVazios imediatamente para evitar que o slot suma antes do refresh
       onRefresh();
       showSuccess(`Item movido para ${novoGrupo}`);
     } catch (err: any) {
