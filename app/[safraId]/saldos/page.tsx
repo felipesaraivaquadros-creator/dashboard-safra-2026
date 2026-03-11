@@ -110,24 +110,12 @@ export default function SaldoPage() {
 
     const totalContratos = listaContratos.reduce((acc, item) => acc + item.total, 0);
 
-    // 3. Saldos de Grupos (Lógica específica para Soja 25/26 se necessário)
-    const ARMAZENS_FIXOS = ["COFCO NSH", "SIPAL MATUPÁ"];
-    const estoqueSipal = listaSaldos
-      .filter(s => ARMAZENS_FIXOS.includes(s.nome))
-      .reduce((acc, s) => acc + s.total, 0);
-    
-    const contratosSipal = listaContratos
-      .filter(c => ARMAZENS_FIXOS.includes(c.armazem_nome || ""))
-      .reduce((acc, c) => acc + c.total, 0);
-
     return {
       listaSaldos,
       listaContratos,
       totalEstoque,
       totalContratos,
-      saldoGeral: totalEstoque - totalContratos,
-      saldoSipal: estoqueSipal - contratosSipal,
-      saldoOutros: (totalEstoque - estoqueSipal) - (totalContratos - contratosSipal)
+      saldoGeral: totalEstoque - totalContratos
     };
   }, [dbRomaneios, dbContratos]);
 
@@ -262,8 +250,6 @@ export default function SaldoPage() {
               {activeTab === 'disponivel' && (
                 <DisponivelTab 
                   saldoGeral={processedData.saldoGeral}
-                  saldoSipal={processedData.saldoSipal}
-                  saldoOutros={processedData.saldoOutros}
                   totalEstoque={processedData.totalEstoque}
                   totalContratos={processedData.totalContratos}
                 />
