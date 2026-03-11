@@ -239,9 +239,10 @@ export default function SaldoPage() {
           </>
         ) : (
           <SaldosPorArmazem 
+            key={`dnd-${safraId}-${listaSaldos.length}-${dbContratos.length}`}
             safraId={safraId}
             listaSaldos={listaSaldos} 
-            listaContratos={contratosProcessados.pendentes.concat(contratosProcessados.cumpridos)} 
+            listaContratos={contratosParaTabela} 
             onRefresh={refresh}
             onEditContrato={handleEdit}
             onDeleteContrato={handleDelete}

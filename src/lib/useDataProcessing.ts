@@ -23,40 +23,27 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchData = async () => {
       if (refreshTick === 0) setLoading(true);
       
       try {
-        // Busca Romaneios (para Dashboard)
-        const { data: romaneios } = await supabase
-          .from('romaneios')
-          .select(`*, fazendas(nome), armazens(id, nome, grupo), contratos(numero)`)
-          .eq('safra_id', safraId);
-        
-        // Busca Saldos Consolidados (Nova Tabela)
-        const { data: saldos } = await supabase
-          .from('saldos')
-          .select('*')
-          .eq('safra_id', safraId);
+        const [romaneiosRes, saldosRes, contratosRes, customRes] = await Promise.all([
+          supabase.from('romaneios').select(`*, fazendas(nome), armazens(id, nome, grupo), contratos(numero)`).eq('safra_id', safraId),
+          supabase.from('saldos').select('*').eq('safra_id', safraId),
+          supabase.from('contratos').select('*').eq('safra_id', safraId),
+          supabase.from('saldos_custom').select('*').eq('safra_id', safraId)
+        ]);
 
-        // Busca Contratos
-        const { data: contratos } = await supabase
-          .from('contratos')
-          .select('*')
-          .eq('safra_id', safraId);
+        if (!isMounted) return;
 
-        // Busca Desmembramentos
-        const { data: customSaldos } = await supabase
-          .from('saldos_custom')
-          .select('*')
-          .eq('safra_id', safraId);
+        setDbSaldos(saldosRes.data || []);
+        setCustomBalances(customRes.data || []);
+        setDbContratos(contratosRes.data || []);
 
-        setDbSaldos(saldos || []);
-        setCustomBalances(customSaldos || []);
-        setDbContratos(contratos || []);
-
-        if (romaneios) {
-          const mapped: Romaneio[] = romaneios.map(d => ({
+        if (romaneiosRes.data) {
+          const mapped: Romaneio[] = romaneiosRes.data.map(d => ({
             data: d.data,
             contrato: d.contrato_id ? "Contrato" : "S/C",
             ncontrato: d.contratos?.numero || "S/C",
@@ -89,11 +76,12 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       } catch (err) {
         console.error("Erro ao carregar dados:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchData();
+    return () => { isMounted = false; };
   }, [safraId, refreshTick]);
 
   const getCorFazenda = (nome: string): string => CORES_FAZENDAS[nome] || CORES_FAZENDAS["Outros"];

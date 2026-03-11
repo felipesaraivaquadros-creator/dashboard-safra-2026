@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { Scale, Plus, Layers, Save, Loader2 } from 'lucide-react';
 import DraggableItem from './DraggableItem';
@@ -22,31 +22,27 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeData, setActiveData] = useState<any>(null);
   
-  const [localSaldos, setLocalSaldos] = useState<any[]>([]);
-  const [localContratos, setLocalContratos] = useState<any[]>([]);
+  // Inicializa o estado local diretamente das props
+  const [localSaldos, setLocalSaldos] = useState<any[]>(() => 
+    listaSaldos.map(s => ({
+      ...s,
+      uiId: s.isCustom ? `custom-${s.db_id}` : `real-${s.id}`,
+      databaseId: s.db_id
+    }))
+  );
+
+  const [localContratos, setLocalContratos] = useState<any[]>(() => 
+    listaContratos.map(c => ({
+      ...c,
+      uiId: `contrato-${c.db_id || c.id}`,
+      databaseId: c.db_id || c.id
+    }))
+  );
+
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [gruposVazios, setGruposVazios] = useState<string[]>([]);
-  
   const [splitTarget, setSplitTarget] = useState<any>(null);
-
-  useEffect(() => {
-    const saldosNormalizados = listaSaldos.map(s => ({
-      ...s,
-      uiId: s.isCustom ? `custom-${s.db_id}` : `real-${s.db_id || s.id}`,
-      databaseId: s.db_id
-    }));
-
-    const contratosNormalizados = listaContratos.map(c => ({
-      ...c,
-      uiId: `contrato-${c.db_id}`,
-      databaseId: c.db_id
-    }));
-
-    setLocalSaldos(saldosNormalizados);
-    setLocalContratos(contratosNormalizados);
-    setIsDirty(false);
-  }, [listaSaldos, listaContratos]);
 
   const todosOsGrupos = useMemo(() => {
     const g = new Set<string>();
@@ -105,7 +101,6 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     try {
       const promises = [];
 
-      // 1. Atualiza Tabela de Saldos (Reais e Customizados)
       for (const s of localSaldos) {
         if (s.databaseId) {
           const table = s.isCustom ? 'saldos_custom' : 'saldos';
@@ -113,24 +108,22 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
         }
       }
 
-      // 2. Atualiza Contratos
       for (const c of localContratos) {
         if (c.databaseId) {
           promises.push(supabase.from('contratos').update({ grupo: c.grupo }).eq('id', c.databaseId));
         }
       }
 
-      const results = await Promise.all(promises);
-      if (results.some(r => r.error)) throw new Error("Erro ao persistir alguns itens.");
-
+      await Promise.all(promises);
       dismissToast(toastId);
-      showSuccess("Organização salva com sucesso!");
-      setIsDirty(false);
+      showSuccess("Organização salva!");
+      
+      // Notifica o pai para atualizar os dados globais
+      // O pai atualizará a 'key', forçando este componente a remontar com novos dados
       onRefresh();
     } catch (err: any) {
       dismissToast(toastId);
       showError(err.message);
-    } finally {
       setIsSaving(false);
     }
   };
@@ -199,7 +192,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                 id={c.uiId} 
                 type="contrato" 
                 nome={c.nome} 
-                valor={c.contratado} 
+                valor={c.total || c.contratado} 
                 dbId={c.databaseId}
                 onEdit={() => onEditContrato(c)}
                 onDelete={() => onDeleteContrato(c.databaseId)}
@@ -213,7 +206,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
             const saldosNoGrupo = localSaldos.filter(s => s.grupo === grupoNome);
             const contratosNoGrupo = localContratos.filter(c => c.grupo === grupoNome);
             const totalEstoque = saldosNoGrupo.reduce((sum, s) => sum + s.total, 0);
-            const totalContratos = contratosNoGrupo.reduce((sum, c) => sum + c.contratado, 0);
+            const totalContratos = contratosNoGrupo.reduce((sum, c) => sum + (c.total || c.contratado), 0);
             const saldoDisponivel = totalEstoque - totalContratos;
 
             return (
@@ -234,7 +227,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
 
                   <DroppableSlot id={`contrato:${grupoNome}`} type="contrato" title="2. Compromissos (-)" total={totalContratos} colorClass="bg-purple-50/50 dark:bg-purple-900/10 border-purple-100 dark:border-purple-900/30">
                     {contratosNoGrupo.map(c => (
-                      <DraggableItem key={c.uiId} id={c.uiId} type="contrato" nome={c.nome} valor={c.contratado} dbId={c.databaseId} onEdit={() => onEditContrato(c)} onDelete={() => onDeleteContrato(c.databaseId)} />
+                      <DraggableItem key={c.uiId} id={c.uiId} type="contrato" nome={c.nome} valor={c.total || c.contratado} dbId={c.databaseId} onEdit={() => onEditContrato(c)} onDelete={() => onDeleteContrato(c.databaseId)} />
                     ))}
                   </DroppableSlot>
 
