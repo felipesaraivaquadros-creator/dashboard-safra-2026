@@ -13,6 +13,7 @@ import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../src/data/safraConfig';
 import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
+import UpdateDataButton from '../../src/components/UpdateDataButton';
 
 export default function Dashboard() {
   const params = useParams();
@@ -70,6 +71,9 @@ export default function Dashboard() {
         
         <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2">
+            {/* Botão de Sincronização Adicionado Aqui */}
+            <UpdateDataButton />
+            
             <Link 
               href={`/${safraId}/fretes`} 
               className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md"
