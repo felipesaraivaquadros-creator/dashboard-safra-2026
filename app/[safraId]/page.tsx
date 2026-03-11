@@ -14,6 +14,7 @@ import { getSafraConfig } from '../../src/data/safraConfig';
 import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
 import UpdateDataButton from '../../src/components/UpdateDataButton';
+import ImportExcelButton from '../../src/components/ImportExcelButton';
 
 export default function Dashboard() {
   const params = useParams();
@@ -71,7 +72,7 @@ export default function Dashboard() {
         
         <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2">
-            {/* Botão de Sincronização Adicionado Aqui */}
+            <ImportExcelButton />
             <UpdateDataButton />
             
             <Link 
