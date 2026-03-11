@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { Warehouse, FileText, Scale, Plus, Trash2, Layers, Info, AlertCircle } from 'lucide-react';
+import { Scale, Plus, Layers, Info } from 'lucide-react';
 import DraggableItem from './DraggableItem';
 import DroppableSlot from './DroppableSlot';
 import { supabase } from '../../integrations/supabase/client';
@@ -19,14 +19,16 @@ interface SaldosPorArmazemProps {
 export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefresh, onEditContrato, onDeleteContrato }: SaldosPorArmazemProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeData, setActiveData] = useState<any>(null);
+  const [gruposVazios, setGruposVazios] = useState<string[]>([]);
 
-  // Grupos únicos presentes nos dados
-  const gruposExistentes = useMemo(() => {
+  // Grupos únicos presentes nos dados + grupos criados manualmente que ainda estão vazios
+  const todosOsGrupos = useMemo(() => {
     const g = new Set<string>();
     listaSaldos.forEach(s => { if (s.grupo) g.add(s.grupo); });
     listaContratos.forEach(c => { if (c.grupo) g.add(c.grupo); });
+    gruposVazios.forEach(name => g.add(name));
     return Array.from(g).sort();
-  }, [listaSaldos, listaContratos]);
+  }, [listaSaldos, listaContratos, gruposVazios]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -41,7 +43,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     if (!over) return;
 
     const itemData = active.data.current;
-    const targetId = over.id as string; // Pode ser 'bank' ou o nome de um grupo
+    const targetId = over.id as string; 
     const targetType = over.data.current?.type;
 
     // Validação: Armazém só vai pra slot de armazém, Contrato pra contrato
@@ -54,7 +56,6 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
 
     try {
       if (itemData?.type === 'armazem') {
-        // Busca o ID real do armazém pelo nome (já que listaSaldos vem processada)
         const { data: armazem } = await supabase.from('armazens').select('id').eq('nome', itemData.nome).single();
         if (armazem) {
           await supabase.from('armazens').update({ grupo: novoGrupo }).eq('id', armazem.id);
@@ -63,6 +64,11 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
         await supabase.from('contratos').update({ grupo: novoGrupo }).eq('id', itemData?.dbId);
       }
       
+      // Se o item foi para um grupo que estava na lista de vazios, removemos ele de lá pois agora ele virá do banco
+      if (novoGrupo && gruposVazios.includes(novoGrupo)) {
+        setGruposVazios(gruposVazios.filter(g => g !== novoGrupo));
+      }
+
       onRefresh();
       showSuccess("Vínculo atualizado!");
     } catch (err: any) {
@@ -73,9 +79,13 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   const handleCriarGrupo = () => {
     const nome = prompt("Digite o nome do novo Grupo de Cálculo:");
     if (nome) {
-      // Apenas forçamos um refresh, o grupo aparecerá assim que o primeiro item for movido para ele
-      // Mas para facilitar a UI, poderíamos ter um estado de 'grupos vazios'
-      showSuccess(`Grupo "${nome.toUpperCase()}" pronto. Arraste itens para ele.`);
+      const nomeUpper = nome.trim().toUpperCase();
+      if (todosOsGrupos.includes(nomeUpper)) {
+        showError("Este grupo já existe.");
+        return;
+      }
+      setGruposVazios([...gruposVazios, nomeUpper]);
+      showSuccess(`Slot "${nomeUpper}" criado. Arraste itens para ele.`);
     }
   };
 
@@ -95,9 +105,9 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
             </div>
             <button 
               onClick={handleCriarGrupo}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-md"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-lg active:scale-95"
             >
-              <Plus size={14} /> Novo Grupo
+              <Plus size={16} /> Novo Slot de Cálculo
             </button>
           </div>
 
@@ -127,7 +137,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
 
         {/* 2. SLOTS DE CÁLCULO (GRUPOS) */}
         <div className="grid grid-cols-1 gap-12">
-          {gruposExistentes.map(grupoNome => {
+          {todosOsGrupos.map(grupoNome => {
             const saldosNoGrupo = listaSaldos.filter(s => s.grupo === grupoNome);
             const contratosNoGrupo = listaContratos.filter(c => c.grupo === grupoNome);
             
@@ -210,11 +220,11 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
             );
           })}
 
-          {gruposExistentes.length === 0 && (
+          {todosOsGrupos.length === 0 && (
             <div className="py-20 text-center bg-white dark:bg-slate-800 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-700">
               <Info size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-4" />
               <p className="text-sm font-black text-slate-400 uppercase italic">Nenhum grupo de cálculo ativo.</p>
-              <p className="text-[10px] text-slate-300 uppercase mt-2">Arraste um item do banco para começar a organizar.</p>
+              <p className="text-[10px] text-slate-300 uppercase mt-2">Clique em "Novo Slot de Cálculo" para começar.</p>
             </div>
           )}
         </div>
