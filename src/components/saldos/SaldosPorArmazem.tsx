@@ -1,170 +1,239 @@
 "use client";
 
-import React, { useMemo } from 'react';
-import { Warehouse, Scale, CheckCircle2, AlertCircle, ArrowDown, Inbox, Layers } from 'lucide-react';
-import { SaldoKpi } from '../../data/saldoTypes';
+import React, { useState, useMemo, useEffect } from 'react';
+import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { Warehouse, FileText, Scale, Plus, Trash2, Layers, Info, AlertCircle } from 'lucide-react';
+import DraggableItem from './DraggableItem';
+import DroppableSlot from './DroppableSlot';
+import { supabase } from '../../integrations/supabase/client';
+import { showSuccess, showError } from '../../utils/toast';
 
 interface SaldosPorArmazemProps {
-  listaSaldos: SaldoKpi[];
-  listaContratos: any[]; 
+  listaSaldos: any[];
+  listaContratos: any[];
+  onRefresh: () => void;
+  onEditContrato: (contrato: any) => void;
+  onDeleteContrato: (id: string) => void;
 }
 
-interface GroupSectionProps {
-  titulo: string;
-  isGrupo: boolean;
-  armazensNomes: string[];
-  saldoReal: number;
-  compromissos: { nome: string, total: number }[];
-}
+export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefresh, onEditContrato, onDeleteContrato }: SaldosPorArmazemProps) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeData, setActiveData] = useState<any>(null);
 
-function GroupSection({ titulo, isGrupo, armazensNomes, saldoReal, compromissos }: GroupSectionProps) {
-  const totalCompromissos = compromissos.reduce((sum, c) => sum + c.total, 0);
-  const saldoLiquido = saldoReal - totalCompromissos;
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 px-2">
-        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-        <div className="flex items-center gap-2">
-          {isGrupo && <Layers size={12} className="text-purple-500" />}
-          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-            {isGrupo ? `GRUPO: ${titulo}` : titulo}
-          </h2>
-        </div>
-        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Card de Estoque */}
-        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-blue-50/30 dark:bg-blue-900/10 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Warehouse size={18} className="text-blue-600" />
-              <h3 className="text-xs font-black uppercase italic tracking-tighter">Estoque Físico</h3>
-            </div>
-            {isGrupo && <span className="text-[8px] font-black bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded uppercase">Soma de {armazensNomes.length} locais</span>}
-          </div>
-          <div className="p-8 flex-1 flex flex-col items-center justify-center text-center">
-            <div className="text-5xl font-black text-blue-600 tracking-tighter mb-2">
-              {saldoReal.toLocaleString('pt-BR')}
-            </div>
-            <p className="text-xs font-black uppercase italic text-slate-400">Sacas em Estoque</p>
-            <div className="mt-4 space-y-1">
-              {armazensNomes.map(n => (
-                <p key={n} className="text-[8px] font-bold text-slate-300 uppercase tracking-wider">{n}</p>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Card de Compromissos */}
-        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-purple-50/30 dark:bg-purple-900/10 flex items-center gap-3">
-            <ArrowDown size={18} className="text-purple-600" />
-            <h3 className="text-xs font-black uppercase italic tracking-tighter">Compromissos / Saídas</h3>
-          </div>
-          <div className="p-4 flex-1 space-y-2">
-            {compromissos.length > 0 ? (
-              compromissos.map((item, i) => (
-                <div key={i} className="flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
-                  <span className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 truncate mr-2">{item.nome}</span>
-                  <span className="text-xs font-black text-purple-600 dark:text-purple-400 shrink-0">{item.total.toLocaleString('pt-BR')} sc</span>
-                </div>
-              ))
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-slate-300 py-8">
-                <Inbox size={24} className="mb-2 opacity-20" />
-                <p className="text-[9px] font-black uppercase">Nenhum contrato vinculado</p>
-              </div>
-            )}
-          </div>
-          <div className="p-4 bg-purple-50/50 dark:bg-purple-900/20 border-t border-purple-100 dark:border-purple-800 flex justify-between items-center">
-            <span className="text-[10px] font-black uppercase text-purple-700 dark:text-purple-300">Total Compromissos</span>
-            <span className="text-sm font-black text-purple-800 dark:text-purple-200">{totalCompromissos.toLocaleString('pt-BR')} sc</span>
-          </div>
-        </div>
-
-        {/* Card de Saldo Disponível */}
-        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-green-50/30 dark:bg-green-900/10 flex items-center gap-3">
-            <Scale size={18} className="text-green-600" />
-            <h3 className="text-xs font-black uppercase italic tracking-tighter">Saldo Disponível</h3>
-          </div>
-          <div className="p-8 flex-1 flex flex-col items-center justify-center text-center">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Resultado Líquido</p>
-            <div className={`text-6xl font-black tracking-tighter mb-4 ${saldoLiquido >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {saldoLiquido.toLocaleString('pt-BR')}
-            </div>
-            <p className="text-xs font-black uppercase italic mb-8">Sacas Livres</p>
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase ${saldoLiquido >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-              {saldoLiquido >= 0 ? <><CheckCircle2 size={14} /> Saldo Positivo</> : <><AlertCircle size={14} /> Saldo Negativo</>}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function SaldosPorArmazem({ listaSaldos, listaContratos }: SaldosPorArmazemProps) {
-  
-  const groupedData = useMemo(() => {
-    const groups: Record<string, { 
-      armazens: string[], 
-      saldoTotal: number, 
-      contratos: { nome: string, total: number }[] 
-    }> = {};
-
-    // 1. Criar grupos APENAS para armazéns que possuem estoque físico (entregas realizadas)
-    listaSaldos.forEach(s => {
-      const key = s.grupo || s.nome;
-      if (!groups[key]) groups[key] = { armazens: [], saldoTotal: 0, contratos: [] };
-      
-      groups[key].armazens.push(s.nome);
-      groups[key].saldoTotal += s.total;
-    });
-
-    // 2. Vincular contratos aos grupos existentes
-    listaContratos.forEach(c => {
-      const key = c.grupo || c.armazem_nome;
-      
-      // Só adiciona o contrato se o grupo/armazém dele estiver na lista de quem tem estoque
-      if (key && groups[key]) {
-        groups[key].contratos.push({ nome: c.nome, total: c.total });
-      }
-    });
-
-    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  // Grupos únicos presentes nos dados
+  const gruposExistentes = useMemo(() => {
+    const g = new Set<string>();
+    listaSaldos.forEach(s => { if (s.grupo) g.add(s.grupo); });
+    listaContratos.forEach(c => { if (c.grupo) g.add(c.grupo); });
+    return Array.from(g).sort();
   }, [listaSaldos, listaContratos]);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    setActiveData(event.active.data.current);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setActiveData(null);
+
+    if (!over) return;
+
+    const itemData = active.data.current;
+    const targetId = over.id as string; // Pode ser 'bank' ou o nome de um grupo
+    const targetType = over.data.current?.type;
+
+    // Validação: Armazém só vai pra slot de armazém, Contrato pra contrato
+    if (targetId !== 'bank' && targetType !== itemData?.type) {
+      showError(`Este item deve ser colocado no slot de ${itemData?.type === 'armazem' ? 'Estoque' : 'Contratos'}.`);
+      return;
+    }
+
+    const novoGrupo = targetId === 'bank' ? null : targetId;
+
+    try {
+      if (itemData?.type === 'armazem') {
+        // Busca o ID real do armazém pelo nome (já que listaSaldos vem processada)
+        const { data: armazem } = await supabase.from('armazens').select('id').eq('nome', itemData.nome).single();
+        if (armazem) {
+          await supabase.from('armazens').update({ grupo: novoGrupo }).eq('id', armazem.id);
+        }
+      } else {
+        await supabase.from('contratos').update({ grupo: novoGrupo }).eq('id', itemData?.dbId);
+      }
+      
+      onRefresh();
+      showSuccess("Vínculo atualizado!");
+    } catch (err: any) {
+      showError("Erro ao mover item: " + err.message);
+    }
+  };
+
+  const handleCriarGrupo = () => {
+    const nome = prompt("Digite o nome do novo Grupo de Cálculo:");
+    if (nome) {
+      // Apenas forçamos um refresh, o grupo aparecerá assim que o primeiro item for movido para ele
+      // Mas para facilitar a UI, poderíamos ter um estado de 'grupos vazios'
+      showSuccess(`Grupo "${nome.toUpperCase()}" pronto. Arraste itens para ele.`);
+    }
+  };
+
   return (
-    <div className="space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      {groupedData.map(([key, data]) => {
-        const isGrupo = data.armazens.length > 1 || (data.armazens.length === 1 && data.armazens[0] !== key);
+    <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="space-y-10 pb-20">
+        
+        {/* 1. BANCO DE ITENS (DISPONÍVEIS) */}
+        <section className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg"><Layers size={20}/></div>
+              <div>
+                <h2 className="text-sm font-black uppercase italic tracking-tighter">Banco de Itens</h2>
+                <p className="text-[9px] font-bold text-slate-400 uppercase">Arraste os itens abaixo para os slots de cálculo</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleCriarGrupo}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-md"
+            >
+              <Plus size={14} /> Novo Grupo
+            </button>
+          </div>
 
-        return (
-          <GroupSection 
-            key={key}
-            titulo={key}
-            isGrupo={isGrupo}
-            armazensNomes={data.armazens}
-            saldoReal={data.saldoTotal}
-            compromissos={data.contratos}
-          />
-        );
-      })}
+          <DroppableSlot id="bank" type="bank">
+            {listaSaldos.filter(s => !s.grupo).map(s => (
+              <DraggableItem key={`s-${s.nome}`} id={`s-${s.nome}`} type="armazem" nome={s.nome} valor={s.total} dbId={s.nome} />
+            ))}
+            {listaContratos.filter(c => !c.grupo).map(c => (
+              <DraggableItem 
+                key={`c-${c.db_id}`} 
+                id={`c-${c.db_id}`} 
+                type="contrato" 
+                nome={c.nome} 
+                valor={c.total} 
+                dbId={c.db_id}
+                onEdit={() => onEditContrato(c)}
+                onDelete={() => onDeleteContrato(c.db_id)}
+              />
+            ))}
+            {listaSaldos.filter(s => !s.grupo).length === 0 && listaContratos.filter(c => !c.grupo).length === 0 && (
+              <div className="col-span-full py-6 text-center text-slate-300 uppercase text-[10px] font-black italic">
+                Todos os itens já estão vinculados a grupos.
+              </div>
+            )}
+          </DroppableSlot>
+        </section>
 
-      {groupedData.length === 0 && (
-        <div className="bg-white dark:bg-slate-800 p-12 rounded-[40px] border border-dashed border-slate-200 dark:border-slate-700 text-center">
-          <Warehouse size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-4" />
-          <p className="text-sm font-black text-slate-400 uppercase italic">
-            Nenhum armazém com entregas físicas nesta safra.
-          </p>
-          <p className="text-[10px] text-slate-300 uppercase mt-2">
-            Os contratos sem estoque físico podem ser visualizados na aba "Contratos".
-          </p>
+        {/* 2. SLOTS DE CÁLCULO (GRUPOS) */}
+        <div className="grid grid-cols-1 gap-12">
+          {gruposExistentes.map(grupoNome => {
+            const saldosNoGrupo = listaSaldos.filter(s => s.grupo === grupoNome);
+            const contratosNoGrupo = listaContratos.filter(c => c.grupo === grupoNome);
+            
+            const totalEstoque = saldosNoGrupo.reduce((sum, s) => sum + s.total, 0);
+            const totalContratos = contratosNoGrupo.reduce((sum, c) => sum + c.total, 0);
+            const saldoDisponivel = totalEstoque - totalContratos;
+
+            return (
+              <div key={grupoNome} className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-4 px-2">
+                  <h3 className="text-lg font-black uppercase italic tracking-tighter text-purple-600 dark:text-purple-400 flex items-center gap-2">
+                    <Scale size={20} /> Grupo: {grupoNome}
+                  </h3>
+                  <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* SLOT 1: ESTOQUE */}
+                  <div className="space-y-2">
+                    <DroppableSlot 
+                      id={grupoNome} 
+                      type="armazem" 
+                      title="1. Estoque Físico (+)" 
+                      total={totalEstoque}
+                      colorClass="bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/30"
+                    >
+                      {saldosNoGrupo.map(s => (
+                        <DraggableItem key={`s-${s.nome}`} id={`s-${s.nome}`} type="armazem" nome={s.nome} valor={s.total} dbId={s.nome} />
+                      ))}
+                    </DroppableSlot>
+                  </div>
+
+                  {/* SLOT 2: CONTRATOS */}
+                  <div className="space-y-2">
+                    <DroppableSlot 
+                      id={grupoNome} 
+                      type="contrato" 
+                      title="2. Compromissos (-)" 
+                      total={totalContratos}
+                      colorClass="bg-purple-50/50 dark:bg-purple-900/10 border-purple-100 dark:border-purple-900/30"
+                    >
+                      {contratosNoGrupo.map(c => (
+                        <DraggableItem 
+                          key={`c-${c.db_id}`} 
+                          id={`c-${c.db_id}`} 
+                          type="contrato" 
+                          nome={c.nome} 
+                          valor={c.total} 
+                          dbId={c.db_id}
+                          onEdit={() => onEditContrato(c)}
+                          onDelete={() => onDeleteContrato(c.db_id)}
+                        />
+                      ))}
+                    </DroppableSlot>
+                  </div>
+
+                  {/* SLOT 3: RESULTADO (NÃO DROPPABLE) */}
+                  <div className={`
+                    p-6 rounded-3xl border-2 flex flex-col items-center justify-center text-center shadow-lg transition-all
+                    ${saldoDisponivel >= 0 
+                      ? 'bg-green-600 border-green-500 text-white' 
+                      : 'bg-red-600 border-red-500 text-white'
+                    }
+                  `}>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-2">Saldo Disponível</p>
+                    <div className="text-5xl font-black tracking-tighter mb-1">
+                      {saldoDisponivel.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                    </div>
+                    <p className="text-[10px] font-black uppercase italic opacity-80">Sacas Livres</p>
+                    
+                    <div className="mt-6 pt-4 border-t border-white/20 w-full flex justify-between items-center">
+                      <span className="text-[9px] font-bold uppercase opacity-60">Status</span>
+                      <span className="text-[10px] font-black uppercase">
+                        {saldoDisponivel >= 0 ? 'Excedente' : 'Déficit'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {gruposExistentes.length === 0 && (
+            <div className="py-20 text-center bg-white dark:bg-slate-800 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-700">
+              <Info size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-4" />
+              <p className="text-sm font-black text-slate-400 uppercase italic">Nenhum grupo de cálculo ativo.</p>
+              <p className="text-[10px] text-slate-300 uppercase mt-2">Arraste um item do banco para começar a organizar.</p>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+
+      {/* Overlay de Arrastar */}
+      <DragOverlay>
+        {activeId ? (
+          <div className="scale-105 rotate-2 shadow-2xl pointer-events-none">
+            <DraggableItem 
+              id={activeId} 
+              type={activeData.type} 
+              nome={activeData.nome} 
+              valor={activeData.valor} 
+              dbId={activeData.dbId} 
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

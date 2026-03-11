@@ -81,6 +81,19 @@ export default function SaldoPage() {
     }
   };
 
+  const handleEdit = (contrato: any) => {
+    // Mapeia os dados do contrato do banco para o formato do formulário
+    setEditingContrato({
+      id: contrato.db_id || contrato.id,
+      nome: contrato.nome,
+      numero: contrato.id || contrato.numero,
+      volume_total: contrato.total || contrato.volume_total,
+      armazem_id: contrato.armazem_id,
+      grupo: contrato.grupo
+    });
+    setShowForm(true);
+  };
+
   // Processamento dos dados da nuvem
   const processedData = useMemo(() => {
     // 1. Calcular Estoque por Armazém
@@ -108,6 +121,7 @@ export default function SaldoPage() {
       total: Number(c.volume_total),
       totalKg: Number(c.volume_total) * 60,
       db_id: c.id,
+      armazem_id: c.armazem_id,
       armazem_nome: c.armazens?.nome,
       grupo: c.grupo || c.armazens?.grupo || null
     })).sort((a, b) => b.total - a.total);
@@ -240,7 +254,7 @@ export default function SaldoPage() {
                             </div>
                             <div className="flex gap-2">
                               <button 
-                                onClick={() => { setEditingContrato(c); setShowForm(true); }}
+                                onClick={() => handleEdit(c)}
                                 className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                               >
                                 <Edit2 size={16} />
@@ -273,6 +287,9 @@ export default function SaldoPage() {
           <SaldosPorArmazem 
             listaSaldos={processedData.listaSaldos} 
             listaContratos={processedData.listaContratos} 
+            onRefresh={fetchData}
+            onEditContrato={handleEdit}
+            onDeleteContrato={handleDelete}
           />
         )}
       </div>

@@ -14,6 +14,9 @@
     "exportar:milho25": "node scripts/exportar-safra.js milho25 && node scripts/normalizar-romaneios.js milho25 romaneios_milho_25.json"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@supabase/auth-ui-react": "^0.4.7",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/supabase-js": "^2.45.0",
