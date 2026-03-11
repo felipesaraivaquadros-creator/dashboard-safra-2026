@@ -55,7 +55,7 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
       <div className="space-y-6">
         <div className="flex items-center gap-2 px-2">
           <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Cenário 1: Conciliação Fixados</h2>
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Alocação de Contratos Fixados</h2>
           <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
         </div>
 
@@ -130,7 +130,7 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
       <div className="space-y-6">
         <div className="flex items-center gap-2 px-2">
           <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Cenário 2: Detalhamento SIPAL LRV</h2>
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Sipal LRV</h2>
           <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
         </div>
 
