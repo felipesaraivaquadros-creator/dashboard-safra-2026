@@ -23,13 +23,17 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   }, []);
 
   useEffect(() => {
-    if (!safraId) return;
+    // Se não houver safraId (ex: transição de rota), encerramos o loading para não travar a tela
+    if (!safraId) {
+      setLoading(false);
+      return;
+    }
 
     let isMounted = true;
     
     const fetchData = async () => {
-      // Só mostra o loading global na primeira carga
-      if (refreshTick === 0) setLoading(true);
+      // Só mostra o loading global na primeira carga ou se for um refresh manual
+      setLoading(true);
       
       try {
         const [romaneiosRes, saldosRes, contratosRes, customRes] = await Promise.all([
@@ -41,7 +45,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
         if (!isMounted) return;
 
-        // Se houver erro em qualquer consulta, logamos mas não travamos a tela
+        // Logs de erro para debug interno, sem travar a UI
         if (romaneiosRes.error) console.error("Erro Romaneios:", romaneiosRes.error);
         if (saldosRes.error) console.error("Erro Saldos:", saldosRes.error);
         if (contratosRes.error) console.error("Erro Contratos:", contratosRes.error);
