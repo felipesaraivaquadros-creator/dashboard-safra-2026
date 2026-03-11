@@ -14,7 +14,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
   const config = useMemo(() => getSafraConfig(safraId), [safraId]);
 
-  // 1. Busca dados do Supabase
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -41,7 +40,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
             nfe: d.nfe,
             numero: d.numero_romaneio,
             cidadeEntrega: d.cidade_entrega,
-            armazem: d.armazens?.nome || "Outros",
+            armazem: d.armazem_nome || d.armazens?.nome || "Outros", // Usa a nova coluna ou o join
             safra: d.safra_id,
             fazenda: d.fazendas?.nome || "Outros",
             talhao: d.talhao,

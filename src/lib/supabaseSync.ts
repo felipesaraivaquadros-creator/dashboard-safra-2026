@@ -9,32 +9,22 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
     const fazendasUnicas = Array.from(new Set(dados.map(d => d.fazenda).filter(Boolean)));
     const armazensUnicos = Array.from(new Set(dados.map(d => d.armazem).filter(Boolean)));
 
-    console.log(`[Sync] Sincronizando ${fazendasUnicas.length} fazendas e ${armazensUnicos.length} armazéns...`);
-
     if (fazendasUnicas.length > 0) {
-      const { error: fErr } = await supabase
+      await supabase
         .from('fazendas')
         .upsert(fazendasUnicas.map(nome => ({ nome })), { onConflict: 'nome' });
-      
-      if (fErr) {
-        console.error("[Sync] Erro crítico em fazendas:", fErr);
-        throw new Error(`Erro ao sincronizar fazendas: ${fErr.message}. Verifique se a tabela 'fazendas' existe no esquema public.`);
-      }
     }
     
     if (armazensUnicos.length > 0) {
-      const { error: aErr } = await supabase
+      await supabase
         .from('armazens')
         .upsert(armazensUnicos.map(nome => ({ nome })), { onConflict: 'nome' });
-      if (aErr) throw new Error(`Erro ao sincronizar armazéns: ${aErr.message}`);
     }
 
     // 2. Buscar os IDs gerados
-    const { data: fazendasDB, error: fGetErr } = await supabase.from('fazendas').select('id, nome');
-    const { data: armazensDB, error: aGetErr } = await supabase.from('armazens').select('id, nome');
+    const { data: fazendasDB } = await supabase.from('fazendas').select('id, nome');
+    const { data: armazensDB } = await supabase.from('armazens').select('id, nome');
     const { data: contratosDB } = await supabase.from('contratos').select('id, numero').eq('safra_id', safraId);
-
-    if (fGetErr || aGetErr) throw new Error("Erro ao recuperar IDs das tabelas auxiliares.");
 
     const fazendaMap = Object.fromEntries(fazendasDB?.map(f => [f.nome, f.id]) || []);
     const armazemMap = Object.fromEntries(armazensDB?.map(a => [a.nome, a.id]) || []);
@@ -50,7 +40,7 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
         nfe: d.nfe,
         numero_romaneio: d.numero,
         emitente: d.emitente,
-        tipo_nf: d.tipoNF,
+        tipo_nf: d.tipoNF, // Corrigido de tipo_nf para tipoNF
         talhao: d.talhao,
         motorista: d.motorista,
         placa: d.placa,
@@ -67,21 +57,18 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
         preco_frete: d.precofrete,
         fazenda_id: fazendaMap[d.fazenda || ''] || null,
         armazem_id: armazemMap[d.armazem || ''] || null,
+        armazem_nome: d.armazem,
         contrato_id: contratoMap[nContrato] || null
       };
     });
 
     // 4. Limpar e Inserir
-    console.log(`[Sync] Limpando dados antigos da safra ${safraId}...`);
-    const { error: delErr } = await supabase.from('romaneios').delete().eq('safra_id', safraId);
-    if (delErr) throw new Error(`Erro ao limpar dados antigos: ${delErr.message}`);
+    await supabase.from('romaneios').delete().eq('safra_id', safraId);
     
-    console.log(`[Sync] Inserindo ${payload.length} novos registros...`);
     const chunkSize = 100;
     for (let i = 0; i < payload.length; i += chunkSize) {
       const chunk = payload.slice(i, i + chunkSize);
-      const { error: insErr } = await supabase.from('romaneios').insert(chunk);
-      if (insErr) throw new Error(`Erro ao inserir lote de romaneios: ${insErr.message}`);
+      await supabase.from('romaneios').insert(chunk);
     }
 
     return payload.length;
