@@ -30,14 +30,11 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   
   const [splitTarget, setSplitTarget] = useState<any>(null);
 
-  // Inicializa e normaliza os dados para garantir IDs únicos na interface
   useEffect(() => {
     const saldosNormalizados = listaSaldos.map(s => ({
       ...s,
-      // ID único para o DND não bugar com nomes iguais
-      uiId: s.isCustom ? `custom-${s.db_id}` : `real-${s.id}`,
-      // ID real para o banco
-      databaseId: s.isCustom ? s.db_id : s.id
+      uiId: s.isCustom ? `custom-${s.db_id}` : `real-${s.db_id || s.id}`,
+      databaseId: s.db_id
     }));
 
     const contratosNormalizados = listaContratos.map(c => ({
@@ -60,9 +57,8 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   }, [localSaldos, localContratos, gruposVazios]);
 
   const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    setActiveId(active.id as string);
-    setActiveData(active.data.current);
+    setActiveId(event.active.id as string);
+    setActiveData(event.active.data.current);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -76,7 +72,6 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     const targetId = over.id as string; 
     const targetType = over.data.current?.type;
 
-    // Ação: Remover do grupo (voltar para o banco)
     if (targetId === 'bank') {
       if (itemData?.type === 'armazem') {
         setLocalSaldos(prev => prev.map(s => s.uiId === active.id ? { ...s, grupo: null } : s));
@@ -87,15 +82,13 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
       return;
     }
 
-    // Validação de tipo de slot
     if (targetType !== itemData?.type) {
-      showError(`Item do tipo ${itemData?.type === 'armazem' ? 'Estoque' : 'Contrato'} deve ser solto no campo correto.`);
+      showError(`Arraste para o slot correto.`);
       return;
     }
 
     const novoGrupo = targetId.split(':')[1];
 
-    // Atualização local com troca forçada de grupo
     if (itemData?.type === 'armazem') {
       setLocalSaldos(prev => prev.map(s => s.uiId === active.id ? { ...s, grupo: novoGrupo } : s));
     } else {
@@ -107,45 +100,33 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
 
   const handleSave = async () => {
     setIsSaving(true);
-    const toastId = showLoading("Sincronizando grupos com o servidor...");
+    const toastId = showLoading("Gravando alterações...");
 
     try {
-      const updates = [];
+      const promises = [];
 
-      // 1. Atualiza Armazéns Reais
-      const reais = localSaldos.filter(s => !s.isCustom);
-      for (const s of reais) {
+      // 1. Atualiza Tabela de Saldos (Reais e Customizados)
+      for (const s of localSaldos) {
         if (s.databaseId) {
-          updates.push(supabase.from('armazens').update({ grupo: s.grupo }).eq('id', s.databaseId));
+          const table = s.isCustom ? 'saldos_custom' : 'saldos';
+          promises.push(supabase.from(table).update({ grupo: s.grupo }).eq('id', s.databaseId));
         }
       }
 
-      // 2. Atualiza Saldos Customizados
-      const customs = localSaldos.filter(s => s.isCustom);
-      for (const s of customs) {
-        if (s.databaseId) {
-          updates.push(supabase.from('saldos_custom').update({ grupo: s.grupo }).eq('id', s.databaseId));
-        }
-      }
-
-      // 3. Atualiza Contratos
+      // 2. Atualiza Contratos
       for (const c of localContratos) {
         if (c.databaseId) {
-          updates.push(supabase.from('contratos').update({ grupo: c.grupo }).eq('id', c.databaseId));
+          promises.push(supabase.from('contratos').update({ grupo: c.grupo }).eq('id', c.databaseId));
         }
       }
 
-      const results = await Promise.all(updates);
-      const hasError = results.some(r => r.error);
-
-      if (hasError) {
-        throw new Error("Falha ao atualizar alguns registros. Tente novamente.");
-      }
+      const results = await Promise.all(promises);
+      if (results.some(r => r.error)) throw new Error("Erro ao persistir alguns itens.");
 
       dismissToast(toastId);
       showSuccess("Organização salva com sucesso!");
       setIsDirty(false);
-      onRefresh(); // Força recarregamento completo do useDataProcessing
+      onRefresh();
     } catch (err: any) {
       dismissToast(toastId);
       showError(err.message);
@@ -155,7 +136,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   };
 
   const handleCriarGrupo = () => {
-    const nome = prompt("Nome do novo Grupo de Cálculo:");
+    const nome = prompt("Nome do novo Grupo:");
     if (nome) {
       const nomeUpper = nome.trim().toUpperCase();
       if (todosOsGrupos.includes(nomeUpper)) return;

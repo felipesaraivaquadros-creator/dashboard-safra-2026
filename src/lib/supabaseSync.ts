@@ -31,16 +31,15 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
     const contratoMap = Object.fromEntries(contratosDB?.map(c => [String(c.numero), c.id]) || []);
 
     // 3. Preparar os Romaneios
-    const payload = dados.map(d => {
+    const payloadRomaneios = dados.map(d => {
       const nContrato = String(d.ncontrato || '').trim().replace(/\.0$/, '').toUpperCase();
-      
       return {
         safra_id: safraId,
         data: d.data,
         nfe: d.nfe,
         numero_romaneio: d.numero,
         emitente: d.emitente,
-        tipo_nf: d.tipoNF, // Corrigido de tipo_nf para tipoNF
+        tipo_nf: d.tipoNF,
         talhao: d.talhao,
         motorista: d.motorista,
         placa: d.placa,
@@ -62,16 +61,39 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
       };
     });
 
-    // 4. Limpar e Inserir
+    // 4. Limpar e Inserir Romaneios
     await supabase.from('romaneios').delete().eq('safra_id', safraId);
-    
     const chunkSize = 100;
-    for (let i = 0; i < payload.length; i += chunkSize) {
-      const chunk = payload.slice(i, i + chunkSize);
-      await supabase.from('romaneios').insert(chunk);
+    for (let i = 0; i < payloadRomaneios.length; i += chunkSize) {
+      await supabase.from('romaneios').insert(payloadRomaneios.slice(i, i + chunkSize));
     }
 
-    return payload.length;
+    // 5. Calcular e Atualizar Tabela de Saldos
+    const saldosAgrupados: Record<string, { sacas: number, kg: number, nome: string }> = {};
+    dados.forEach(d => {
+      const aNome = d.armazem || "Outros";
+      const aId = armazemMap[aNome];
+      if (aId) {
+        if (!saldosAgrupados[aId]) saldosAgrupados[aId] = { sacas: 0, kg: 0, nome: aNome };
+        saldosAgrupados[aId].sacas += Number(d.sacasLiquida) || 0;
+        saldosAgrupados[aId].kg += Number(d.pesoLiquidoKg) || 0;
+      }
+    });
+
+    const payloadSaldos = Object.entries(saldosAgrupados).map(([id, val]) => ({
+      safra_id: safraId,
+      armazem_id: id,
+      armazem_nome: val.nome,
+      total_sacas: parseFloat(val.sacas.toFixed(2)),
+      total_kg: Math.round(val.kg)
+    }));
+
+    // Upsert nos saldos (atualiza volumes, mas não mexe no grupo se já existir)
+    for (const s of payloadSaldos) {
+      await supabase.from('saldos').upsert(s, { onConflict: 'safra_id, armazem_id' });
+    }
+
+    return payloadRomaneios.length;
   } catch (error: any) {
     console.error("[Sync Error]", error);
     throw error;
