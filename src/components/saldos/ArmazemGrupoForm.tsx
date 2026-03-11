@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../integrations/supabase/client';
-import { X, Save, Loader2, Warehouse } from 'lucide-react';
-import { showSuccess, showError } from '../../utils/toast';
+import { X, Loader2, Warehouse, Info } from 'lucide-react';
+import { showError } from '../../utils/toast';
 
 interface ArmazemGrupoFormProps {
   safraId: string;
@@ -19,32 +19,36 @@ export default function ArmazemGrupoForm({ safraId, onClose, onSuccess }: Armaze
     const fetchRelevantArmazens = async () => {
       setLoading(true);
       try {
-        // Busca armazéns que possuem romaneios NESTA safra
+        // 1. Busca IDs de armazéns que possuem romaneios NESTA safra
         const { data: romaneiosData } = await supabase
           .from('romaneios')
           .select('armazem_id')
-          .eq('safra_id', safraId);
+          .eq('safra_id', safraId)
+          .not('armazem_id', 'is', null);
         
-        // Busca armazéns que possuem contratos NESTA safra
+        // 2. Busca IDs de armazéns que possuem contratos NESTA safra
         const { data: contratosData } = await supabase
           .from('contratos')
           .select('armazem_id')
-          .eq('safra_id', safraId);
+          .eq('safra_id', safraId)
+          .not('armazem_id', 'is', null);
 
-        const idsRelevantes = new Set([
+        // Consolida IDs únicos
+        const idsRelevantes = Array.from(new Set([
           ...(romaneiosData?.map(r => r.armazem_id) || []),
           ...(contratosData?.map(c => c.armazem_id) || [])
-        ].filter(Boolean));
+        ]));
 
-        if (idsRelevantes.size === 0) {
+        if (idsRelevantes.length === 0) {
           setArmazens([]);
           return;
         }
 
+        // 3. Busca os detalhes dos armazéns filtrados
         const { data: armazensData } = await supabase
           .from('armazens')
           .select('*')
-          .in('id', Array.from(idsRelevantes))
+          .in('id', idsRelevantes)
           .order('nome');
 
         if (armazensData) setArmazens(armazensData);
@@ -59,14 +63,15 @@ export default function ArmazemGrupoForm({ safraId, onClose, onSuccess }: Armaze
   }, [safraId]);
 
   const handleUpdateGrupo = async (id: string, grupo: string) => {
+    const valorGrupo = grupo.trim().toUpperCase() || null;
     const { error } = await supabase
       .from('armazens')
-      .update({ grupo: grupo.toUpperCase() || null })
+      .update({ grupo: valorGrupo })
       .eq('id', id);
     
     if (error) showError("Erro ao atualizar: " + error.message);
     else {
-      setArmazens(armazens.map(a => a.id === id ? { ...a, grupo: grupo.toUpperCase() } : a));
+      setArmazens(armazens.map(a => a.id === id ? { ...a, grupo: valorGrupo } : a));
     }
   };
 
@@ -89,9 +94,13 @@ export default function ArmazemGrupoForm({ safraId, onClose, onSuccess }: Armaze
             </div>
           ) : armazens.length > 0 ? (
             <>
-              <p className="text-[10px] font-bold text-slate-400 uppercase mb-4">
-                Exibindo apenas armazéns com movimentação na safra {safraId}.
-              </p>
+              <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 mb-4">
+                <Info size={14} className="text-blue-500 shrink-0 mt-0.5" />
+                <p className="text-[9px] font-bold text-blue-700 dark:text-blue-300 uppercase leading-tight">
+                  Defina um nome de grupo (ex: SIPAL) para somar o estoque de diferentes unidades e abater contratos do mesmo grupo.
+                </p>
+              </div>
+              
               {armazens.map((a) => (
                 <div key={a.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700">
                   <div className="flex-1 min-w-0">
@@ -111,7 +120,7 @@ export default function ArmazemGrupoForm({ safraId, onClose, onSuccess }: Armaze
             </>
           ) : (
             <div className="py-10 text-center text-slate-400 italic uppercase text-[10px]">
-              Nenhum armazém vinculado a esta safra ainda.
+              Nenhum armazém com movimentação nesta safra.
             </div>
           )}
         </div>

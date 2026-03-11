@@ -15,6 +15,36 @@ interface ContratoFormProps {
 export default function ContratoForm({ safraId, onClose, onSuccess, editData }: ContratoFormProps) {
   const [loading, setLoading] = useState(false);
   const [armazens, setArmazens] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchRelevantArmazens = async () => {
+      try {
+        // Busca IDs de armazéns que possuem romaneios NESTA safra
+        const { data: romaneiosData } = await supabase
+          .from('romaneios')
+          .select('armazem_id')
+          .eq('safra_id', safraId)
+          .not('armazem_id', 'is', null);
+        
+        // Consolida IDs únicos
+        const idsRelevantes = Array.from(new Set(romaneiosData?.map(r => r.armazem_id) || []));
+
+        // Busca detalhes dos armazéns ou todos se não houver romaneios ainda
+        let query = supabase.from('armazens').select('*').order('nome');
+        
+        if (idsRelevantes.length > 0) {
+          query = query.in('id', idsRelevantes);
+        }
+
+        const { data } = await query;
+        if (data) setArmazens(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchRelevantArmazens();
+  }, [safraId]);
+
   const [formData, setFormData] = useState({
     nome: editData?.nome || '',
     numero: editData?.numero || '',
@@ -22,14 +52,6 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
     armazem_id: editData?.armazem_id || '',
     grupo: editData?.grupo || '',
   });
-
-  useEffect(() => {
-    const fetchArmazens = async () => {
-      const { data } = await supabase.from('armazens').select('*').order('nome');
-      if (data) setArmazens(data);
-    };
-    fetchArmazens();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +61,6 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
       const payload = {
         ...formData,
         safra_id: safraId,
-        // Se selecionou um armazém, tenta herdar o grupo dele se o campo grupo estiver vazio
         grupo: formData.grupo || armazens.find(a => a.id === formData.armazem_id)?.grupo || null
       };
 
@@ -129,7 +150,6 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
               className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-purple-500 transition-all"
               placeholder="Ex: SIPAL, AMAGGI, ADM"
             />
-            <p className="text-[9px] text-slate-400 italic ml-1">Contratos e Armazéns com o mesmo grupo serão somados.</p>
           </div>
 
           <div className="space-y-1.5">
