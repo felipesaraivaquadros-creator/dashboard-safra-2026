@@ -288,6 +288,7 @@ export default function SaldoPage() {
 
       {showGrupoForm && (
         <ArmazemGrupoForm 
+          safraId={safraId}
           onClose={() => setShowGrupoForm(false)} 
           onSuccess={fetchData}
         />

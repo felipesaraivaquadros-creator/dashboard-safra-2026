@@ -11,6 +11,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   const [loading, setLoading] = useState(true);
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
+  const [contractWarehouses, setContractWarehouses] = useState<string[]>([]);
 
   const config = useMemo(() => getSafraConfig(safraId), [safraId]);
 
@@ -18,7 +19,8 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
+        // Busca Romaneios
+        const { data: romaneios, error: errR } = await supabase
           .from('romaneios')
           .select(`
             *,
@@ -28,10 +30,26 @@ export const useDataProcessing = (safraId: string): DataContextType => {
           `)
           .eq('safra_id', safraId);
 
-        if (error) throw error;
+        if (errR) throw errR;
 
-        if (data) {
-          const mapped: Romaneio[] = data.map(d => ({
+        // Busca Armazéns citados em contratos desta safra (mesmo sem romaneio ainda)
+        const { data: contratos, error: errC } = await supabase
+          .from('contratos')
+          .select('armazens(nome)')
+          .eq('safra_id', safraId);
+        
+        if (errC) throw errC;
+
+        const warehousesFromContracts = Array.from(new Set(
+          contratos?.map(c => {
+            const a = c.armazens as any;
+            return Array.isArray(a) ? a[0]?.nome : a?.nome;
+          }).filter(Boolean) as string[]
+        ));
+        setContractWarehouses(warehousesFromContracts);
+
+        if (romaneios) {
+          const mapped: Romaneio[] = romaneios.map(d => ({
             data: d.data,
             contrato: d.contrato_id ? "Contrato" : "S/C",
             ncontrato: d.contratos?.numero || "S/C",
@@ -40,7 +58,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
             nfe: d.nfe,
             numero: d.numero_romaneio,
             cidadeEntrega: d.cidade_entrega,
-            armazem: d.armazem_nome || d.armazens?.nome || "Outros", // Usa a nova coluna ou o join
+            armazem: d.armazem_nome || d.armazens?.nome || "Outros",
             safra: d.safra_id,
             fazenda: d.fazendas?.nome || "Outros",
             talhao: d.talhao,
@@ -247,7 +265,12 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   };
 
   const allFazendas = useMemo(() => Array.from(new Set(rawDados.map(d => d.fazenda).filter(Boolean) as string[])), [rawDados]);
-  const allArmazens = useMemo(() => Array.from(new Set(rawDados.map(d => d.armazem).filter(Boolean) as string[])), [rawDados]);
+  
+  // Armazéns: Combina os que têm romaneios com os que estão em contratos da safra
+  const allArmazens = useMemo(() => {
+    const fromRomaneios = rawDados.map(d => d.armazem).filter(Boolean) as string[];
+    return Array.from(new Set([...fromRomaneios, ...contractWarehouses])).sort();
+  }, [rawDados, contractWarehouses]);
 
   const chartFazendas: ChartData[] = useMemo(() => {
     const data = rawDados.filter(d => !armazemFiltro || d.armazem === armazemFiltro);
