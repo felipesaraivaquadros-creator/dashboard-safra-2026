@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { Scale, Plus, Layers, Save, Loader2, RotateCcw } from 'lucide-react';
+import { Scale, Plus, Layers, Save, Loader2 } from 'lucide-react';
 import DraggableItem from './DraggableItem';
 import DroppableSlot from './DroppableSlot';
 import { supabase } from '../../integrations/supabase/client';
@@ -30,9 +30,24 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   
   const [splitTarget, setSplitTarget] = useState<any>(null);
 
+  // Inicializa e normaliza os dados para garantir IDs únicos na interface
   useEffect(() => {
-    setLocalSaldos(listaSaldos);
-    setLocalContratos(listaContratos);
+    const saldosNormalizados = listaSaldos.map(s => ({
+      ...s,
+      // ID único para o DND não bugar com nomes iguais
+      uiId: s.isCustom ? `custom-${s.db_id}` : `real-${s.id}`,
+      // ID real para o banco
+      databaseId: s.isCustom ? s.db_id : s.id
+    }));
+
+    const contratosNormalizados = listaContratos.map(c => ({
+      ...c,
+      uiId: `contrato-${c.db_id}`,
+      databaseId: c.db_id
+    }));
+
+    setLocalSaldos(saldosNormalizados);
+    setLocalContratos(contratosNormalizados);
     setIsDirty(false);
   }, [listaSaldos, listaContratos]);
 
@@ -45,8 +60,9 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   }, [localSaldos, localContratos, gruposVazios]);
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-    setActiveData(event.active.data.current);
+    const { active } = event;
+    setActiveId(active.id as string);
+    setActiveData(active.data.current);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -60,27 +76,30 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     const targetId = over.id as string; 
     const targetType = over.data.current?.type;
 
+    // Ação: Remover do grupo (voltar para o banco)
     if (targetId === 'bank') {
       if (itemData?.type === 'armazem') {
-        setLocalSaldos(prev => prev.map(s => (s.id === itemData.dbId || s.db_id === itemData.dbId) ? { ...s, grupo: null } : s));
+        setLocalSaldos(prev => prev.map(s => s.uiId === active.id ? { ...s, grupo: null } : s));
       } else {
-        setLocalContratos(prev => prev.map(c => c.db_id === itemData.dbId ? { ...c, grupo: null } : c));
+        setLocalContratos(prev => prev.map(c => c.uiId === active.id ? { ...c, grupo: null } : c));
       }
       setIsDirty(true);
       return;
     }
 
+    // Validação de tipo de slot
     if (targetType !== itemData?.type) {
-      showError(`Arraste para o slot correto.`);
+      showError(`Item do tipo ${itemData?.type === 'armazem' ? 'Estoque' : 'Contrato'} deve ser solto no campo correto.`);
       return;
     }
 
     const novoGrupo = targetId.split(':')[1];
 
+    // Atualização local com troca forçada de grupo
     if (itemData?.type === 'armazem') {
-      setLocalSaldos(prev => prev.map(s => (s.id === itemData.dbId || s.db_id === itemData.dbId) ? { ...s, grupo: novoGrupo } : s));
+      setLocalSaldos(prev => prev.map(s => s.uiId === active.id ? { ...s, grupo: novoGrupo } : s));
     } else {
-      setLocalContratos(prev => prev.map(c => c.db_id === itemData.dbId ? { ...c, grupo: novoGrupo } : c));
+      setLocalContratos(prev => prev.map(c => c.uiId === active.id ? { ...c, grupo: novoGrupo } : c));
     }
     
     setIsDirty(true);
@@ -88,45 +107,45 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
 
   const handleSave = async () => {
     setIsSaving(true);
-    const toastId = showLoading("Gravando alterações...");
+    const toastId = showLoading("Sincronizando grupos com o servidor...");
 
     try {
-      const promises = [];
+      const updates = [];
 
-      // 1. Armazéns Reais
-      const armazensReais = localSaldos.filter(s => !s.isCustom);
-      for (const s of armazensReais) {
-        if (s.id) {
-          promises.push(supabase.from('armazens').update({ grupo: s.grupo }).eq('id', s.id));
+      // 1. Atualiza Armazéns Reais
+      const reais = localSaldos.filter(s => !s.isCustom);
+      for (const s of reais) {
+        if (s.databaseId) {
+          updates.push(supabase.from('armazens').update({ grupo: s.grupo }).eq('id', s.databaseId));
         }
       }
 
-      // 2. Saldos Customizados
-      const saldosCustom = localSaldos.filter(s => s.isCustom);
-      for (const s of saldosCustom) {
-        if (s.db_id) {
-          promises.push(supabase.from('saldos_custom').update({ grupo: s.grupo }).eq('id', s.db_id));
+      // 2. Atualiza Saldos Customizados
+      const customs = localSaldos.filter(s => s.isCustom);
+      for (const s of customs) {
+        if (s.databaseId) {
+          updates.push(supabase.from('saldos_custom').update({ grupo: s.grupo }).eq('id', s.databaseId));
         }
       }
 
-      // 3. Contratos
+      // 3. Atualiza Contratos
       for (const c of localContratos) {
-        if (c.db_id) {
-          promises.push(supabase.from('contratos').update({ grupo: c.grupo }).eq('id', c.db_id));
+        if (c.databaseId) {
+          updates.push(supabase.from('contratos').update({ grupo: c.grupo }).eq('id', c.databaseId));
         }
       }
 
-      const results = await Promise.all(promises);
-      const errors = results.filter(r => r.error);
+      const results = await Promise.all(updates);
+      const hasError = results.some(r => r.error);
 
-      if (errors.length > 0) {
-        throw new Error("Alguns itens não puderam ser salvos. Verifique se os armazéns estão vinculados corretamente.");
+      if (hasError) {
+        throw new Error("Falha ao atualizar alguns registros. Tente novamente.");
       }
 
       dismissToast(toastId);
-      showSuccess("Alterações gravadas com sucesso!");
+      showSuccess("Organização salva com sucesso!");
       setIsDirty(false);
-      onRefresh();
+      onRefresh(); // Força recarregamento completo do useDataProcessing
     } catch (err: any) {
       dismissToast(toastId);
       showError(err.message);
@@ -136,7 +155,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   };
 
   const handleCriarGrupo = () => {
-    const nome = prompt("Nome do novo Grupo:");
+    const nome = prompt("Nome do novo Grupo de Cálculo:");
     if (nome) {
       const nomeUpper = nome.trim().toUpperCase();
       if (todosOsGrupos.includes(nomeUpper)) return;
@@ -153,7 +172,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
             <div className="bg-slate-900 dark:bg-purple-900 text-white px-6 py-4 rounded-3xl shadow-2xl border border-white/10 flex items-center gap-6 backdrop-blur-xl">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black uppercase text-purple-300">Alterações Pendentes</span>
-                <p className="text-xs font-bold">Clique em gravar para persistir no banco.</p>
+                <p className="text-xs font-bold">Clique em gravar para confirmar as mudanças.</p>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => onRefresh()} className="px-4 py-2 text-[10px] font-black uppercase rounded-xl bg-white/10 hover:bg-white/20 transition-all">Descartar</button>
@@ -172,7 +191,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
               <div className="p-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg"><Layers size={20}/></div>
               <div>
                 <h2 className="text-sm font-black uppercase italic tracking-tighter">Banco de Itens</h2>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Itens sem grupo definido</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase">Itens aguardando alocação</p>
               </div>
             </div>
             <button onClick={handleCriarGrupo} className="flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-lg">
@@ -183,26 +202,26 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
           <DroppableSlot id="bank" type="bank">
             {localSaldos.filter(s => !s.grupo).map(s => (
               <DraggableItem 
-                key={`s-${s.nome}`} 
-                id={`s-${s.nome}`} 
+                key={s.uiId} 
+                id={s.uiId} 
                 type="armazem" 
                 nome={s.nome} 
                 valor={s.total} 
-                dbId={s.id || s.db_id} 
+                dbId={s.databaseId} 
                 isCustom={s.isCustom}
                 onEdit={() => setSplitTarget({ ...s, totalSc: s.total })}
               />
             ))}
             {localContratos.filter(c => !c.grupo).map(c => (
               <DraggableItem 
-                key={`c-${c.db_id}`} 
-                id={`c-${c.db_id}`} 
+                key={c.uiId} 
+                id={c.uiId} 
                 type="contrato" 
                 nome={c.nome} 
                 valor={c.contratado} 
-                dbId={c.db_id}
+                dbId={c.databaseId}
                 onEdit={() => onEditContrato(c)}
-                onDelete={() => onDeleteContrato(c.db_id)}
+                onDelete={() => onDeleteContrato(c.databaseId)}
               />
             ))}
           </DroppableSlot>
@@ -228,13 +247,13 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <DroppableSlot id={`armazem:${grupoNome}`} type="armazem" title="1. Estoque Físico (+)" total={totalEstoque} colorClass="bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/30">
                     {saldosNoGrupo.map(s => (
-                      <DraggableItem key={`s-${s.nome}`} id={`s-${s.nome}`} type="armazem" nome={s.nome} valor={s.total} dbId={s.id || s.db_id} isCustom={s.isCustom} onEdit={() => setSplitTarget({ ...s, totalSc: s.total })} />
+                      <DraggableItem key={s.uiId} id={s.uiId} type="armazem" nome={s.nome} valor={s.total} dbId={s.databaseId} isCustom={s.isCustom} onEdit={() => setSplitTarget({ ...s, totalSc: s.total })} />
                     ))}
                   </DroppableSlot>
 
                   <DroppableSlot id={`contrato:${grupoNome}`} type="contrato" title="2. Compromissos (-)" total={totalContratos} colorClass="bg-purple-50/50 dark:bg-purple-900/10 border-purple-100 dark:border-purple-900/30">
                     {contratosNoGrupo.map(c => (
-                      <DraggableItem key={`c-${c.db_id}`} id={`c-${c.db_id}`} type="contrato" nome={c.nome} valor={c.contratado} dbId={c.db_id} onEdit={() => onEditContrato(c)} onDelete={() => onDeleteContrato(c.db_id)} />
+                      <DraggableItem key={c.uiId} id={c.uiId} type="contrato" nome={c.nome} valor={c.contratado} dbId={c.databaseId} onEdit={() => onEditContrato(c)} onDelete={() => onDeleteContrato(c.databaseId)} />
                     ))}
                   </DroppableSlot>
 
