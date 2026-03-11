@@ -15,7 +15,6 @@ import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
 import UpdateDataButton from '../../src/components/UpdateDataButton';
 import ImportExcelButton from '../../src/components/ImportExcelButton';
-import DataConsistencyCheck from '../../src/components/DataConsistencyCheck';
 import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -116,13 +115,6 @@ export default function Dashboard() {
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 space-y-6">
           
-          {/* Barra de Conferência de Dados */}
-          <DataConsistencyCheck 
-            safraId={safraId} 
-            localCount={romaneiosCount} 
-            localSacas={stats.totalLiq} 
-          />
-
           <KpiSection 
             stats={stats} 
             fazendaFiltro={fazendaFiltro} 
