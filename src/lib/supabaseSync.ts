@@ -6,15 +6,20 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
 
   try {
     // 1. Garantir que Fazendas e Armazéns existem (Upsert)
-    // Usamos o nome como chave única para evitar duplicatas
     const fazendasUnicas = Array.from(new Set(dados.map(d => d.fazenda).filter(Boolean)));
     const armazensUnicos = Array.from(new Set(dados.map(d => d.armazem).filter(Boolean)));
+
+    console.log(`[Sync] Sincronizando ${fazendasUnicas.length} fazendas e ${armazensUnicos.length} armazéns...`);
 
     if (fazendasUnicas.length > 0) {
       const { error: fErr } = await supabase
         .from('fazendas')
         .upsert(fazendasUnicas.map(nome => ({ nome })), { onConflict: 'nome' });
-      if (fErr) throw new Error(`Erro ao sincronizar fazendas: ${fErr.message}`);
+      
+      if (fErr) {
+        console.error("[Sync] Erro crítico em fazendas:", fErr);
+        throw new Error(`Erro ao sincronizar fazendas: ${fErr.message}. Verifique se a tabela 'fazendas' existe no esquema public.`);
+      }
     }
     
     if (armazensUnicos.length > 0) {
@@ -24,16 +29,18 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
       if (aErr) throw new Error(`Erro ao sincronizar armazéns: ${aErr.message}`);
     }
 
-    // 2. Buscar os IDs gerados para fazer o vínculo (Relacionamento)
-    const { data: fazendasDB } = await supabase.from('fazendas').select('id, nome');
-    const { data: armazensDB } = await supabase.from('armazens').select('id, nome');
+    // 2. Buscar os IDs gerados
+    const { data: fazendasDB, error: fGetErr } = await supabase.from('fazendas').select('id, nome');
+    const { data: armazensDB, error: aGetErr } = await supabase.from('armazens').select('id, nome');
     const { data: contratosDB } = await supabase.from('contratos').select('id, numero').eq('safra_id', safraId);
+
+    if (fGetErr || aGetErr) throw new Error("Erro ao recuperar IDs das tabelas auxiliares.");
 
     const fazendaMap = Object.fromEntries(fazendasDB?.map(f => [f.nome, f.id]) || []);
     const armazemMap = Object.fromEntries(armazensDB?.map(a => [a.nome, a.id]) || []);
     const contratoMap = Object.fromEntries(contratosDB?.map(c => [String(c.numero), c.id]) || []);
 
-    // 3. Preparar os Romaneios com os IDs das tabelas relacionadas
+    // 3. Preparar os Romaneios
     const payload = dados.map(d => {
       const nContrato = String(d.ncontrato || '').trim().replace(/\.0$/, '').toUpperCase();
       
@@ -64,11 +71,12 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
       };
     });
 
-    // 4. Limpar dados antigos da safra para evitar duplicidade e inserir novos
+    // 4. Limpar e Inserir
+    console.log(`[Sync] Limpando dados antigos da safra ${safraId}...`);
     const { error: delErr } = await supabase.from('romaneios').delete().eq('safra_id', safraId);
     if (delErr) throw new Error(`Erro ao limpar dados antigos: ${delErr.message}`);
     
-    // Inserção em lotes (chunks) para não estourar o limite da API
+    console.log(`[Sync] Inserindo ${payload.length} novos registros...`);
     const chunkSize = 100;
     for (let i = 0; i < payload.length; i += chunkSize) {
       const chunk = payload.slice(i, i + chunkSize);
