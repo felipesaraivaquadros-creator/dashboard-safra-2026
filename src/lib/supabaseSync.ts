@@ -1,8 +1,10 @@
 import { supabase } from '../integrations/supabase/client';
 import { Romaneio } from '../data/types';
+import { getSafraConfig } from '../data/safraConfig';
 
 export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]) {
   console.log(`[Sync] Iniciando sincronização da safra ${safraId}...`);
+  const config = getSafraConfig(safraId);
 
   try {
     // 1. Garantir que Fazendas e Armazéns existem (Upsert)
@@ -21,7 +23,22 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
         .upsert(armazensUnicos.map(nome => ({ nome })), { onConflict: 'nome' });
     }
 
-    // 2. Buscar os IDs gerados
+    // 2. Sincronizar Contratos da Configuração (Novo)
+    // Isso garante que contratos como "Arrendamento CT" subam para o banco
+    const contratosConfig = Object.entries(config.VOLUMES_CONTRATADOS).map(([numero, info]) => ({
+      safra_id: safraId,
+      numero: numero,
+      nome: info.nome,
+      volume_total: info.total
+    }));
+
+    if (contratosConfig.length > 0) {
+      await supabase
+        .from('contratos')
+        .upsert(contratosConfig, { onConflict: 'safra_id, numero' });
+    }
+
+    // 3. Buscar os IDs gerados para mapeamento
     const { data: fazendasDB } = await supabase.from('fazendas').select('id, nome');
     const { data: armazensDB } = await supabase.from('armazens').select('id, nome');
     const { data: contratosDB } = await supabase.from('contratos').select('id, numero').eq('safra_id', safraId);
@@ -30,7 +47,7 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
     const armazemMap = Object.fromEntries(armazensDB?.map(a => [a.nome, a.id]) || []);
     const contratoMap = Object.fromEntries(contratosDB?.map(c => [String(c.numero), c.id]) || []);
 
-    // 3. Preparar os Romaneios
+    // 4. Preparar os Romaneios
     const payloadRomaneios = dados.map(d => {
       const nContrato = String(d.ncontrato || '').trim().replace(/\.0$/, '').toUpperCase();
       return {
@@ -44,7 +61,7 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
         motorista: d.motorista,
         placa: d.placa,
         peso_bruto_kg: d.pesoBrutoKg,
-        peso_liquido_kg: d.pesoLiquidoKg,
+        peso_liquid_kg: d.pesoLiquidoKg,
         sacas_bruto: d.sacasBruto,
         sacas_liquida: d.sacasLiquida,
         umidade: d.umidade || 0,
@@ -61,14 +78,14 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
       };
     });
 
-    // 4. Limpar e Inserir Romaneios
+    // 5. Limpar e Inserir Romaneios
     await supabase.from('romaneios').delete().eq('safra_id', safraId);
     const chunkSize = 100;
     for (let i = 0; i < payloadRomaneios.length; i += chunkSize) {
       await supabase.from('romaneios').insert(payloadRomaneios.slice(i, i + chunkSize));
     }
 
-    // 5. Calcular e Atualizar Tabela de Saldos
+    // 6. Calcular e Atualizar Tabela de Saldos
     const saldosAgrupados: Record<string, { sacas: number, kg: number, nome: string }> = {};
     dados.forEach(d => {
       const aNome = d.armazem || "Outros";
@@ -88,7 +105,6 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
       total_kg: Math.round(val.kg)
     }));
 
-    // Upsert nos saldos (atualiza volumes, mas não mexe no grupo se já existir)
     for (const s of payloadSaldos) {
       await supabase.from('saldos').upsert(s, { onConflict: 'safra_id, armazem_id' });
     }
