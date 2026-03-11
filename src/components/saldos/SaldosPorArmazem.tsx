@@ -14,20 +14,11 @@ interface WarehouseSectionProps {
   nomeArmazem: string;
   saldoReal: number;
   compromissos: { nome: string, total: number }[];
-  corDestaque: 'blue' | 'purple' | 'orange' | 'emerald' | 'slate';
 }
 
-function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos, corDestaque }: WarehouseSectionProps) {
+function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos }: WarehouseSectionProps) {
   const totalCompromissos = compromissos.reduce((sum, c) => sum + c.total, 0);
   const saldoLiquido = saldoReal - totalCompromissos;
-
-  const colorClasses = {
-    blue: { bg: 'bg-blue-50/30 dark:bg-blue-900/10', text: 'text-blue-600', border: 'border-blue-100 dark:border-blue-800', lightBg: 'bg-blue-50/50 dark:bg-blue-900/20' },
-    purple: { bg: 'bg-purple-50/30 dark:bg-purple-900/10', text: 'text-purple-600', border: 'border-purple-100 dark:border-purple-800', lightBg: 'bg-purple-50/50 dark:bg-purple-900/20' },
-    orange: { bg: 'bg-orange-50/30 dark:bg-orange-900/10', text: 'text-orange-600', border: 'border-orange-100 dark:border-orange-800', lightBg: 'bg-orange-50/50 dark:bg-orange-900/20' },
-    emerald: { bg: 'bg-emerald-50/30 dark:bg-emerald-900/10', text: 'text-emerald-600', border: 'border-emerald-100 dark:border-emerald-800', lightBg: 'bg-emerald-50/50 dark:bg-emerald-900/20' },
-    slate: { bg: 'bg-slate-50/30 dark:bg-slate-900/10', text: 'text-slate-600', border: 'border-slate-100 dark:border-slate-800', lightBg: 'bg-slate-50/50 dark:bg-slate-900/20' },
-  }[corDestaque];
 
   return (
     <div className="space-y-6">
@@ -38,15 +29,15 @@ function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos, corDes
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Card 1: Saldo Físico (Atualizado para Saldo + Nome) */}
+        {/* Card 1: Saldo Físico (AZUL) */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
-          <div className={`p-5 border-b border-slate-100 dark:border-slate-700 ${colorClasses.bg} flex items-center gap-3`}>
-            <Warehouse size={18} className={colorClasses.text} />
+          <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-blue-50/30 dark:bg-blue-900/10 flex items-center gap-3">
+            <Warehouse size={18} className="text-blue-600" />
             <h3 className="text-xs font-black uppercase italic tracking-tighter">Saldo {nomeArmazem}</h3>
           </div>
           <div className="p-8 flex-1 flex flex-col items-center justify-center text-center">
             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Estoque Físico</p>
-            <div className={`text-5xl font-black ${colorClasses.text} tracking-tighter mb-2`}>
+            <div className="text-5xl font-black text-blue-600 tracking-tighter mb-2">
               {saldoReal.toLocaleString('pt-BR')}
             </div>
             <p className="text-xs font-black uppercase italic text-slate-400">Sacas em Estoque</p>
@@ -54,10 +45,10 @@ function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos, corDes
           </div>
         </div>
 
-        {/* Card 2: Compromissos */}
+        {/* Card 2: Compromissos (ROXO) */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-orange-50/30 dark:bg-orange-900/10 flex items-center gap-3">
-            <ArrowDown size={18} className="text-orange-600" />
+          <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-purple-50/30 dark:bg-purple-900/10 flex items-center gap-3">
+            <ArrowDown size={18} className="text-purple-600" />
             <h3 className="text-xs font-black uppercase italic tracking-tighter">Compromissos / Saídas</h3>
           </div>
           <div className="p-4 flex-1 space-y-2">
@@ -65,7 +56,7 @@ function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos, corDes
               compromissos.map((item, i) => (
                 <div key={i} className="flex justify-between items-center p-2.5 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
                   <span className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400">{item.nome}</span>
-                  <span className="text-xs font-black text-orange-600 dark:text-orange-400">{item.total.toLocaleString('pt-BR')} sc</span>
+                  <span className="text-xs font-black text-purple-600 dark:text-purple-400">{item.total.toLocaleString('pt-BR')} sc</span>
                 </div>
               ))
             ) : (
@@ -75,13 +66,13 @@ function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos, corDes
               </div>
             )}
           </div>
-          <div className="p-4 bg-orange-50/50 dark:bg-orange-900/20 border-t border-orange-100 dark:border-orange-800 flex justify-between items-center">
-            <span className="text-[10px] font-black uppercase text-orange-700 dark:text-orange-300">Total Compromissos</span>
-            <span className="text-sm font-black text-orange-800 dark:text-orange-200">{totalCompromissos.toLocaleString('pt-BR')} sc</span>
+          <div className="p-4 bg-purple-50/50 dark:bg-purple-900/20 border-t border-purple-100 dark:border-purple-800 flex justify-between items-center">
+            <span className="text-[10px] font-black uppercase text-purple-700 dark:text-purple-300">Total Compromissos</span>
+            <span className="text-sm font-black text-purple-800 dark:text-purple-200">{totalCompromissos.toLocaleString('pt-BR')} sc</span>
           </div>
         </div>
 
-        {/* Card 3: Saldo Disponível */}
+        {/* Card 3: Saldo Disponível (VERDE) */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
           <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-green-50/30 dark:bg-green-900/10 flex items-center gap-3">
             <Scale size={18} className="text-green-600" />
@@ -218,7 +209,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
           { nome: "BEDIN (6750SC)", total: 6750 },
           { nome: "COMISS A FIXAR", total: 1000 },
         ]}
-        corDestaque="blue"
       />
 
       <WarehouseSection 
@@ -228,7 +218,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
         compromissos={[
           { nome: "ARRENDAMENTO CT (ARR-CST)", total: 10000 },
         ]}
-        corDestaque="purple"
       />
 
       <WarehouseSection 
@@ -236,7 +225,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
         nomeArmazem="AC GRÃOS"
         saldoReal={getSaldo("AC GRÃOS")}
         compromissos={[]}
-        corDestaque="orange"
       />
 
       <WarehouseSection 
@@ -244,7 +232,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
         nomeArmazem="AMAGGI MATUPÁ"
         saldoReal={getSaldo("AMAGGI MATUPÁ")}
         compromissos={[]}
-        corDestaque="emerald"
       />
 
       <WarehouseSection 
@@ -252,7 +239,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
         nomeArmazem="GO AGRO"
         saldoReal={getSaldo("GO AGRO")}
         compromissos={[]}
-        corDestaque="slate"
       />
 
       <WarehouseSection 
@@ -260,7 +246,6 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
         nomeArmazem="AMAGGI SINOP"
         saldoReal={getSaldo("AMAGGI SINOP")}
         compromissos={[]}
-        corDestaque="blue"
       />
 
     </div>
