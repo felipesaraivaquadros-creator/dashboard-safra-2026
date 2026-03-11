@@ -21,7 +21,6 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   const [activeData, setActiveData] = useState<any>(null);
   const [gruposVazios, setGruposVazios] = useState<string[]>([]);
 
-  // Grupos únicos presentes nos dados + grupos criados manualmente que ainda estão vazios
   const todosOsGrupos = useMemo(() => {
     const g = new Set<string>();
     listaSaldos.forEach(s => { if (s.grupo) g.add(s.grupo); });
@@ -46,13 +45,32 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     const targetId = over.id as string; 
     const targetType = over.data.current?.type;
 
-    // Validação: Armazém só vai pra slot de armazém, Contrato pra contrato
-    if (targetId !== 'bank' && targetType !== itemData?.type) {
-      showError(`Este item deve ser colocado no slot de ${itemData?.type === 'armazem' ? 'Estoque' : 'Contratos'}.`);
+    // Se soltou no banco de itens (remover do grupo)
+    if (targetId === 'bank') {
+      try {
+        if (itemData?.type === 'armazem') {
+          const { data: armazem } = await supabase.from('armazens').select('id').eq('nome', itemData.nome).single();
+          if (armazem) await supabase.from('armazens').update({ grupo: null }).eq('id', armazem.id);
+        } else {
+          await supabase.from('contratos').update({ grupo: null }).eq('id', itemData?.dbId);
+        }
+        onRefresh();
+        showSuccess("Item removido do grupo.");
+        return;
+      } catch (err) {
+        showError("Erro ao remover item.");
+        return;
+      }
+    }
+
+    // Validação de tipo (Saldo só entra em slot de armazem, Contrato em slot de contrato)
+    if (targetType !== itemData?.type) {
+      showError(`Arraste para o slot correto de ${itemData?.type === 'armazem' ? 'Estoque' : 'Compromissos'}.`);
       return;
     }
 
-    const novoGrupo = targetId === 'bank' ? null : targetId;
+    // Extrai o nome do grupo do ID do slot (formato "tipo:NOME_DO_GRUPO")
+    const novoGrupo = targetId.split(':')[1];
 
     try {
       if (itemData?.type === 'armazem') {
@@ -64,13 +82,12 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
         await supabase.from('contratos').update({ grupo: novoGrupo }).eq('id', itemData?.dbId);
       }
       
-      // Se o item foi para um grupo que estava na lista de vazios, removemos ele de lá pois agora ele virá do banco
       if (novoGrupo && gruposVazios.includes(novoGrupo)) {
         setGruposVazios(gruposVazios.filter(g => g !== novoGrupo));
       }
 
       onRefresh();
-      showSuccess("Vínculo atualizado!");
+      showSuccess(`Item movido para ${novoGrupo}`);
     } catch (err: any) {
       showError("Erro ao mover item: " + err.message);
     }
@@ -85,7 +102,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
         return;
       }
       setGruposVazios([...gruposVazios, nomeUpper]);
-      showSuccess(`Slot "${nomeUpper}" criado. Arraste itens para ele.`);
+      showSuccess(`Slot "${nomeUpper}" criado.`);
     }
   };
 
@@ -93,14 +110,13 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="space-y-10 pb-20">
         
-        {/* 1. BANCO DE ITENS (DISPONÍVEIS) */}
         <section className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-lg"><Layers size={20}/></div>
               <div>
                 <h2 className="text-sm font-black uppercase italic tracking-tighter">Banco de Itens</h2>
-                <p className="text-[9px] font-bold text-slate-400 uppercase">Arraste os itens abaixo para os slots de cálculo</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase">Arraste os itens para os slots abaixo</p>
               </div>
             </div>
             <button 
@@ -127,15 +143,9 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                 onDelete={() => onDeleteContrato(c.db_id)}
               />
             ))}
-            {listaSaldos.filter(s => !s.grupo).length === 0 && listaContratos.filter(c => !c.grupo).length === 0 && (
-              <div className="col-span-full py-6 text-center text-slate-300 uppercase text-[10px] font-black italic">
-                Todos os itens já estão vinculados a grupos.
-              </div>
-            )}
           </DroppableSlot>
         </section>
 
-        {/* 2. SLOTS DE CÁLCULO (GRUPOS) */}
         <div className="grid grid-cols-1 gap-12">
           {todosOsGrupos.map(grupoNome => {
             const saldosNoGrupo = listaSaldos.filter(s => s.grupo === grupoNome);
@@ -155,10 +165,9 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* SLOT 1: ESTOQUE */}
                   <div className="space-y-2">
                     <DroppableSlot 
-                      id={grupoNome} 
+                      id={`armazem:${grupoNome}`} 
                       type="armazem" 
                       title="1. Estoque Físico (+)" 
                       total={totalEstoque}
@@ -170,10 +179,9 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                     </DroppableSlot>
                   </div>
 
-                  {/* SLOT 2: CONTRATOS */}
                   <div className="space-y-2">
                     <DroppableSlot 
-                      id={grupoNome} 
+                      id={`contrato:${grupoNome}`} 
                       type="contrato" 
                       title="2. Compromissos (-)" 
                       total={totalContratos}
@@ -194,43 +202,23 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                     </DroppableSlot>
                   </div>
 
-                  {/* SLOT 3: RESULTADO (NÃO DROPPABLE) */}
                   <div className={`
                     p-6 rounded-3xl border-2 flex flex-col items-center justify-center text-center shadow-lg transition-all
-                    ${saldoDisponivel >= 0 
-                      ? 'bg-green-600 border-green-500 text-white' 
-                      : 'bg-red-600 border-red-500 text-white'
-                    }
+                    ${saldoDisponivel >= 0 ? 'bg-green-600 border-green-500 text-white' : 'bg-red-600 border-red-500 text-white'}
                   `}>
                     <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-2">Saldo Disponível</p>
                     <div className="text-5xl font-black tracking-tighter mb-1">
                       {saldoDisponivel.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                     </div>
                     <p className="text-[10px] font-black uppercase italic opacity-80">Sacas Livres</p>
-                    
-                    <div className="mt-6 pt-4 border-t border-white/20 w-full flex justify-between items-center">
-                      <span className="text-[9px] font-bold uppercase opacity-60">Status</span>
-                      <span className="text-[10px] font-black uppercase">
-                        {saldoDisponivel >= 0 ? 'Excedente' : 'Déficit'}
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
             );
           })}
-
-          {todosOsGrupos.length === 0 && (
-            <div className="py-20 text-center bg-white dark:bg-slate-800 rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-700">
-              <Info size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-4" />
-              <p className="text-sm font-black text-slate-400 uppercase italic">Nenhum grupo de cálculo ativo.</p>
-              <p className="text-[10px] text-slate-300 uppercase mt-2">Clique em "Novo Slot de Cálculo" para começar.</p>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Overlay de Arrastar */}
       <DragOverlay>
         {activeId ? (
           <div className="scale-105 rotate-2 shadow-2xl pointer-events-none">
