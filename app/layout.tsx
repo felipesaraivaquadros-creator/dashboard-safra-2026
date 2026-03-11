@@ -8,24 +8,13 @@ import { AuthProvider } from '../src/components/AuthProvider'
 
 export const metadata: Metadata = {
   title: "Painel Safra",
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/icon-192.png",
-    apple: "/icon-512.png",
-  },
-  description: 'Acompanhamento de Romaneios e Saldos de Soja e Milho',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Painel Safra',
-  },
+  description: 'Acompanhamento de Romaneios e Saldos',
 };
 
 export const viewport: Viewport = {
   themeColor: '#7c3aed',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -35,17 +24,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-br" suppressHydrationWarning>
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-      </head>
-      <body className="flex flex-col min-h-screen">
+      <body className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900">
         <ThemeWrapper attribute="class" defaultTheme="light">
           <AuthProvider>
             <LastUpdateBar />
             <ToastProvider />
-            <div className="flex-1">
+            <main className="flex-1">
               {children}
-            </div>
+            </main>
           </AuthProvider>
         </ThemeWrapper>
       </body>

@@ -6,6 +6,7 @@ import * as XLSX from 'xlsx';
 import { showSuccess, showError, showLoading, dismissToast } from '../utils/toast';
 import { syncRomaneiosToSupabase } from '../lib/supabaseSync';
 import { useParams } from 'next/navigation';
+import { Romaneio } from '../data/types';
 
 export default function ImportExcelButton() {
   const params = useParams();
@@ -26,25 +27,32 @@ export default function ImportExcelButton() {
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      const romaneiosFormatados = jsonData.map((linha: any) => ({
-        data: linha['Data'] || linha['DATA'],
-        nfe: linha['NFe'] || linha['NFE'],
-        numero: linha['Nº'] || linha['NUMERO'],
-        emitente: linha['Emitente'] || linha['EMITENTE'],
-        tipoNF: linha['Tipo NF'] || linha['TIPO NF'],
-        fazenda: linha['Fazenda'] || linha['FAZENDA'],
-        armazem: linha['Armazem'] || linha['ARMAZEM'],
-        talhao: linha['Talhão'] || linha['TALHAO'],
-        motorista: linha['Motorista'] || linha['MOTORISTA'],
-        placa: linha['Placa'] || linha['PLACA'],
-        pesoBrutoKg: linha['Peso Bruto'] || linha['PESO BRUTO'],
-        pesoLiquidoKg: linha['Peso Liquido'] || linha['PESO LIQUIDO'],
-        sacasBruto: linha['Sacas Bruto'] || linha['SACAS BRUTO'],
-        sacasLiquida: linha['Sacas Liquida'] || linha['SACAS LIQUIDA'],
-        umidade: linha['Umid'] || linha['UMIDADE'],
-        impureza: linha['Impu'] || linha['IMPUREZA'],
-        ncontrato: String(linha['ncontrato'] || linha['CONTRATO'] || '').trim(),
-        precofrete: linha['precofrete'] || linha['PRECO FRETE']
+      const romaneiosFormatados: Romaneio[] = jsonData.map((linha: any) => ({
+        data: linha['Data'] || linha['DATA'] || null,
+        contrato: linha['Contrato'] || linha['CONTRATO'] || 'S/C',
+        ncontrato: String(linha['ncontrato'] || linha['CONTRATO'] || '').trim() || 'S/C',
+        emitente: linha['Emitente'] || linha['EMITENTE'] || null,
+        tipoNF: linha['Tipo NF'] || linha['TIPO NF'] || null,
+        nfe: Number(linha['NFe'] || linha['NFE']) || null,
+        numero: Number(linha['Nº'] || linha['NUMERO']) || null,
+        cidadeEntrega: linha['Cidade de Entrega'] || linha['CIDADE'] || null,
+        armazem: linha['Armazem'] || linha['ARMAZEM'] || null,
+        safra: linha['Safra'] || linha['SAFRA'] || null,
+        fazenda: linha['Fazenda'] || linha['FAZENDA'] || null,
+        talhao: linha['Talhão'] || linha['TALHAO'] || null,
+        motorista: linha['Motorista'] || linha['MOTORISTA'] || null,
+        placa: linha['Placa'] || linha['PLACA'] || null,
+        pesoBrutoKg: Number(linha['Peso Bruto'] || linha['PESO BRUTO']) || 0,
+        pesoLiquidoKg: Number(linha['Peso Liquido'] || linha['PESO LIQUIDO']) || 0,
+        sacasBruto: Number(linha['Sacas Bruto'] || linha['SACAS BRUTO']) || 0,
+        sacasLiquida: Number(linha['Sacas Liquida'] || linha['SACAS LIQUIDA']) || 0,
+        umidade: Number(linha['Umid'] || linha['UMIDADE']) || 0,
+        impureza: Number(linha['Impu'] || linha['IMPUREZA']) || 0,
+        ardido: Number(linha['Ardi'] || linha['ARDIDO']) || 0,
+        avariados: Number(linha['Avari'] || linha['AVARIADOS']) || 0,
+        quebrados: Number(linha['Quebr'] || linha['QUEBRADOS']) || 0,
+        contaminantes: Number(linha['Contaminantes']) || 0,
+        precofrete: Number(linha['precofrete'] || linha['PRECO FRETE']) || null
       }));
 
       dismissToast(toastId);

@@ -9,21 +9,20 @@ export default function LastUpdateBar() {
   const [formattedTime, setFormattedTime] = useState("");
 
   useEffect(() => {
-    const date = new Date(lastUpdate.timestamp);
-    
-    setFormattedDate(date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }));
-    
-    setFormattedTime(date.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    }));
+    try {
+      if (lastUpdate && lastUpdate.timestamp) {
+        const date = new Date(lastUpdate.timestamp);
+        if (!isNaN(date.getTime())) {
+          setFormattedDate(date.toLocaleDateString('pt-BR'));
+          setFormattedTime(date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao formatar data:", e);
+    }
   }, []);
 
-  if (!formattedDate) return <div className="w-full h-6 bg-green-600 dark:bg-green-700 print:hidden" />;
+  if (!formattedDate) return null;
 
   return (
     <div className="w-full bg-green-600 dark:bg-green-700 py-1 px-4 flex justify-center items-center gap-2 shadow-sm z-[100] print:hidden">
