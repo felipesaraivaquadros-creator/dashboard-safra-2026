@@ -11,26 +11,32 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
 
     if (fazendasUnicas.length > 0) {
       console.log("[Sync] Atualizando fazendas...");
-      const { error: fErr } = await supabase.from('fazendas').upsert(fazendasUnicas.map(nome => ({ nome })), { onConflict: 'nome' });
-      if (fErr) throw new Error(`Erro em fazendas: ${fErr.message}`);
+      const { error: fErr } = await supabase.from('fazendas').upsert(
+        fazendasUnicas.map(nome => ({ nome })), 
+        { onConflict: 'nome' }
+      );
+      if (fErr) throw new Error(`Erro ao salvar fazendas: ${fErr.message}`);
     }
     
     if (armazensUnicos.length > 0) {
       console.log("[Sync] Atualizando armazéns...");
-      const { error: aErr } = await supabase.from('armazens').upsert(armazensUnicos.map(nome => ({ nome })), { onConflict: 'nome' });
-      if (aErr) throw new Error(`Erro em armazéns: ${aErr.message}`);
+      const { error: aErr } = await supabase.from('armazens').upsert(
+        armazensUnicos.map(nome => ({ nome })), 
+        { onConflict: 'nome' }
+      );
+      if (aErr) throw new Error(`Erro ao salvar armazéns: ${aErr.message}`);
     }
 
-    // 2. Buscar mapeamentos atualizados
+    // 2. Buscar mapeamentos atualizados para vincular os IDs
     const { data: fazendas } = await supabase.from('fazendas').select('id, nome');
     const { data: armazens } = await supabase.from('armazens').select('id, nome');
     const { data: contratos } = await supabase.from('contratos').select('id, numero').eq('safra_id', safraId);
 
     const fazendaMap = Object.fromEntries(fazendas?.map(f => [f.nome, f.id]) || []);
     const armazemMap = Object.fromEntries(armazens?.map(a => [a.nome, a.id]) || []);
-    const contratoMap = Object.fromEntries(contratos?.map(c => [c.numero, c.id]) || []);
+    const contratoMap = Object.fromEntries(contratos?.map(c => [String(c.numero), c.id]) || []);
 
-    // 3. Preparar dados
+    // 3. Preparar dados para inserção
     const payload = dados.map(d => {
       const nContrato = String(d.ncontrato || '').trim().replace(/\.0$/, '').toUpperCase();
       
@@ -61,17 +67,19 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
       };
     });
 
-    // 4. Limpar e Inserir
-    console.log("[Sync] Limpando registros antigos de romaneios...");
+    // 4. Limpar registros antigos desta safra e inserir os novos
+    console.log("[Sync] Removendo romaneios antigos...");
     const { error: delErr } = await supabase.from('romaneios').delete().eq('safra_id', safraId);
-    if (delErr) throw new Error(`Erro ao deletar: ${delErr.message}`);
+    if (delErr) throw new Error(`Erro ao limpar dados antigos: ${delErr.message}`);
     
     console.log(`[Sync] Inserindo ${payload.length} novos registros...`);
+    
+    // Inserção em lotes para evitar sobrecarga
     const chunkSize = 50;
     for (let i = 0; i < payload.length; i += chunkSize) {
       const chunk = payload.slice(i, i + chunkSize);
       const { error: insErr } = await supabase.from('romaneios').insert(chunk);
-      if (insErr) throw new Error(`Erro ao inserir lote: ${insErr.message}`);
+      if (insErr) throw new Error(`Erro ao inserir lote ${i/chunkSize + 1}: ${insErr.message}`);
     }
 
     return payload.length;
