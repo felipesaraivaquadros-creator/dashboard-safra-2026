@@ -5,10 +5,12 @@ import lastUpdate from '../data/lastUpdate.json';
 import { Clock } from 'lucide-react';
 
 export default function LastUpdateBar() {
+  const [mounted, setMounted] = useState(false);
   const [formattedDate, setFormattedDate] = useState("");
   const [formattedTime, setFormattedTime] = useState("");
 
   useEffect(() => {
+    setMounted(true);
     try {
       if (lastUpdate && lastUpdate.timestamp) {
         const date = new Date(lastUpdate.timestamp);
@@ -22,7 +24,8 @@ export default function LastUpdateBar() {
     }
   }, []);
 
-  if (!formattedDate) return null;
+  // Não renderiza nada no servidor ou antes do mount para evitar mismatch
+  if (!mounted || !formattedDate) return null;
 
   return (
     <div className="w-full bg-green-600 dark:bg-green-700 py-1 px-4 flex justify-center items-center gap-2 shadow-sm z-[100] print:hidden">
