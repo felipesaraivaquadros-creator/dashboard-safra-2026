@@ -1,22 +1,23 @@
 "use client";
 
 import React, { useMemo } from 'react';
-import { Warehouse, Scale, CheckCircle2, AlertCircle, ArrowDown, Inbox } from 'lucide-react';
+import { Warehouse, Scale, CheckCircle2, AlertCircle, ArrowDown, Inbox, Layers } from 'lucide-react';
 import { SaldoKpi } from '../../data/saldoTypes';
 
 interface SaldosPorArmazemProps {
   listaSaldos: SaldoKpi[];
-  listaContratos: any[]; // Recebe os contratos do banco
+  listaContratos: any[]; 
 }
 
-interface WarehouseSectionProps {
+interface GroupSectionProps {
   titulo: string;
-  nomeArmazem: string;
+  isGrupo: boolean;
+  armazensNomes: string[];
   saldoReal: number;
   compromissos: { nome: string, total: number }[];
 }
 
-function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos }: WarehouseSectionProps) {
+function GroupSection({ titulo, isGrupo, armazensNomes, saldoReal, compromissos }: GroupSectionProps) {
   const totalCompromissos = compromissos.reduce((sum, c) => sum + c.total, 0);
   const saldoLiquido = saldoReal - totalCompromissos;
 
@@ -24,26 +25,39 @@ function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos }: Ware
     <div className="space-y-6">
       <div className="flex items-center gap-2 px-2">
         <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{titulo}</h2>
+        <div className="flex items-center gap-2">
+          {isGrupo && <Layers size={12} className="text-purple-500" />}
+          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            {isGrupo ? `GRUPO: ${titulo}` : titulo}
+          </h2>
+        </div>
         <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Card de Estoque */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-blue-50/30 dark:bg-blue-900/10 flex items-center gap-3">
-            <Warehouse size={18} className="text-blue-600" />
-            <h3 className="text-xs font-black uppercase italic tracking-tighter">Saldo {nomeArmazem}</h3>
+          <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-blue-50/30 dark:bg-blue-900/10 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Warehouse size={18} className="text-blue-600" />
+              <h3 className="text-xs font-black uppercase italic tracking-tighter">Estoque Físico</h3>
+            </div>
+            {isGrupo && <span className="text-[8px] font-black bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded uppercase">Soma de {armazensNomes.length} locais</span>}
           </div>
           <div className="p-8 flex-1 flex flex-col items-center justify-center text-center">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Estoque Físico</p>
             <div className="text-5xl font-black text-blue-600 tracking-tighter mb-2">
               {saldoReal.toLocaleString('pt-BR')}
             </div>
             <p className="text-xs font-black uppercase italic text-slate-400">Sacas em Estoque</p>
-            <p className="text-[10px] font-bold text-slate-300 mt-4">{(saldoReal * 60).toLocaleString('pt-BR')} KG</p>
+            <div className="mt-4 space-y-1">
+              {armazensNomes.map(n => (
+                <p key={n} className="text-[8px] font-bold text-slate-300 uppercase tracking-wider">{n}</p>
+              ))}
+            </div>
           </div>
         </div>
 
+        {/* Card de Compromissos */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
           <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-purple-50/30 dark:bg-purple-900/10 flex items-center gap-3">
             <ArrowDown size={18} className="text-purple-600" />
@@ -70,6 +84,7 @@ function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos }: Ware
           </div>
         </div>
 
+        {/* Card de Saldo Disponível */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
           <div className="p-5 border-b border-slate-100 dark:border-slate-700 bg-green-50/30 dark:bg-green-900/10 flex items-center gap-3">
             <Scale size={18} className="text-green-600" />
@@ -92,39 +107,60 @@ function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos }: Ware
 }
 
 export default function SaldosPorArmazem({ listaSaldos, listaContratos }: SaldosPorArmazemProps) {
-  // Lista de armazéns únicos que possuem saldo ou contratos
-  const armazensUnicos = useMemo(() => {
-    const nomes = new Set<string>();
-    listaSaldos.forEach(s => nomes.add(s.nome));
-    listaContratos.forEach(c => {
-      if (c.armazem_nome) nomes.add(c.armazem_nome);
-    });
-    return Array.from(nomes).sort();
-  }, [listaSaldos, listaContratos]);
-
-  const getSaldo = (nome: string) => listaSaldos.find(s => s.nome === nome)?.total || 0;
   
-  const getContratosPorArmazem = (nome: string) => 
-    listaContratos.filter(c => c.armazem_nome === nome);
+  // Lógica de Agrupamento
+  const groupedData = useMemo(() => {
+    const groups: Record<string, { 
+      armazens: string[], 
+      saldoTotal: number, 
+      contratos: { nome: string, total: number }[] 
+    }> = {};
+
+    // 1. Processar Saldos (Estoque Físico)
+    listaSaldos.forEach(s => {
+      // Se o armazém tem um grupo definido no banco, usamos ele. 
+      // Caso contrário, usamos o próprio nome do armazém como chave única.
+      const key = s.grupo || s.nome;
+      if (!groups[key]) groups[key] = { armazens: [], saldoTotal: 0, contratos: [] };
+      
+      groups[key].armazens.push(s.nome);
+      groups[key].saldoTotal += s.total;
+    });
+
+    // 2. Processar Contratos
+    listaContratos.forEach(c => {
+      // Prioridade: Grupo do Contrato -> Nome do Armazém vinculado -> "Outros"
+      const key = c.grupo || c.armazem_nome || "Outros";
+      
+      if (!groups[key]) groups[key] = { armazens: [c.armazem_nome || "Geral"], saldoTotal: 0, contratos: [] };
+      
+      groups[key].contratos.push({ nome: c.nome, total: c.total });
+    });
+
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
+  }, [listaSaldos, listaContratos]);
 
   return (
     <div className="space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      {armazensUnicos.map(nome => (
-        <WarehouseSection 
-          key={nome}
-          titulo={nome}
-          nomeArmazem={nome}
-          saldoReal={getSaldo(nome)}
-          compromissos={getContratosPorArmazem(nome).map(c => ({
-            nome: c.nome,
-            total: c.total
-          }))}
-        />
-      ))}
+      {groupedData.map(([key, data]) => {
+        // Verifica se é um grupo real (tem mais de um armazém ou o nome da chave é diferente do único armazém)
+        const isGrupo = data.armazens.length > 1 || (data.armazens.length === 1 && data.armazens[0] !== key);
 
-      {armazensUnicos.length === 0 && (
+        return (
+          <GroupSection 
+            key={key}
+            titulo={key}
+            isGrupo={isGrupo}
+            armazensNomes={data.armazens}
+            saldoReal={data.saldoTotal}
+            compromissos={data.contratos}
+          />
+        );
+      })}
+
+      {groupedData.length === 0 && (
         <div className="text-center py-20 text-slate-400 italic uppercase text-xs font-black">
-          Nenhum dado de armazém disponível para esta safra.
+          Nenhum dado disponível para esta safra.
         </div>
       )}
     </div>

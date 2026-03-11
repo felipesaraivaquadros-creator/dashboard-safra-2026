@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../integrations/supabase/client';
-import { X, Save, Loader2 } from 'lucide-react';
+import { X, Save, Loader2, Layers } from 'lucide-react';
 import { showSuccess, showError } from '../../utils/toast';
 
 interface ContratoFormProps {
@@ -20,6 +20,7 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
     numero: editData?.numero || '',
     volume_total: editData?.volume_total || 0,
     armazem_id: editData?.armazem_id || '',
+    grupo: editData?.grupo || '',
   });
 
   useEffect(() => {
@@ -38,6 +39,8 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
       const payload = {
         ...formData,
         safra_id: safraId,
+        // Se selecionou um armazém, tenta herdar o grupo dele se o campo grupo estiver vazio
+        grupo: formData.grupo || armazens.find(a => a.id === formData.armazem_id)?.grupo || null
       };
 
       let error;
@@ -116,7 +119,21 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Armazém Vinculado</label>
+            <label className="text-[10px] font-black uppercase text-slate-400 ml-1 flex items-center gap-1">
+              <Layers size={10} /> Grupo de Abatimento (Opcional)
+            </label>
+            <input
+              type="text"
+              value={formData.grupo}
+              onChange={(e) => setFormData({ ...formData, grupo: e.target.value.toUpperCase() })}
+              className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-purple-500 transition-all"
+              placeholder="Ex: SIPAL, AMAGGI, ADM"
+            />
+            <p className="text-[9px] text-slate-400 italic ml-1">Contratos e Armazéns com o mesmo grupo serão somados.</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Armazém Específico</label>
             <select
               value={formData.armazem_id}
               onChange={(e) => setFormData({ ...formData, armazem_id: e.target.value })}

@@ -9,6 +9,7 @@ export interface SaldoItem {
 export interface SaldoKpi {
   nome: string;
   total: number;
-  totalKg?: number; // Adicionado campo de peso
+  totalKg?: number; 
   id?: string;
+  grupo?: string | null; // Adicionado para suportar agrupamento dinâmico
 }

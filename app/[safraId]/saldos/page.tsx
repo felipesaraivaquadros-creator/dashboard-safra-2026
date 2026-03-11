@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Package, FileText, Scale, LayoutGrid, List, Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { Package, FileText, Scale, LayoutGrid, List, Plus, Edit2, Trash2, Loader2, Layers } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import { useParams } from 'next/navigation';
@@ -17,6 +17,7 @@ import ContratosTab from '../../../src/components/saldos/ContratosTab';
 import DisponivelTab from '../../../src/components/saldos/DisponivelTab';
 import SaldosPorArmazem from '../../../src/components/saldos/SaldosPorArmazem';
 import ContratoForm from '../../../src/components/saldos/ContratoForm';
+import ArmazemGrupoForm from '../../../src/components/saldos/ArmazemGrupoForm';
 
 type TabType = 'saldos' | 'contratos' | 'disponivel';
 type ScenarioType = 'geral' | 'armazem';
@@ -29,6 +30,7 @@ export default function SaldoPage() {
   const [activeTab, setActiveTab] = useState<TabType>('saldos');
   const [scenario, setScenario] = useState<ScenarioType>('geral');
   const [showForm, setShowForm] = useState(false);
+  const [showGrupoForm, setShowGrupoForm] = useState(false);
   const [editingContrato, setEditingContrato] = useState<any>(null);
   
   const [loading, setLoading] = useState(true);
@@ -42,7 +44,7 @@ export default function SaldoPage() {
       // Busca Contratos
       const { data: contratos, error: errC } = await supabase
         .from('contratos')
-        .select('*, armazens(nome)')
+        .select('*, armazens(nome, grupo)')
         .eq('safra_id', safraId)
         .order('created_at', { ascending: false });
       
@@ -52,7 +54,7 @@ export default function SaldoPage() {
       // Busca Romaneios (para calcular estoque físico)
       const { data: romaneios, error: errR } = await supabase
         .from('romaneios')
-        .select('sacas_liquida, peso_liquido_kg, armazens(nome)')
+        .select('sacas_liquida, peso_liquido_kg, armazens(nome, grupo)')
         .eq('safra_id', safraId);
 
       if (errR) throw errR;
@@ -82,10 +84,10 @@ export default function SaldoPage() {
   // Processamento dos dados da nuvem
   const processedData = useMemo(() => {
     // 1. Calcular Estoque por Armazém
-    const saldosMap: Record<string, { sc: number, kg: number }> = {};
+    const saldosMap: Record<string, { sc: number, kg: number, grupo: string | null }> = {};
     dbRomaneios.forEach(r => {
       const nomeArmazem = r.armazens?.nome || "Outros";
-      if (!saldosMap[nomeArmazem]) saldosMap[nomeArmazem] = { sc: 0, kg: 0 };
+      if (!saldosMap[nomeArmazem]) saldosMap[nomeArmazem] = { sc: 0, kg: 0, grupo: r.armazens?.grupo || null };
       saldosMap[nomeArmazem].sc += Number(r.sacas_liquida) || 0;
       saldosMap[nomeArmazem].kg += Number(r.peso_liquido_kg) || 0;
     });
@@ -93,7 +95,8 @@ export default function SaldoPage() {
     const listaSaldos = Object.entries(saldosMap).map(([nome, val]) => ({
       nome,
       total: parseFloat(val.sc.toFixed(2)),
-      totalKg: Math.round(val.kg)
+      totalKg: Math.round(val.kg),
+      grupo: val.grupo
     })).sort((a, b) => b.total - a.total);
 
     const totalEstoque = listaSaldos.reduce((acc, item) => acc + item.total, 0);
@@ -105,7 +108,8 @@ export default function SaldoPage() {
       total: Number(c.volume_total),
       totalKg: Number(c.volume_total) * 60,
       db_id: c.id,
-      armazem_nome: c.armazens?.nome
+      armazem_nome: c.armazens?.nome,
+      grupo: c.grupo || c.armazens?.grupo || null
     })).sort((a, b) => b.total - a.total);
 
     const totalContratos = listaContratos.reduce((acc, item) => acc + item.total, 0);
@@ -140,6 +144,12 @@ export default function SaldoPage() {
         </div>
         
         <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
+          <button 
+            onClick={() => setShowGrupoForm(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md"
+          >
+            <Layers size={16} /> Grupos
+          </button>
           <button 
             onClick={() => { setEditingContrato(null); setShowForm(true); }}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md"
@@ -222,7 +232,10 @@ export default function SaldoPage() {
                         {dbContratos.map(c => (
                           <div key={c.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700">
                             <div>
-                              <p className="text-xs font-black uppercase text-slate-700 dark:text-slate-200">{c.nome}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-black uppercase text-slate-700 dark:text-slate-200">{c.nome}</p>
+                                {c.grupo && <span className="text-[8px] font-black bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded uppercase">{c.grupo}</span>}
+                              </div>
                               <p className="text-[9px] font-bold text-slate-400">{c.volume_total.toLocaleString('pt-BR')} sc {c.armazens ? `| ${c.armazens.nome}` : ''}</p>
                             </div>
                             <div className="flex gap-2">
@@ -270,6 +283,13 @@ export default function SaldoPage() {
           onClose={() => { setShowForm(false); setEditingContrato(null); }} 
           onSuccess={fetchData}
           editData={editingContrato}
+        />
+      )}
+
+      {showGrupoForm && (
+        <ArmazemGrupoForm 
+          onClose={() => setShowGrupoForm(false)} 
+          onSuccess={fetchData}
         />
       )}
     </main>
