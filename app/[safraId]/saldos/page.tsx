@@ -257,7 +257,10 @@ export default function SaldoPage() {
             </div>
           </>
         ) : (
-          <SaldosPorArmazem listaSaldos={processedData.listaSaldos} />
+          <SaldosPorArmazem 
+            listaSaldos={processedData.listaSaldos} 
+            listaContratos={processedData.listaContratos} 
+          />
         )}
       </div>
 
