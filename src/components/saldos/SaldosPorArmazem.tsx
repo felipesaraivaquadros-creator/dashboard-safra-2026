@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { Scale, Plus, Layers, Info } from 'lucide-react';
+import { Scale, Plus, Layers, Save, Loader2, RotateCcw } from 'lucide-react';
 import DraggableItem from './DraggableItem';
 import DroppableSlot from './DroppableSlot';
 import { supabase } from '../../integrations/supabase/client';
-import { showSuccess, showError } from '../../utils/toast';
+import { showSuccess, showError, showLoading, dismissToast } from '../../utils/toast';
 import SplitSaldoModal from './SplitSaldoModal';
 
 interface SaldosPorArmazemProps {
@@ -21,25 +21,37 @@ interface SaldosPorArmazemProps {
 export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefresh, onEditContrato, onDeleteContrato, safraId }: SaldosPorArmazemProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeData, setActiveData] = useState<any>(null);
+  
+  // Estados locais para permitir arraste fluido sem esperar o banco
+  const [localSaldos, setLocalSaldos] = useState<any[]>([]);
+  const [localContratos, setLocalContratos] = useState<any[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [gruposVazios, setGruposVazios] = useState<string[]>([]);
   
-  // Estado para o modal de desmembramento
   const [splitTarget, setSplitTarget] = useState<any>(null);
+
+  // Sincroniza estado local quando os dados do banco mudam (refresh)
+  useEffect(() => {
+    setLocalSaldos(listaSaldos);
+    setLocalContratos(listaContratos);
+    setIsDirty(false);
+  }, [listaSaldos, listaContratos]);
 
   const todosOsGrupos = useMemo(() => {
     const g = new Set<string>();
-    listaSaldos.forEach(s => { if (s.grupo) g.add(s.grupo); });
-    listaContratos.forEach(c => { if (c.grupo) g.add(c.grupo); });
+    localSaldos.forEach(s => { if (s.grupo) g.add(s.grupo); });
+    localContratos.forEach(c => { if (c.grupo) g.add(c.grupo); });
     gruposVazios.forEach(name => g.add(name));
     return Array.from(g).sort();
-  }, [listaSaldos, listaContratos, gruposVazios]);
+  }, [localSaldos, localContratos, gruposVazios]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
     setActiveData(event.active.data.current);
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
     setActiveData(null);
@@ -50,28 +62,18 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     const targetId = over.id as string; 
     const targetType = over.data.current?.type;
 
+    // Se soltou no banco (remover do grupo)
     if (targetId === 'bank') {
-      try {
-        if (itemData?.type === 'armazem') {
-          const saldoObj = listaSaldos.find(s => s.nome === itemData.nome);
-          if (saldoObj?.isCustom) {
-            await supabase.from('saldos_custom').update({ grupo: null }).eq('id', saldoObj.db_id);
-          } else {
-            const { data: armazem } = await supabase.from('armazens').select('id').eq('nome', itemData.nome).single();
-            if (armazem) await supabase.from('armazens').update({ grupo: null }).eq('id', armazem.id);
-          }
-        } else {
-          await supabase.from('contratos').update({ grupo: null }).eq('id', itemData?.dbId);
-        }
-        onRefresh();
-        showSuccess("Item removido do grupo.");
-        return;
-      } catch (err) {
-        showError("Erro ao remover item.");
-        return;
+      if (itemData?.type === 'armazem') {
+        setLocalSaldos(prev => prev.map(s => s.nome === itemData.nome ? { ...s, grupo: null } : s));
+      } else {
+        setLocalContratos(prev => prev.map(c => c.db_id === itemData.dbId ? { ...c, grupo: null } : c));
       }
+      setIsDirty(true);
+      return;
     }
 
+    // Valida se o tipo do slot bate com o tipo do item
     if (targetType !== itemData?.type) {
       showError(`Arraste para o slot correto de ${itemData?.type === 'armazem' ? 'Estoque' : 'Compromissos'}.`);
       return;
@@ -79,24 +81,47 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
 
     const novoGrupo = targetId.split(':')[1];
 
+    // Atualiza localmente
+    if (itemData?.type === 'armazem') {
+      setLocalSaldos(prev => prev.map(s => s.nome === itemData.nome ? { ...s, grupo: novoGrupo } : s));
+    } else {
+      setLocalContratos(prev => prev.map(c => c.db_id === itemData.dbId ? { ...c, grupo: novoGrupo } : c));
+    }
+    
+    setIsDirty(true);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    const toastId = showLoading("Gravando alterações no banco...");
+
     try {
-      if (itemData?.type === 'armazem') {
-        const saldoObj = listaSaldos.find(s => s.nome === itemData.nome);
-        if (saldoObj?.isCustom) {
-          await supabase.from('saldos_custom').update({ grupo: novoGrupo }).eq('id', saldoObj.db_id);
-        } else {
-          const { data: armazem } = await supabase.from('armazens').select('id').eq('nome', itemData.nome).single();
-          if (armazem) await supabase.from('armazens').update({ grupo: novoGrupo }).eq('id', armazem.id);
-        }
-      } else {
-        await supabase.from('contratos').update({ grupo: novoGrupo }).eq('id', itemData?.dbId);
+      // 1. Salvar Grupos de Armazéns Reais
+      const armazensReais = localSaldos.filter(s => !s.isCustom);
+      for (const s of armazensReais) {
+        await supabase.from('armazens').update({ grupo: s.grupo }).eq('id', s.id);
       }
-      
-      // Não removemos do gruposVazios imediatamente para evitar que o slot suma antes do refresh
-      onRefresh();
-      showSuccess(`Item movido para ${novoGrupo}`);
+
+      // 2. Salvar Grupos de Saldos Customizados (Desmembramentos)
+      const saldosCustom = localSaldos.filter(s => s.isCustom);
+      for (const s of saldosCustom) {
+        await supabase.from('saldos_custom').update({ grupo: s.grupo }).eq('id', s.db_id);
+      }
+
+      // 3. Salvar Grupos de Contratos
+      for (const c of localContratos) {
+        await supabase.from('contratos').update({ grupo: c.grupo }).eq('id', c.db_id);
+      }
+
+      dismissToast(toastId);
+      showSuccess("Todas as alterações foram gravadas!");
+      setIsDirty(false);
+      onRefresh(); // Recarrega para garantir sincronia total
     } catch (err: any) {
-      showError("Erro ao mover item: " + err.message);
+      dismissToast(toastId);
+      showError("Erro ao gravar: " + err.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -109,14 +134,41 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
         return;
       }
       setGruposVazios([...gruposVazios, nomeUpper]);
-      showSuccess(`Slot "${nomeUpper}" criado.`);
     }
   };
 
   return (
     <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="space-y-10 pb-20">
+      <div className="space-y-10 pb-32">
         
+        {/* Barra de Ações Flutuante quando houver mudanças */}
+        {isDirty && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] animate-in slide-in-from-bottom-10 duration-300">
+            <div className="bg-slate-900 dark:bg-purple-900 text-white px-6 py-4 rounded-3xl shadow-2xl border border-white/10 flex items-center gap-6 backdrop-blur-xl">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase text-purple-300">Alterações Pendentes</span>
+                <p className="text-xs font-bold">Você organizou os itens, mas ainda não salvou.</p>
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => onRefresh()}
+                  className="px-4 py-2 text-[10px] font-black uppercase rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+                >
+                  Descartar
+                </button>
+                <button 
+                  disabled={isSaving}
+                  onClick={handleSave}
+                  className="flex items-center gap-2 px-6 py-2 text-[10px] font-black uppercase rounded-xl bg-green-500 hover:bg-green-400 text-slate-900 transition-all shadow-lg"
+                >
+                  {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                  Gravar Agora
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <section className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -126,16 +178,18 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                 <p className="text-[9px] font-bold text-slate-400 uppercase">Arraste os itens para os slots abaixo</p>
               </div>
             </div>
-            <button 
-              onClick={handleCriarGrupo}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-lg active:scale-95"
-            >
-              <Plus size={16} /> Novo Slot de Cálculo
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={handleCriarGrupo}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase rounded-xl bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-lg active:scale-95"
+              >
+                <Plus size={16} /> Novo Slot
+              </button>
+            </div>
           </div>
 
           <DroppableSlot id="bank" type="bank">
-            {listaSaldos.filter(s => !s.grupo).map(s => (
+            {localSaldos.filter(s => !s.grupo).map(s => (
               <DraggableItem 
                 key={`s-${s.nome}`} 
                 id={`s-${s.nome}`} 
@@ -147,7 +201,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                 onEdit={() => setSplitTarget({ ...s, totalSc: s.total })}
               />
             ))}
-            {listaContratos.filter(c => !c.grupo).map(c => (
+            {localContratos.filter(c => !c.grupo).map(c => (
               <DraggableItem 
                 key={`c-${c.db_id}`} 
                 id={`c-${c.db_id}`} 
@@ -164,8 +218,8 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
 
         <div className="grid grid-cols-1 gap-12">
           {todosOsGrupos.map(grupoNome => {
-            const saldosNoGrupo = listaSaldos.filter(s => s.grupo === grupoNome);
-            const contratosNoGrupo = listaContratos.filter(c => c.grupo === grupoNome);
+            const saldosNoGrupo = localSaldos.filter(s => s.grupo === grupoNome);
+            const contratosNoGrupo = localContratos.filter(c => c.grupo === grupoNome);
             
             const totalEstoque = saldosNoGrupo.reduce((sum, s) => sum + s.total, 0);
             const totalContratos = contratosNoGrupo.reduce((sum, c) => sum + c.total, 0);
