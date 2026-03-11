@@ -38,14 +38,14 @@ function WarehouseSection({ titulo, nomeArmazem, saldoReal, compromissos, corDes
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Card 1: Saldo Físico */}
+        {/* Card 1: Saldo Físico (Atualizado para Saldo + Nome) */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
           <div className={`p-5 border-b border-slate-100 dark:border-slate-700 ${colorClasses.bg} flex items-center gap-3`}>
             <Warehouse size={18} className={colorClasses.text} />
-            <h3 className="text-xs font-black uppercase italic tracking-tighter">Saldo Físico</h3>
+            <h3 className="text-xs font-black uppercase italic tracking-tighter">Saldo {nomeArmazem}</h3>
           </div>
           <div className="p-8 flex-1 flex flex-col items-center justify-center text-center">
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">{nomeArmazem}</p>
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-2">Estoque Físico</p>
             <div className={`text-5xl font-black ${colorClasses.text} tracking-tighter mb-2`}>
               {saldoReal.toLocaleString('pt-BR')}
             </div>
@@ -253,6 +253,14 @@ export default function SaldosPorArmazem({ listaSaldos }: SaldosPorArmazemProps)
         saldoReal={getSaldo("GO AGRO")}
         compromissos={[]}
         corDestaque="slate"
+      />
+
+      <WarehouseSection 
+        titulo="Amaggi Sinop"
+        nomeArmazem="AMAGGI SINOP"
+        saldoReal={getSaldo("AMAGGI SINOP")}
+        compromissos={[]}
+        corDestaque="blue"
       />
 
     </div>
