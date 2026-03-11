@@ -3,6 +3,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Package, FileText, Scale, LayoutGrid, List, Plus, Edit2, Trash2, Loader2, Layers } from 'lucide-react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../../src/data/safraConfig';
@@ -15,10 +16,23 @@ import { showSuccess, showError } from '../../../src/utils/toast';
 import SaldosTab from '../../../src/components/saldos/SaldosTab';
 import ContratosTab from '../../../src/components/saldos/ContratosTab';
 import DisponivelTab from '../../../src/components/saldos/DisponivelTab';
-import SaldosPorArmazem from '../../../src/components/saldos/SaldosPorArmazem';
 import ContratoForm from '../../../src/components/saldos/ContratoForm';
 import ArmazemGrupoForm from '../../../src/components/saldos/ArmazemGrupoForm';
 import { useDataProcessing } from '../../../src/lib/useDataProcessing';
+
+// Carregamento dinâmico do componente de Drag & Drop para evitar erros de SSR
+const SaldosPorArmazem = dynamic(
+  () => import('../../../src/components/saldos/SaldosPorArmazem'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700">
+        <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-4" />
+        <p className="text-[10px] font-black uppercase text-slate-400">Carregando interface de organização...</p>
+      </div>
+    )
+  }
+);
 
 type TabType = 'saldos' | 'contratos' | 'disponivel';
 type ScenarioType = 'geral' | 'armazem';
@@ -87,7 +101,9 @@ export default function SaldoPage() {
       nome: c.nome,
       id: c.id,
       total: c.contratado,
-      totalKg: c.contratado * 60
+      totalKg: c.contratado * 60,
+      db_id: c.db_id,
+      grupo: c.grupo
     }));
   }, [contratosProcessados]);
 

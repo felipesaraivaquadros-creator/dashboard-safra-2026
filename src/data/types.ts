@@ -34,12 +34,14 @@ export interface ContractVolume {
 
 export interface ProcessedContract {
   id: string;
+  db_id?: string;
   nome: string;
   contratado: number;
   cumprido: number;
   aCumprir: number;
   porcentagem: string;
   isConcluido: boolean;
+  grupo?: string | null;
 }
 
 export interface DiscountStats {
