@@ -108,7 +108,6 @@ function GroupSection({ titulo, isGrupo, armazensNomes, saldoReal, compromissos 
 
 export default function SaldosPorArmazem({ listaSaldos, listaContratos }: SaldosPorArmazemProps) {
   
-  // Lógica de Agrupamento
   const groupedData = useMemo(() => {
     const groups: Record<string, { 
       armazens: string[], 
@@ -116,10 +115,8 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos }: Saldos
       contratos: { nome: string, total: number }[] 
     }> = {};
 
-    // 1. Processar Saldos (Estoque Físico)
+    // 1. Criar grupos APENAS para armazéns que possuem estoque físico (entregas realizadas)
     listaSaldos.forEach(s => {
-      // Se o armazém tem um grupo definido no banco, usamos ele. 
-      // Caso contrário, usamos o próprio nome do armazém como chave única.
       const key = s.grupo || s.nome;
       if (!groups[key]) groups[key] = { armazens: [], saldoTotal: 0, contratos: [] };
       
@@ -127,14 +124,14 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos }: Saldos
       groups[key].saldoTotal += s.total;
     });
 
-    // 2. Processar Contratos
+    // 2. Vincular contratos aos grupos existentes
     listaContratos.forEach(c => {
-      // Prioridade: Grupo do Contrato -> Nome do Armazém vinculado -> "Outros"
-      const key = c.grupo || c.armazem_nome || "Outros";
+      const key = c.grupo || c.armazem_nome;
       
-      if (!groups[key]) groups[key] = { armazens: [c.armazem_nome || "Geral"], saldoTotal: 0, contratos: [] };
-      
-      groups[key].contratos.push({ nome: c.nome, total: c.total });
+      // Só adiciona o contrato se o grupo/armazém dele estiver na lista de quem tem estoque
+      if (key && groups[key]) {
+        groups[key].contratos.push({ nome: c.nome, total: c.total });
+      }
     });
 
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
@@ -143,7 +140,6 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos }: Saldos
   return (
     <div className="space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       {groupedData.map(([key, data]) => {
-        // Verifica se é um grupo real (tem mais de um armazém ou o nome da chave é diferente do único armazém)
         const isGrupo = data.armazens.length > 1 || (data.armazens.length === 1 && data.armazens[0] !== key);
 
         return (
@@ -159,8 +155,14 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos }: Saldos
       })}
 
       {groupedData.length === 0 && (
-        <div className="text-center py-20 text-slate-400 italic uppercase text-xs font-black">
-          Nenhum dado disponível para esta safra.
+        <div className="bg-white dark:bg-slate-800 p-12 rounded-[40px] border border-dashed border-slate-200 dark:border-slate-700 text-center">
+          <Warehouse size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-4" />
+          <p className="text-sm font-black text-slate-400 uppercase italic">
+            Nenhum armazém com entregas físicas nesta safra.
+          </p>
+          <p className="text-[10px] text-slate-300 uppercase mt-2">
+            Os contratos sem estoque físico podem ser visualizados na aba "Contratos".
+          </p>
         </div>
       )}
     </div>
