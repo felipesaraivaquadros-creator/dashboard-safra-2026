@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { Scale, Plus, Layers, Save, Loader2, RotateCcw } from 'lucide-react';
+import { Scale, Plus, Layers, Save, Loader2 } from 'lucide-react';
 import DraggableItem from './DraggableItem';
 import DroppableSlot from './DroppableSlot';
 import { supabase } from '../../integrations/supabase/client';
@@ -207,7 +207,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                 id={`c-${c.db_id}`} 
                 type="contrato" 
                 nome={c.nome} 
-                valor={c.total} 
+                valor={c.contratado} 
                 dbId={c.db_id}
                 onEdit={() => onEditContrato(c)}
                 onDelete={() => onDeleteContrato(c.db_id)}
@@ -222,7 +222,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
             const contratosNoGrupo = localContratos.filter(c => c.grupo === grupoNome);
             
             const totalEstoque = saldosNoGrupo.reduce((sum, s) => sum + s.total, 0);
-            const totalContratos = contratosNoGrupo.reduce((sum, c) => sum + c.total, 0);
+            const totalContratos = contratosNoGrupo.reduce((sum, c) => sum + c.contratado, 0);
             const saldoDisponivel = totalEstoque - totalContratos;
 
             return (
@@ -272,7 +272,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                           id={`c-${c.db_id}`} 
                           type="contrato" 
                           nome={c.nome} 
-                          valor={c.total} 
+                          valor={c.contratado} 
                           dbId={c.db_id}
                           onEdit={() => onEditContrato(c)}
                           onDelete={() => onDeleteContrato(c.db_id)}
