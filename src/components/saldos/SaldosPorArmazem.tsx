@@ -7,6 +7,7 @@ import DraggableItem from './DraggableItem';
 import DroppableSlot from './DroppableSlot';
 import { supabase } from '../../integrations/supabase/client';
 import { showSuccess, showError } from '../../utils/toast';
+import SplitSaldoModal from './SplitSaldoModal';
 
 interface SaldosPorArmazemProps {
   listaSaldos: any[];
@@ -14,12 +15,16 @@ interface SaldosPorArmazemProps {
   onRefresh: () => void;
   onEditContrato: (contrato: any) => void;
   onDeleteContrato: (id: string) => void;
+  safraId: string;
 }
 
-export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefresh, onEditContrato, onDeleteContrato }: SaldosPorArmazemProps) {
+export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefresh, onEditContrato, onDeleteContrato, safraId }: SaldosPorArmazemProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeData, setActiveData] = useState<any>(null);
   const [gruposVazios, setGruposVazios] = useState<string[]>([]);
+  
+  // Estado para o modal de desmembramento
+  const [splitTarget, setSplitTarget] = useState<any>(null);
 
   const todosOsGrupos = useMemo(() => {
     const g = new Set<string>();
@@ -45,12 +50,17 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     const targetId = over.id as string; 
     const targetType = over.data.current?.type;
 
-    // Se soltou no banco de itens (remover do grupo)
     if (targetId === 'bank') {
       try {
         if (itemData?.type === 'armazem') {
-          const { data: armazem } = await supabase.from('armazens').select('id').eq('nome', itemData.nome).single();
-          if (armazem) await supabase.from('armazens').update({ grupo: null }).eq('id', armazem.id);
+          // Se for custom, atualizamos pelo ID do registro custom
+          const saldoObj = listaSaldos.find(s => s.nome === itemData.nome);
+          if (saldoObj?.isCustom) {
+            await supabase.from('saldos_custom').update({ grupo: null }).eq('id', saldoObj.db_id);
+          } else {
+            const { data: armazem } = await supabase.from('armazens').select('id').eq('nome', itemData.nome).single();
+            if (armazem) await supabase.from('armazens').update({ grupo: null }).eq('id', armazem.id);
+          }
         } else {
           await supabase.from('contratos').update({ grupo: null }).eq('id', itemData?.dbId);
         }
@@ -63,20 +73,21 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
       }
     }
 
-    // Validação de tipo (Saldo só entra em slot de armazem, Contrato em slot de contrato)
     if (targetType !== itemData?.type) {
       showError(`Arraste para o slot correto de ${itemData?.type === 'armazem' ? 'Estoque' : 'Compromissos'}.`);
       return;
     }
 
-    // Extrai o nome do grupo do ID do slot (formato "tipo:NOME_DO_GRUPO")
     const novoGrupo = targetId.split(':')[1];
 
     try {
       if (itemData?.type === 'armazem') {
-        const { data: armazem } = await supabase.from('armazens').select('id').eq('nome', itemData.nome).single();
-        if (armazem) {
-          await supabase.from('armazens').update({ grupo: novoGrupo }).eq('id', armazem.id);
+        const saldoObj = listaSaldos.find(s => s.nome === itemData.nome);
+        if (saldoObj?.isCustom) {
+          await supabase.from('saldos_custom').update({ grupo: novoGrupo }).eq('id', saldoObj.db_id);
+        } else {
+          const { data: armazem } = await supabase.from('armazens').select('id').eq('nome', itemData.nome).single();
+          if (armazem) await supabase.from('armazens').update({ grupo: novoGrupo }).eq('id', armazem.id);
         }
       } else {
         await supabase.from('contratos').update({ grupo: novoGrupo }).eq('id', itemData?.dbId);
@@ -129,7 +140,16 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
 
           <DroppableSlot id="bank" type="bank">
             {listaSaldos.filter(s => !s.grupo).map(s => (
-              <DraggableItem key={`s-${s.nome}`} id={`s-${s.nome}`} type="armazem" nome={s.nome} valor={s.total} dbId={s.nome} />
+              <DraggableItem 
+                key={`s-${s.nome}`} 
+                id={`s-${s.nome}`} 
+                type="armazem" 
+                nome={s.nome} 
+                valor={s.total} 
+                dbId={s.nome} 
+                isCustom={s.isCustom}
+                onEdit={() => setSplitTarget({ ...s, totalSc: s.total })}
+              />
             ))}
             {listaContratos.filter(c => !c.grupo).map(c => (
               <DraggableItem 
@@ -174,7 +194,16 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
                       colorClass="bg-blue-50/50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/30"
                     >
                       {saldosNoGrupo.map(s => (
-                        <DraggableItem key={`s-${s.nome}`} id={`s-${s.nome}`} type="armazem" nome={s.nome} valor={s.total} dbId={s.nome} />
+                        <DraggableItem 
+                          key={`s-${s.nome}`} 
+                          id={`s-${s.nome}`} 
+                          type="armazem" 
+                          nome={s.nome} 
+                          valor={s.total} 
+                          dbId={s.nome} 
+                          isCustom={s.isCustom}
+                          onEdit={() => setSplitTarget({ ...s, totalSc: s.total })}
+                        />
                       ))}
                     </DroppableSlot>
                   </div>
@@ -218,6 +247,15 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
           })}
         </div>
       </div>
+
+      {splitTarget && (
+        <SplitSaldoModal 
+          safraId={safraId}
+          armazem={splitTarget}
+          onClose={() => setSplitTarget(null)}
+          onSuccess={onRefresh}
+        />
+      )}
 
       <DragOverlay>
         {activeId ? (

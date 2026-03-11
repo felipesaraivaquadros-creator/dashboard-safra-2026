@@ -3,7 +3,7 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Warehouse, FileText, GripVertical, Edit2, Trash2 } from 'lucide-react';
+import { Warehouse, FileText, GripVertical, Edit2, Trash2, Scissors } from 'lucide-react';
 
 interface DraggableItemProps {
   id: string;
@@ -11,11 +11,12 @@ interface DraggableItemProps {
   nome: string;
   valor: number;
   dbId: string;
+  isCustom?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
-export default function DraggableItem({ id, type, nome, valor, dbId, onEdit, onDelete }: DraggableItemProps) {
+export default function DraggableItem({ id, type, nome, valor, dbId, isCustom, onEdit, onDelete }: DraggableItemProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: id,
     data: { type, dbId, nome, valor }
@@ -49,23 +50,28 @@ export default function DraggableItem({ id, type, nome, valor, dbId, onEdit, onD
           {isContrato ? <FileText size={14} /> : <Warehouse size={14} />}
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase truncate text-slate-700 dark:text-slate-200 leading-tight">{nome}</p>
+          <div className="flex items-center gap-1">
+            <p className="text-[10px] font-black uppercase truncate text-slate-700 dark:text-slate-200 leading-tight">{nome}</p>
+            {isCustom && <Scissors size={10} className="text-blue-400 shrink-0" />}
+          </div>
           <p className={`text-[11px] font-black ${isContrato ? 'text-purple-700 dark:text-purple-400' : 'text-blue-700 dark:text-blue-400'}`}>
             {valor.toLocaleString('pt-BR')} sc
           </p>
         </div>
       </div>
 
-      {isContrato && onEdit && (
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="p-1.5 hover:bg-purple-200 dark:hover:bg-purple-800 rounded-lg text-purple-600 transition-colors">
-            <Edit2 size={12} />
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {onEdit && (
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className={`p-1.5 rounded-lg transition-colors ${isContrato ? 'hover:bg-purple-200 text-purple-600' : 'hover:bg-blue-200 text-blue-600'}`}>
+            {isContrato ? <Edit2 size={12} /> : <Scissors size={12} />}
           </button>
+        )}
+        {isContrato && onDelete && (
           <button onClick={(e) => { e.stopPropagation(); onDelete?.(); }} className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg text-red-500 transition-colors">
             <Trash2 size={12} />
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

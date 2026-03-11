@@ -92,7 +92,7 @@ export interface ChartData {
 
 export interface DataContextType {
   safraId: string;
-  loading: boolean; // Novo
+  loading: boolean;
   fazendaFiltro: string | null;
   armazemFiltro: string | null;
   setFazendaFiltro: (fazenda: string | null) => void;
@@ -109,4 +109,8 @@ export interface DataContextType {
   chartArmazens: ChartData[];
   getCorFazenda: (name: string) => string;
   getCorArmazem: (name: string) => string;
+  listaSaldos: any[];
+  totalEstoque: number;
+  totalContratos: number;
+  saldoGeral: number;
 }

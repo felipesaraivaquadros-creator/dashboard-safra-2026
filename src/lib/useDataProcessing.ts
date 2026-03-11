@@ -11,7 +11,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   const [loading, setLoading] = useState(true);
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
-  const [contractWarehouses, setContractWarehouses] = useState<string[]>([]);
+  const [customBalances, setCustomBalances] = useState<any[]>([]);
 
   const config = useMemo(() => getSafraConfig(safraId), [safraId]);
 
@@ -19,34 +19,17 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Busca Romaneios
-        const { data: romaneios, error: errR } = await supabase
+        const { data: romaneios } = await supabase
           .from('romaneios')
-          .select(`
-            *,
-            fazendas(nome),
-            armazens(nome),
-            contratos(numero)
-          `)
-          .eq('safra_id', safraId);
-
-        if (errR) throw errR;
-
-        // Busca Armazéns citados em contratos desta safra (mesmo sem romaneio ainda)
-        const { data: contratos, error: errC } = await supabase
-          .from('contratos')
-          .select('armazens(nome)')
+          .select(`*, fazendas(nome), armazens(id, nome, grupo), contratos(numero)`)
           .eq('safra_id', safraId);
         
-        if (errC) throw errC;
+        const { data: customSaldos } = await supabase
+          .from('saldos_custom')
+          .select('*, armazens(nome)')
+          .eq('safra_id', safraId);
 
-        const warehousesFromContracts = Array.from(new Set(
-          contratos?.map(c => {
-            const a = c.armazens as any;
-            return Array.isArray(a) ? a[0]?.nome : a?.nome;
-          }).filter(Boolean) as string[]
-        ));
-        setContractWarehouses(warehousesFromContracts);
+        setCustomBalances(customSaldos || []);
 
         if (romaneios) {
           const mapped: Romaneio[] = romaneios.map(d => ({
@@ -59,6 +42,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
             numero: d.numero_romaneio,
             cidadeEntrega: d.cidade_entrega,
             armazem: d.armazem_nome || d.armazens?.nome || "Outros",
+            armazem_id: d.armazem_id,
             safra: d.safra_id,
             fazenda: d.fazendas?.nome || "Outros",
             talhao: d.talhao,
@@ -79,7 +63,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
           setRawDados(mapped);
         }
       } catch (err) {
-        console.error("Erro ao carregar dados da nuvem:", err);
+        console.error("Erro ao carregar dados:", err);
       } finally {
         setLoading(false);
       }
@@ -107,9 +91,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     });
   }, [rawDados, fazendaFiltro, armazemFiltro]);
 
-  const romaneiosCount = useMemo(() => dadosFiltrados.length, [dadosFiltrados]);
-
-  const { stats, discountStats, volumeStats } = useMemo(() => {
+  const { stats, discountStats } = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
     const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
     const liqKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.pesoLiquidoKg) || 0), 0);
@@ -128,30 +110,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
       Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
 
-    const diasMap: Record<string, { kg: number, sc: number }> = {};
-    dadosFiltrados.forEach(d => {
-      if (d.data) {
-        if (!diasMap[d.data]) diasMap[d.data] = { kg: 0, sc: 0 };
-        diasMap[d.data].kg += Number(d.pesoLiquidoKg) || 0;
-        diasMap[d.data].sc += Number(d.sacasLiquida) || 0;
-      }
-    });
-
-    const listaDias = Object.entries(diasMap);
-    const numDias = listaDias.length || 1;
-    
-    let melhorDiaData = "";
-    let melhorDiaKg = 0;
-    let melhorDiaSc = 0;
-
-    listaDias.forEach(([data, val]) => {
-      if (val.kg > melhorDiaKg) {
-        melhorDiaKg = val.kg;
-        melhorDiaSc = val.sc;
-        melhorDiaData = data;
-      }
-    });
-
     const stats: KpiStats = {
       totalLiq: liq,
       totalLiqKg: liqKg,
@@ -166,36 +124,18 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     };
 
     const discountStats: DiscountStats = {
-      umidadeSc: umidKg / 60,
-      umidadeKg: umidKg,
-      impurezaSc: impuKg / 60,
-      impurezaKg: impuKg,
-      ardidoSc: ardiKg / 60,
-      ardidoKg: ardiKg,
-      avariadosSc: avariKg / 60,
-      avariadosKg: avariKg,
-      contaminantesSc: contamKg / 60,
-      contaminantesKg: contamKg,
-      quebradosSc: quebrKg / 60,
-      quebradosKg: quebrKg,
+      umidadeSc: umidKg / 60, umidadeKg: umidKg,
+      impurezaSc: impuKg / 60, impurezaKg: impuKg,
+      ardidoSc: ardiKg / 60, ardidoKg: ardiKg,
+      avariadosSc: avariKg / 60, avariadosKg: avariKg,
+      contaminantesSc: contamKg / 60, contaminantesKg: contamKg,
+      quebradosSc: quebrKg / 60, quebradosKg: quebrKg,
       totalDescontosSc: totalDescontosKg / 60,
       totalDescontosKg: totalDescontosKg,
       percentualDesconto: percDesconto
     };
 
-    const volumeStats: VolumeStats = {
-      mediaCargaKg: dadosFiltrados.length > 0 ? liqKg / dadosFiltrados.length : 0,
-      mediaCargaSc: dadosFiltrados.length > 0 ? liq / dadosFiltrados.length : 0,
-      mediaDiaKg: liqKg / numDias,
-      mediaDiaSc: liq / numDias,
-      melhorDiaKg,
-      melhorDiaSc,
-      melhorDiaData,
-      percentualColhido: '100.0', 
-      metaPercentual: ((liq / 117000) * 100).toFixed(1)
-    };
-
-    return { stats, discountStats, volumeStats };
+    return { stats, discountStats };
   }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
 
   const contratosProcessados = useMemo(() => {
@@ -207,30 +147,12 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       }
     });
 
-    const isSafraPassadaCumprida = safraId === 'soja2425' || safraId === 'milho25';
-
     const todos: ProcessedContract[] = Object.keys(config.VOLUMES_CONTRATADOS).map(idKey => {
       const c = config.VOLUMES_CONTRATADOS[idKey];
       const idNormalizado = String(idKey).trim().replace(/\.0$/, '').toUpperCase();
       const cumprido = entregasMap[idNormalizado] || 0;
-      
-      let isConcluido = false;
-      let aCumprir = 0;
-      let perc = 0;
-
-      if (isSafraPassadaCumprida) {
-        isConcluido = true;
-        aCumprir = 0;
-        perc = c.total > 0 ? 100 : (cumprido > 0 ? 100 : 0);
-      } else if (c.total === 0) {
-        isConcluido = cumprido > 0;
-        aCumprir = 0;
-        perc = cumprido > 0 ? 100 : 0;
-      } else {
-        aCumprir = Math.max(c.total - cumprido, 0);
-        perc = (cumprido / c.total) * 100;
-        isConcluido = aCumprir < 1; 
-      }
+      const aCumprir = Math.max(c.total - cumprido, 0);
+      const perc = c.total > 0 ? (cumprido / c.total) * 100 : (cumprido > 0 ? 100 : 0);
       
       return { 
         id: idKey, 
@@ -239,64 +161,73 @@ export const useDataProcessing = (safraId: string): DataContextType => {
         cumprido: parseFloat(cumprido.toFixed(2)), 
         aCumprir: parseFloat(aCumprir.toFixed(2)), 
         porcentagem: Math.min(perc, 100).toFixed(1), 
-        isConcluido: isConcluido 
+        isConcluido: aCumprir < 1 
       };
     });
 
     return {
-      pendentes: isSafraPassadaCumprida ? [] : todos.filter(x => !x.isConcluido && x.contratado > 0).sort((a,b) => b.cumprido - a.cumprido),
-      cumpridos: isSafraPassadaCumprida ? todos.sort((a,b) => b.cumprido - a.cumprido) : todos.filter(x => x.isConcluido || x.contratado === 0).sort((a,b) => b.cumprido - a.cumprido)
+      pendentes: todos.filter(x => !x.isConcluido && x.contratado > 0).sort((a,b) => b.cumprido - a.cumprido),
+      cumpridos: todos.filter(x => x.isConcluido || x.contratado === 0).sort((a,b) => b.cumprido - a.cumprido)
     };
-  }, [rawDados, config.VOLUMES_CONTRATADOS, safraId]);
+  }, [rawDados, config.VOLUMES_CONTRATADOS]);
 
-  const calculateChartData = (data: Romaneio[], key: keyof Romaneio, allKeys: string[]): ChartData[] => {
-    const totals: Record<string, number> = {};
-    allKeys.forEach(k => totals[k] = 0);
-    data.forEach(d => {
-      const groupName = d[key] as string;
-      if (groupName) {
-        totals[groupName] = (totals[groupName] || 0) + (Number(d.sacasLiquida) || 0);
+  const listaSaldos = useMemo(() => {
+    const saldosReaisMap: Record<string, { sc: number, kg: number, id: string, grupo: string | null }> = {};
+    rawDados.forEach(d => {
+      const nome = d.armazem || "Outros";
+      if (!saldosReaisMap[nome]) {
+        saldosReaisMap[nome] = { sc: 0, kg: 0, id: (d as any).armazem_id, grupo: (d as any).armazens?.grupo || null };
+      }
+      saldosReaisMap[nome].sc += Number(d.sacasLiquida) || 0;
+      saldosReaisMap[nome].kg += Number(d.pesoLiquidoKg) || 0;
+    });
+
+    const finalSaldos: any[] = [];
+    const armazensDesmembrados = new Set(customBalances.map(cb => cb.armazem_id));
+
+    Object.entries(saldosReaisMap).forEach(([nome, val]) => {
+      if (!armazensDesmembrados.has(val.id)) {
+        finalSaldos.push({ nome, total: parseFloat(val.sc.toFixed(2)), totalKg: Math.round(val.kg), id: val.id, grupo: val.grupo, isCustom: false });
       }
     });
-    return Object.keys(totals)
-      .map(name => ({ name, sacas: totals[name] }))
-      .filter(d => d.sacas > 0 || allKeys.includes(d.name))
-      .sort((a,b) => b.sacas - a.sacas);
-  };
 
-  const allFazendas = useMemo(() => Array.from(new Set(rawDados.map(d => d.fazenda).filter(Boolean) as string[])), [rawDados]);
-  
-  // Armazéns: Combina os que têm romaneios com os que estão em contratos da safra
-  const allArmazens = useMemo(() => {
-    const fromRomaneios = rawDados.map(d => d.armazem).filter(Boolean) as string[];
-    return Array.from(new Set([...fromRomaneios, ...contractWarehouses])).sort();
-  }, [rawDados, contractWarehouses]);
+    customBalances.forEach(cb => {
+      finalSaldos.push({ nome: cb.nome_exibicao, total: parseFloat((cb.peso_kg / 60).toFixed(2)), totalKg: Number(cb.peso_kg), id: cb.armazem_id, db_id: cb.id, grupo: cb.grupo, isCustom: true, armazem_id: cb.armazem_id });
+    });
+
+    return finalSaldos.sort((a, b) => b.total - a.total);
+  }, [rawDados, customBalances]);
+
+  const totalEstoque = useMemo(() => listaSaldos.reduce((acc, item) => acc + item.total, 0), [listaSaldos]);
+  const totalContratos = useMemo(() => {
+    const todos = [...contratosProcessados.pendentes, ...contratosProcessados.cumpridos];
+    return todos.reduce((acc, item) => acc + item.contratado, 0);
+  }, [contratosProcessados]);
 
   const chartFazendas: ChartData[] = useMemo(() => {
-    const data = rawDados.filter(d => !armazemFiltro || d.armazem === armazemFiltro);
-    return calculateChartData(data, 'fazenda', allFazendas);
-  }, [rawDados, armazemFiltro, allFazendas]);
+    const totals: Record<string, number> = {};
+    rawDados.forEach(d => {
+      if (d.fazenda && (!armazemFiltro || d.armazem === armazemFiltro)) {
+        totals[d.fazenda] = (totals[d.fazenda] || 0) + (Number(d.sacasLiquida) || 0);
+      }
+    });
+    return Object.keys(totals).map(name => ({ name, sacas: totals[name] })).sort((a,b) => b.sacas - a.sacas);
+  }, [rawDados, armazemFiltro]);
 
   const chartArmazens: ChartData[] = useMemo(() => {
-    const data = rawDados.filter(d => !fazendaFiltro || d.fazenda === fazendaFiltro);
-    return calculateChartData(data, 'armazem', allArmazens);
-  }, [rawDados, fazendaFiltro, allArmazens]);
+    const totals: Record<string, number> = {};
+    rawDados.forEach(d => {
+      if (d.armazem && (!fazendaFiltro || d.fazenda === fazendaFiltro)) {
+        totals[d.armazem] = (totals[d.armazem] || 0) + (Number(d.sacasLiquida) || 0);
+      }
+    });
+    return Object.keys(totals).map(name => ({ name, sacas: totals[name] })).sort((a,b) => b.sacas - a.sacas);
+  }, [rawDados, fazendaFiltro]);
 
   return {
-    safraId,
-    loading,
-    fazendaFiltro,
-    armazemFiltro,
-    setFazendaFiltro,
-    setArmazemFiltro,
-    stats,
-    discountStats,
-    volumeStats,
-    romaneiosCount, 
-    contratosProcessados,
-    chartFazendas,
-    chartArmazens,
-    getCorFazenda,
-    getCorArmazem,
+    safraId, loading, fazendaFiltro, armazemFiltro, setFazendaFiltro, setArmazemFiltro,
+    stats, discountStats, volumeStats: {} as any, romaneiosCount: dadosFiltrados.length,
+    contratosProcessados, chartFazendas, chartArmazens, getCorFazenda, getCorArmazem,
+    listaSaldos, totalEstoque, totalContratos, saldoGeral: totalEstoque - totalContratos
   };
 };

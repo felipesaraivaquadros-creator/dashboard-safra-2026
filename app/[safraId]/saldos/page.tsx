@@ -18,6 +18,7 @@ import DisponivelTab from '../../../src/components/saldos/DisponivelTab';
 import SaldosPorArmazem from '../../../src/components/saldos/SaldosPorArmazem';
 import ContratoForm from '../../../src/components/saldos/ContratoForm';
 import ArmazemGrupoForm from '../../../src/components/saldos/ArmazemGrupoForm';
+import { useDataProcessing } from '../../../src/lib/useDataProcessing';
 
 type TabType = 'saldos' | 'contratos' | 'disponivel';
 type ScenarioType = 'geral' | 'armazem';
@@ -33,43 +34,29 @@ export default function SaldoPage() {
   const [showGrupoForm, setShowGrupoForm] = useState(false);
   const [editingContrato, setEditingContrato] = useState<any>(null);
   
-  const [loading, setLoading] = useState(true);
+  const { 
+    loading, 
+    listaSaldos, 
+    contratosProcessados, 
+    totalEstoque, 
+    totalContratos, 
+    saldoGeral 
+  } = useDataProcessing(safraId);
+
   const [dbContratos, setDbContratos] = useState<any[]>([]);
-  const [dbRomaneios, setDbRomaneios] = useState<any[]>([]);
 
-  // Busca dados do banco (Contratos e Romaneios)
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Busca Contratos
-      const { data: contratos, error: errC } = await supabase
-        .from('contratos')
-        .select('*, armazens(nome, grupo)')
-        .eq('safra_id', safraId)
-        .order('created_at', { ascending: false });
-      
-      if (errC) throw errC;
-      setDbContratos(contratos || []);
-
-      // Busca Romaneios (para calcular estoque físico)
-      const { data: romaneios, error: errR } = await supabase
-        .from('romaneios')
-        .select('sacas_liquida, peso_liquido_kg, armazens(nome, grupo)')
-        .eq('safra_id', safraId);
-
-      if (errR) throw errR;
-      setDbRomaneios(romaneios || []);
-
-    } catch (error: any) {
-      showError("Erro ao carregar dados: " + error.message);
-    } finally {
-      setLoading(false);
-    }
+  const fetchContratos = useCallback(async () => {
+    const { data } = await supabase
+      .from('contratos')
+      .select('*, armazens(nome, grupo)')
+      .eq('safra_id', safraId)
+      .order('created_at', { ascending: false });
+    if (data) setDbContratos(data);
   }, [safraId]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchContratos();
+  }, [fetchContratos]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este contrato?")) return;
@@ -77,12 +64,11 @@ export default function SaldoPage() {
     if (error) showError("Erro ao excluir: " + error.message);
     else {
       showSuccess("Contrato excluído!");
-      fetchData();
+      window.location.reload();
     }
   };
 
   const handleEdit = (contrato: any) => {
-    // Mapeia os dados do contrato do banco para o formato do formulário
     setEditingContrato({
       id: contrato.db_id || contrato.id,
       nome: contrato.nome,
@@ -94,48 +80,15 @@ export default function SaldoPage() {
     setShowForm(true);
   };
 
-  // Processamento dos dados da nuvem
-  const processedData = useMemo(() => {
-    // 1. Calcular Estoque por Armazém
-    const saldosMap: Record<string, { sc: number, kg: number, grupo: string | null }> = {};
-    dbRomaneios.forEach(r => {
-      const nomeArmazem = r.armazens?.nome || "Outros";
-      if (!saldosMap[nomeArmazem]) saldosMap[nomeArmazem] = { sc: 0, kg: 0, grupo: r.armazens?.grupo || null };
-      saldosMap[nomeArmazem].sc += Number(r.sacas_liquida) || 0;
-      saldosMap[nomeArmazem].kg += Number(r.peso_liquido_kg) || 0;
-    });
-
-    const listaSaldos = Object.entries(saldosMap).map(([nome, val]) => ({
-      nome,
-      total: parseFloat(val.sc.toFixed(2)),
-      totalKg: Math.round(val.kg),
-      grupo: val.grupo
-    })).sort((a, b) => b.total - a.total);
-
-    const totalEstoque = listaSaldos.reduce((acc, item) => acc + item.total, 0);
-
-    // 2. Formatar Contratos
-    const listaContratos = dbContratos.map(c => ({
-      id: c.numero,
+  // Mapeia ProcessedContract para SaldoKpi para compatibilidade com ContratosTab
+  const contratosParaTabela = useMemo(() => {
+    return [...contratosProcessados.pendentes, ...contratosProcessados.cumpridos].map(c => ({
       nome: c.nome,
-      total: Number(c.volume_total),
-      totalKg: Number(c.volume_total) * 60,
-      db_id: c.id,
-      armazem_id: c.armazem_id,
-      armazem_nome: c.armazens?.nome,
-      grupo: c.grupo || c.armazens?.grupo || null
-    })).sort((a, b) => b.total - a.total);
-
-    const totalContratos = listaContratos.reduce((acc, item) => acc + item.total, 0);
-
-    return {
-      listaSaldos,
-      listaContratos,
-      totalEstoque,
-      totalContratos,
-      saldoGeral: totalEstoque - totalContratos
-    };
-  }, [dbRomaneios, dbContratos]);
+      id: c.id,
+      total: c.contratado,
+      totalKg: c.contratado * 60
+    }));
+  }, [contratosProcessados]);
 
   if (loading) {
     return (
@@ -225,18 +178,18 @@ export default function SaldoPage() {
             <div className="min-h-[400px]">
               {activeTab === 'saldos' && (
                 <SaldosTab 
-                  lista={processedData.listaSaldos} 
-                  totalSacas={processedData.totalEstoque} 
-                  totalKg={processedData.totalEstoque * 60} 
+                  lista={listaSaldos} 
+                  totalSacas={totalEstoque} 
+                  totalKg={totalEstoque * 60} 
                 />
               )}
               
               {activeTab === 'contratos' && (
                 <div className="space-y-6">
                   <ContratosTab 
-                    lista={processedData.listaContratos} 
-                    totalSacas={processedData.totalContratos} 
-                    totalKg={processedData.totalContratos * 60} 
+                    lista={contratosParaTabela} 
+                    totalSacas={totalContratos} 
+                    totalKg={totalContratos * 60} 
                   />
                   
                   {dbContratos.length > 0 && (
@@ -276,18 +229,19 @@ export default function SaldoPage() {
               
               {activeTab === 'disponivel' && (
                 <DisponivelTab 
-                  saldoGeral={processedData.saldoGeral}
-                  totalEstoque={processedData.totalEstoque}
-                  totalContratos={processedData.totalContratos}
+                  saldoGeral={saldoGeral}
+                  totalEstoque={totalEstoque}
+                  totalContratos={totalContratos}
                 />
               )}
             </div>
           </>
         ) : (
           <SaldosPorArmazem 
-            listaSaldos={processedData.listaSaldos} 
-            listaContratos={processedData.listaContratos} 
-            onRefresh={fetchData}
+            safraId={safraId}
+            listaSaldos={listaSaldos} 
+            listaContratos={contratosProcessados.pendentes.concat(contratosProcessados.cumpridos)} 
+            onRefresh={() => window.location.reload()}
             onEditContrato={handleEdit}
             onDeleteContrato={handleDelete}
           />
@@ -298,7 +252,7 @@ export default function SaldoPage() {
         <ContratoForm 
           safraId={safraId} 
           onClose={() => { setShowForm(false); setEditingContrato(null); }} 
-          onSuccess={fetchData}
+          onSuccess={() => window.location.reload()}
           editData={editingContrato}
         />
       )}
@@ -307,7 +261,7 @@ export default function SaldoPage() {
         <ArmazemGrupoForm 
           safraId={safraId}
           onClose={() => setShowGrupoForm(false)} 
-          onSuccess={fetchData}
+          onSuccess={() => window.location.reload()}
         />
       )}
     </main>
