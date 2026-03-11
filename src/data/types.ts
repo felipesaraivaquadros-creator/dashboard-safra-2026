@@ -5,7 +5,7 @@ export interface Romaneio {
   emitente?: string | null; 
   tipoNF: string | null;
   nfe: number | null;
-  numero: number | null; // Adicionado
+  numero: number | null; 
   cidadeEntrega: string | null;
   armazem: string | null;
   armazemsaldo?: string | null;
@@ -92,6 +92,7 @@ export interface ChartData {
 
 export interface DataContextType {
   safraId: string;
+  loading: boolean; // Novo
   fazendaFiltro: string | null;
   armazemFiltro: string | null;
   setFazendaFiltro: (fazenda: string | null) => void;

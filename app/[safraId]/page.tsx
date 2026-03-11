@@ -16,6 +16,7 @@ import NavigationMenu from '../../src/components/NavigationMenu';
 import UpdateDataButton from '../../src/components/UpdateDataButton';
 import ImportExcelButton from '../../src/components/ImportExcelButton';
 import DataConsistencyCheck from '../../src/components/DataConsistencyCheck';
+import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
   const params = useParams();
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const safraConfig = getSafraConfig(safraId);
 
   const {
+    loading,
     fazendaFiltro,
     armazemFiltro,
     setFazendaFiltro,
@@ -49,6 +51,15 @@ export default function Dashboard() {
     setFazendaFiltro(null);
     setArmazemFiltro(null);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <Loader2 className="w-10 h-10 text-purple-600 animate-spin mb-4" />
+        <p className="text-xs font-black uppercase tracking-widest text-slate-400">Carregando dados da nuvem...</p>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen p-4 bg-slate-100 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100 relative">

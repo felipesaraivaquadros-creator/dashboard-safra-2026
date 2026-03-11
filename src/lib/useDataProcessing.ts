@@ -1,68 +1,100 @@
-import { useMemo, useState } from 'react';
+"use client";
+
+import { useMemo, useState, useEffect } from 'react';
 import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType, DiscountStats, VolumeStats } from '../data/types';
-import { getSafraConfig, SafraConfig } from '../data/safraConfig';
+import { getSafraConfig } from '../data/safraConfig';
 import { CORES_FAZENDAS, CORES_ARMAZENS } from '../data/sharedConfig';
-
-const dataMap: Record<string, Romaneio[]> = {
-  'soja2526': require('../data/soja2526/romaneios_normalizados.json'),
-  'soja2425': require('../data/soja2425/romaneios_normalizados.json'),
-  'milho25': require('../data/milho25/romaneios_normalizados.json'),
-  'milho26': require('../data/milho26/romaneios_normalizados.json'),
-};
-
-interface SafraData {
-  dados: Romaneio[];
-  config: SafraConfig;
-}
-
-function loadSafraData(safraId: string): SafraData {
-  const config = getSafraConfig(safraId);
-  let dados = dataMap[safraId];
-  
-  if (!Array.isArray(dados)) {
-    console.error(`Erro ao carregar dados para a safra ${safraId}. Retornando array vazio.`);
-    dados = [];
-  }
-  
-  const romaneiosValidos = dados.filter(d => d.sacasLiquida > 0 && d.data !== null);
-
-  return { dados: romaneiosValidos, config };
-}
+import { supabase } from '../integrations/supabase/client';
 
 export const useDataProcessing = (safraId: string): DataContextType => {
-  const { dados: typedDadosOriginal, config } = useMemo(() => loadSafraData(safraId), [safraId]);
-  
+  const [rawDados, setRawDados] = useState<Romaneio[]>([]);
+  const [loading, setLoading] = useState(true);
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
+
+  const config = useMemo(() => getSafraConfig(safraId), [safraId]);
+
+  // 1. Busca dados do Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('romaneios')
+          .select(`
+            *,
+            fazendas(nome),
+            armazens(nome),
+            contratos(numero)
+          `)
+          .eq('safra_id', safraId);
+
+        if (error) throw error;
+
+        if (data) {
+          const mapped: Romaneio[] = data.map(d => ({
+            data: d.data,
+            contrato: d.contrato_id ? "Contrato" : "S/C",
+            ncontrato: d.contratos?.numero || "S/C",
+            emitente: d.emitente,
+            tipoNF: d.tipo_nf,
+            nfe: d.nfe,
+            numero: d.numero_romaneio,
+            cidadeEntrega: d.cidade_entrega,
+            armazem: d.armazens?.nome || "Outros",
+            safra: d.safra_id,
+            fazenda: d.fazendas?.nome || "Outros",
+            talhao: d.talhao,
+            motorista: d.motorista,
+            placa: d.placa,
+            pesoLiquidoKg: Number(d.peso_liquido_kg) || 0,
+            pesoBrutoKg: Number(d.peso_bruto_kg) || 0,
+            sacasLiquida: Number(d.sacas_liquida) || 0,
+            sacasBruto: Number(d.sacas_bruto) || 0,
+            umidade: Number(d.umidade) || 0,
+            impureza: Number(d.impureza) || 0,
+            ardido: Number(d.ardido) || 0,
+            avariados: Number(d.avariados) || 0,
+            quebrados: Number(d.quebrados) || 0,
+            contaminantes: Number(d.contaminantes) || 0,
+            precofrete: Number(d.preco_frete) || null
+          }));
+          setRawDados(mapped);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar dados da nuvem:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [safraId]);
 
   const getCorFazenda = (nome: string): string => CORES_FAZENDAS[nome] || CORES_FAZENDAS["Outros"];
   const getCorArmazem = (nome: string): string => {
     const exactMatch = CORES_ARMAZENS[nome];
     if (exactMatch) return exactMatch;
-
     const baseName = nome.split(' ')[0];
     for (const key in CORES_ARMAZENS) {
-      if (key.includes(baseName)) {
-        return CORES_ARMAZENS[key];
-      }
+      if (key.includes(baseName)) return CORES_ARMAZENS[key];
     }
     return CORES_ARMAZENS["Outros"];
   };
 
   const dadosFiltrados = useMemo(() => {
-    return typedDadosOriginal.filter(d => {
+    return rawDados.filter(d => {
       const matchFazenda = !fazendaFiltro || d.fazenda === fazendaFiltro;
       const matchArmazem = !armazemFiltro || d.armazem === armazemFiltro;
       return matchFazenda && matchArmazem;
     });
-  }, [typedDadosOriginal, fazendaFiltro, armazemFiltro]);
+  }, [rawDados, fazendaFiltro, armazemFiltro]);
 
   const romaneiosCount = useMemo(() => dadosFiltrados.length, [dadosFiltrados]);
 
   const { stats, discountStats, volumeStats } = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
     const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
-    
     const liqKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.pesoLiquidoKg) || 0), 0);
     const brutaKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.pesoBrutoKg) || 0), 0);
 
@@ -151,8 +183,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};
-    typedDadosOriginal.forEach(d => {
-      // Normalização idêntica ao script de exportação para garantir o vínculo
+    rawDados.forEach(d => {
       const id = String(d.ncontrato || '').trim().replace(/\.0$/, '').toUpperCase();
       if (id && id !== "S/C") {
         entregasMap[id] = (entregasMap[id] || 0) + (Number(d.sacasLiquida) || 0);
@@ -163,7 +194,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
     const todos: ProcessedContract[] = Object.keys(config.VOLUMES_CONTRATADOS).map(idKey => {
       const c = config.VOLUMES_CONTRATADOS[idKey];
-      // Busca no mapa usando a chave normalizada
       const idNormalizado = String(idKey).trim().replace(/\.0$/, '').toUpperCase();
       const cumprido = entregasMap[idNormalizado] || 0;
       
@@ -200,7 +230,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       pendentes: isSafraPassadaCumprida ? [] : todos.filter(x => !x.isConcluido && x.contratado > 0).sort((a,b) => b.cumprido - a.cumprido),
       cumpridos: isSafraPassadaCumprida ? todos.sort((a,b) => b.cumprido - a.cumprido) : todos.filter(x => x.isConcluido || x.contratado === 0).sort((a,b) => b.cumprido - a.cumprido)
     };
-  }, [typedDadosOriginal, config.VOLUMES_CONTRATADOS, safraId]);
+  }, [rawDados, config.VOLUMES_CONTRATADOS, safraId]);
 
   const calculateChartData = (data: Romaneio[], key: keyof Romaneio, allKeys: string[]): ChartData[] => {
     const totals: Record<string, number> = {};
@@ -217,28 +247,22 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       .sort((a,b) => b.sacas - a.sacas);
   };
 
-  const allFazendas = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.fazenda).filter(Boolean) as string[])), [typedDadosOriginal]);
-  const allArmazens = useMemo(() => Array.from(new Set(typedDadosOriginal.map(d => d.armazem).filter(Boolean) as string[])), [typedDadosOriginal]);
-
-  const dadosParaChartFazendas = useMemo(() => {
-    return typedDadosOriginal.filter(d => !armazemFiltro || d.armazem === armazemFiltro);
-  }, [typedDadosOriginal, armazemFiltro]);
+  const allFazendas = useMemo(() => Array.from(new Set(rawDados.map(d => d.fazenda).filter(Boolean) as string[])), [rawDados]);
+  const allArmazens = useMemo(() => Array.from(new Set(rawDados.map(d => d.armazem).filter(Boolean) as string[])), [rawDados]);
 
   const chartFazendas: ChartData[] = useMemo(() => {
-    return calculateChartData(dadosParaChartFazendas, 'fazenda', allFazendas);
-  }, [dadosParaChartFazendas, allFazendas]);
-
-  const dadosParaChartArmazens = useMemo(() => {
-    return typedDadosOriginal.filter(d => !fazendaFiltro || d.fazenda === fazendaFiltro);
-  }, [typedDadosOriginal, fazendaFiltro]);
+    const data = rawDados.filter(d => !armazemFiltro || d.armazem === armazemFiltro);
+    return calculateChartData(data, 'fazenda', allFazendas);
+  }, [rawDados, armazemFiltro, allFazendas]);
 
   const chartArmazens: ChartData[] = useMemo(() => {
-    return calculateChartData(dadosParaChartArmazens, 'armazem', allArmazens);
-  }, [dadosParaChartArmazens, allArmazens]);
-
+    const data = rawDados.filter(d => !fazendaFiltro || d.fazenda === fazendaFiltro);
+    return calculateChartData(data, 'armazem', allArmazens);
+  }, [rawDados, fazendaFiltro, allArmazens]);
 
   return {
     safraId,
+    loading,
     fazendaFiltro,
     armazemFiltro,
     setFazendaFiltro,
