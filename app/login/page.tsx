@@ -1,14 +1,23 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '../../src/integrations/supabase/client';
-import { showError } from '../../src/utils/toast';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const router = useRouter();
   const ALLOWED_EMAIL = "fazendaromancini@gmail.com";
+
+  useEffect(() => {
+    // Se o usuário já estiver logado, manda para a seleção de safra
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.push('/');
+      }
+    });
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 dark:bg-slate-900 p-4">
