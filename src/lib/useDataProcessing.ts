@@ -23,9 +23,12 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   }, []);
 
   useEffect(() => {
+    if (!safraId) return;
+
     let isMounted = true;
     
     const fetchData = async () => {
+      // Só mostra o loading global na primeira carga
       if (refreshTick === 0) setLoading(true);
       
       try {
@@ -37,6 +40,11 @@ export const useDataProcessing = (safraId: string): DataContextType => {
         ]);
 
         if (!isMounted) return;
+
+        // Se houver erro em qualquer consulta, logamos mas não travamos a tela
+        if (romaneiosRes.error) console.error("Erro Romaneios:", romaneiosRes.error);
+        if (saldosRes.error) console.error("Erro Saldos:", saldosRes.error);
+        if (contratosRes.error) console.error("Erro Contratos:", contratosRes.error);
 
         setDbSaldos(saldosRes.data || []);
         setCustomBalances(customRes.data || []);
@@ -59,7 +67,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
             talhao: d.talhao,
             motorista: d.motorista,
             placa: d.placa,
-            pesoLiquidoKg: Number(d.peso_liquido_kg) || 0,
+            pesoLiquidoKg: Number(d.peso_liquid_kg) || 0,
             pesoBrutoKg: Number(d.peso_bruto_kg) || 0,
             sacasLiquida: Number(d.sacas_liquida) || 0,
             sacasBruto: Number(d.sacas_bruto) || 0,
@@ -72,9 +80,11 @@ export const useDataProcessing = (safraId: string): DataContextType => {
             precofrete: Number(d.preco_frete) || null
           }));
           setRawDados(mapped);
+        } else {
+          setRawDados([]);
         }
       } catch (err) {
-        console.error("Erro ao carregar dados:", err);
+        console.error("Erro fatal ao carregar dados:", err);
       } finally {
         if (isMounted) setLoading(false);
       }
