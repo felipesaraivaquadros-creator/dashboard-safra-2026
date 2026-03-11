@@ -11,7 +11,7 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
 
   if (fError || aError || cError) {
     console.error("[Sync] Erro ao buscar metadados:", { fError, aError, cError });
-    throw new Error("Não foi possível carregar as tabelas de apoio. Verifique se as tabelas 'fazendas' e 'armazens' existem.");
+    throw new Error(`Erro ao carregar tabelas de apoio: ${fError?.message || aError?.message || cError?.message || 'Erro desconhecido'}`);
   }
 
   const fazendaMap = Object.fromEntries(fazendas?.map(f => [f.nome, f.id]) || []);
@@ -59,7 +59,10 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
   for (let i = 0; i < payload.length; i += chunkSize) {
     const chunk = payload.slice(i, i + chunkSize);
     const { error: insError } = await supabase.from('romaneios').insert(chunk);
-    if (insError) throw insError;
+    if (insError) {
+      console.error("[Sync] Erro ao inserir lote:", insError);
+      throw insError;
+    }
   }
 
   return payload.length;
