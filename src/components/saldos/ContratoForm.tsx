@@ -32,6 +32,12 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.armazem_id) {
+      showError("É obrigatório associar o contrato a um armazém.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -116,13 +122,14 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Armazém Vinculado</label>
+            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Armazém Vinculado (Obrigatório)</label>
             <select
+              required
               value={formData.armazem_id}
               onChange={(e) => setFormData({ ...formData, armazem_id: e.target.value })}
               className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-purple-500 transition-all"
             >
-              <option value="">Nenhum (Geral)</option>
+              <option value="">Selecione um Armazém</option>
               {armazens.map((a) => (
                 <option key={a.id} value={a.id}>{a.nome}</option>
               ))}
