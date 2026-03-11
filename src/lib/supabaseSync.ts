@@ -6,37 +6,34 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
 
   try {
     // 1. Garantir que Fazendas e Armazéns existem (Upsert)
+    // Usamos o nome como chave única para evitar duplicatas
     const fazendasUnicas = Array.from(new Set(dados.map(d => d.fazenda).filter(Boolean)));
     const armazensUnicos = Array.from(new Set(dados.map(d => d.armazem).filter(Boolean)));
 
     if (fazendasUnicas.length > 0) {
-      console.log("[Sync] Atualizando fazendas...");
-      const { error: fErr } = await supabase.from('fazendas').upsert(
-        fazendasUnicas.map(nome => ({ nome })), 
-        { onConflict: 'nome' }
-      );
-      if (fErr) throw new Error(`Erro ao salvar fazendas: ${fErr.message}`);
+      const { error: fErr } = await supabase
+        .from('fazendas')
+        .upsert(fazendasUnicas.map(nome => ({ nome })), { onConflict: 'nome' });
+      if (fErr) throw new Error(`Erro ao sincronizar fazendas: ${fErr.message}`);
     }
     
     if (armazensUnicos.length > 0) {
-      console.log("[Sync] Atualizando armazéns...");
-      const { error: aErr } = await supabase.from('armazens').upsert(
-        armazensUnicos.map(nome => ({ nome })), 
-        { onConflict: 'nome' }
-      );
-      if (aErr) throw new Error(`Erro ao salvar armazéns: ${aErr.message}`);
+      const { error: aErr } = await supabase
+        .from('armazens')
+        .upsert(armazensUnicos.map(nome => ({ nome })), { onConflict: 'nome' });
+      if (aErr) throw new Error(`Erro ao sincronizar armazéns: ${aErr.message}`);
     }
 
-    // 2. Buscar mapeamentos atualizados para vincular os IDs
-    const { data: fazendas } = await supabase.from('fazendas').select('id, nome');
-    const { data: armazens } = await supabase.from('armazens').select('id, nome');
-    const { data: contratos } = await supabase.from('contratos').select('id, numero').eq('safra_id', safraId);
+    // 2. Buscar os IDs gerados para fazer o vínculo (Relacionamento)
+    const { data: fazendasDB } = await supabase.from('fazendas').select('id, nome');
+    const { data: armazensDB } = await supabase.from('armazens').select('id, nome');
+    const { data: contratosDB } = await supabase.from('contratos').select('id, numero').eq('safra_id', safraId);
 
-    const fazendaMap = Object.fromEntries(fazendas?.map(f => [f.nome, f.id]) || []);
-    const armazemMap = Object.fromEntries(armazens?.map(a => [a.nome, a.id]) || []);
-    const contratoMap = Object.fromEntries(contratos?.map(c => [String(c.numero), c.id]) || []);
+    const fazendaMap = Object.fromEntries(fazendasDB?.map(f => [f.nome, f.id]) || []);
+    const armazemMap = Object.fromEntries(armazensDB?.map(a => [a.nome, a.id]) || []);
+    const contratoMap = Object.fromEntries(contratosDB?.map(c => [String(c.numero), c.id]) || []);
 
-    // 3. Preparar dados para inserção
+    // 3. Preparar os Romaneios com os IDs das tabelas relacionadas
     const payload = dados.map(d => {
       const nContrato = String(d.ncontrato || '').trim().replace(/\.0$/, '').toUpperCase();
       
@@ -67,19 +64,16 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
       };
     });
 
-    // 4. Limpar registros antigos desta safra e inserir os novos
-    console.log("[Sync] Removendo romaneios antigos...");
+    // 4. Limpar dados antigos da safra para evitar duplicidade e inserir novos
     const { error: delErr } = await supabase.from('romaneios').delete().eq('safra_id', safraId);
     if (delErr) throw new Error(`Erro ao limpar dados antigos: ${delErr.message}`);
     
-    console.log(`[Sync] Inserindo ${payload.length} novos registros...`);
-    
-    // Inserção em lotes para evitar sobrecarga
-    const chunkSize = 50;
+    // Inserção em lotes (chunks) para não estourar o limite da API
+    const chunkSize = 100;
     for (let i = 0; i < payload.length; i += chunkSize) {
       const chunk = payload.slice(i, i + chunkSize);
       const { error: insErr } = await supabase.from('romaneios').insert(chunk);
-      if (insErr) throw new Error(`Erro ao inserir lote ${i/chunkSize + 1}: ${insErr.message}`);
+      if (insErr) throw new Error(`Erro ao inserir lote de romaneios: ${insErr.message}`);
     }
 
     return payload.length;
