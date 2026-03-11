@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { calculateSaldoDashboard } from '../../../src/lib/saldoProcessing';
-import { Package, FileText, Scale, LayoutGrid, List, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Package, FileText, Scale, LayoutGrid, List, Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import { useParams } from 'next/navigation';
@@ -31,70 +30,115 @@ export default function SaldoPage() {
   const [scenario, setScenario] = useState<ScenarioType>('geral');
   const [showForm, setShowForm] = useState(false);
   const [editingContrato, setEditingContrato] = useState<any>(null);
+  
+  const [loading, setLoading] = useState(true);
   const [dbContratos, setDbContratos] = useState<any[]>([]);
+  const [dbRomaneios, setDbRomaneios] = useState<any[]>([]);
 
-  // Busca contratos do banco
-  const fetchContratos = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('contratos')
-      .select('*, armazens(nome)')
-      .eq('safra_id', safraId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      showError("Erro ao carregar contratos: " + error.message);
-    } else {
-      setDbContratos(data || []);
+  // Busca dados do banco (Contratos e Romaneios)
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Busca Contratos
+      const { data: contratos, error: errC } = await supabase
+        .from('contratos')
+        .select('*, armazens(nome)')
+        .eq('safra_id', safraId)
+        .order('created_at', { ascending: false });
+      
+      if (errC) throw errC;
+      setDbContratos(contratos || []);
+
+      // Busca Romaneios (para calcular estoque físico)
+      const { data: romaneios, error: errR } = await supabase
+        .from('romaneios')
+        .select('sacas_liquida, peso_liquido_kg, armazens(nome)')
+        .eq('safra_id', safraId);
+
+      if (errR) throw errR;
+      setDbRomaneios(romaneios || []);
+
+    } catch (error: any) {
+      showError("Erro ao carregar dados: " + error.message);
+    } finally {
+      setLoading(false);
     }
   }, [safraId]);
 
   useEffect(() => {
-    fetchContratos();
-  }, [fetchContratos]);
+    fetchData();
+  }, [fetchData]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este contrato?")) return;
-    
     const { error } = await supabase.from('contratos').delete().eq('id', id);
-    if (error) {
-      showError("Erro ao excluir: " + error.message);
-    } else {
+    if (error) showError("Erro ao excluir: " + error.message);
+    else {
       showSuccess("Contrato excluído!");
-      fetchContratos();
+      fetchData();
     }
   };
 
-  // Dados processados (Mistura estáticos com banco se necessário, ou apenas banco)
-  const data = useMemo(() => {
-    const baseData = calculateSaldoDashboard(safraId);
+  // Processamento dos dados da nuvem
+  const processedData = useMemo(() => {
+    // 1. Calcular Estoque por Armazém
+    const saldosMap: Record<string, { sc: number, kg: number }> = {};
+    dbRomaneios.forEach(r => {
+      const nomeArmazem = r.armazens?.nome || "Outros";
+      if (!saldosMap[nomeArmazem]) saldosMap[nomeArmazem] = { sc: 0, kg: 0 };
+      saldosMap[nomeArmazem].sc += Number(r.sacas_liquida) || 0;
+      saldosMap[nomeArmazem].kg += Number(r.peso_liquido_kg) || 0;
+    });
+
+    const listaSaldos = Object.entries(saldosMap).map(([nome, val]) => ({
+      nome,
+      total: parseFloat(val.sc.toFixed(2)),
+      totalKg: Math.round(val.kg)
+    })).sort((a, b) => b.total - a.total);
+
+    const totalEstoque = listaSaldos.reduce((acc, item) => acc + item.total, 0);
+
+    // 2. Formatar Contratos
+    const listaContratos = dbContratos.map(c => ({
+      id: c.numero,
+      nome: c.nome,
+      total: Number(c.volume_total),
+      totalKg: Number(c.volume_total) * 60,
+      db_id: c.id,
+      armazem_nome: c.armazens?.nome
+    })).sort((a, b) => b.total - a.total);
+
+    const totalContratos = listaContratos.reduce((acc, item) => acc + item.total, 0);
+
+    // 3. Saldos de Grupos (Lógica específica para Soja 25/26 se necessário)
+    const ARMAZENS_FIXOS = ["COFCO NSH", "SIPAL MATUPÁ"];
+    const estoqueSipal = listaSaldos
+      .filter(s => ARMAZENS_FIXOS.includes(s.nome))
+      .reduce((acc, s) => acc + s.total, 0);
     
-    // Se houver contratos no banco, eles substituem ou complementam os estáticos
-    // Para uma transição profissional, vamos usar os do banco se existirem
-    if (dbContratos.length > 0) {
-      const contratosFormatados = dbContratos.map(c => ({
-        id: c.numero,
-        nome: c.nome,
-        total: Number(c.volume_total),
-        totalKg: Number(c.volume_total) * 60,
-        db_id: c.id,
-        armazem_id: c.armazem_id,
-        armazem_nome: c.armazens?.nome
-      }));
+    const contratosSipal = listaContratos
+      .filter(c => ARMAZENS_FIXOS.includes(c.armazem_nome || ""))
+      .reduce((acc, c) => acc + c.total, 0);
 
-      const totalContratos = contratosFormatados.reduce((acc, item) => acc + item.total, 0);
-      
-      return {
-        ...baseData,
-        listaContratos: contratosFormatados,
-        totalContratos,
-        saldoGeral: baseData.totalEstoque - totalContratos
-      };
-    }
+    return {
+      listaSaldos,
+      listaContratos,
+      totalEstoque,
+      totalContratos,
+      saldoGeral: totalEstoque - totalContratos,
+      saldoSipal: estoqueSipal - contratosSipal,
+      saldoOutros: (totalEstoque - estoqueSipal) - (totalContratos - contratosSipal)
+    };
+  }, [dbRomaneios, dbContratos]);
 
-    return baseData;
-  }, [safraId, dbContratos]);
-
-  const isSoja2526 = safraId === 'soja2526';
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <Loader2 className="w-10 h-10 text-purple-600 animate-spin mb-4" />
+        <p className="text-xs font-black uppercase tracking-widest text-slate-400">Sincronizando Saldos...</p>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
@@ -115,10 +159,10 @@ export default function SaldoPage() {
             <Plus size={16} /> Novo Contrato
           </button>
           <Link 
-            href={`/${safraId}/fretes`} 
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md"
+            href={`/${safraId}`} 
+            className="flex items-center gap-2 px-4 py-2 text-xs font-black uppercase rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition-all shadow-sm"
           >
-            Fretes
+            Painel
           </Link>
           <ThemeToggle />
         </div>
@@ -126,24 +170,22 @@ export default function SaldoPage() {
 
       <div className="max-w-[1200px] mx-auto">
         
-        {isSoja2526 && (
-          <div className="flex justify-center mb-8">
-            <div className="bg-white dark:bg-slate-800 p-1 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex gap-1">
-              <button 
-                onClick={() => setScenario('geral')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${scenario === 'geral' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                <LayoutGrid size={14} /> Saldos Gerais
-              </button>
-              <button 
-                onClick={() => setScenario('armazem')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${scenario === 'armazem' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                <List size={14} /> Saldos por Armazém
-              </button>
-            </div>
+        <div className="flex justify-center mb-8">
+          <div className="bg-white dark:bg-slate-800 p-1 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex gap-1">
+            <button 
+              onClick={() => setScenario('geral')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${scenario === 'geral' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <LayoutGrid size={14} /> Saldos Gerais
+            </button>
+            <button 
+              onClick={() => setScenario('armazem')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${scenario === 'armazem' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              <List size={14} /> Saldos por Armazém
+            </button>
           </div>
-        )}
+        </div>
 
         {scenario === 'geral' ? (
           <>
@@ -152,7 +194,7 @@ export default function SaldoPage() {
                 onClick={() => setActiveTab('saldos')}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 text-[10px] md:text-xs font-black uppercase rounded-2xl transition-all ${activeTab === 'saldos' ? 'bg-white dark:bg-slate-700 text-blue-600 shadow-md scale-[1.02]' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
               >
-                <Package size={16} /> Saldos
+                <Package size={16} /> Estoque
               </button>
               <button 
                 onClick={() => setActiveTab('contratos')}
@@ -171,24 +213,23 @@ export default function SaldoPage() {
             <div className="min-h-[400px]">
               {activeTab === 'saldos' && (
                 <SaldosTab 
-                  lista={data.listaSaldos} 
-                  totalSacas={data.totalEstoque} 
-                  totalKg={data.totalEstoque * 60} 
+                  lista={processedData.listaSaldos} 
+                  totalSacas={processedData.totalEstoque} 
+                  totalKg={processedData.totalEstoque * 60} 
                 />
               )}
               
               {activeTab === 'contratos' && (
                 <div className="space-y-6">
                   <ContratosTab 
-                    lista={data.listaContratos} 
-                    totalSacas={data.totalContratos} 
-                    totalKg={data.totalContratos * 60} 
+                    lista={processedData.listaContratos} 
+                    totalSacas={processedData.totalContratos} 
+                    totalKg={processedData.totalContratos * 60} 
                   />
                   
-                  {/* Lista de Ações para Contratos do Banco */}
                   {dbContratos.length > 0 && (
                     <div className="max-w-5xl mx-auto bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-                      <h3 className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Gerenciar Contratos (Banco)</h3>
+                      <h3 className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">Gerenciar Contratos</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {dbContratos.map(c => (
                           <div key={c.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-700">
@@ -220,17 +261,17 @@ export default function SaldoPage() {
               
               {activeTab === 'disponivel' && (
                 <DisponivelTab 
-                  saldoGeral={data.saldoGeral}
-                  saldoSipal={data.saldoContratosFixos}
-                  saldoOutros={data.saldoOutros}
-                  totalEstoque={data.totalEstoque}
-                  totalContratos={data.totalContratos}
+                  saldoGeral={processedData.saldoGeral}
+                  saldoSipal={processedData.saldoSipal}
+                  saldoOutros={processedData.saldoOutros}
+                  totalEstoque={processedData.totalEstoque}
+                  totalContratos={processedData.totalContratos}
                 />
               )}
             </div>
           </>
         ) : (
-          <SaldosPorArmazem listaSaldos={data.listaSaldos} />
+          <SaldosPorArmazem listaSaldos={processedData.listaSaldos} />
         )}
       </div>
 
@@ -238,17 +279,10 @@ export default function SaldoPage() {
         <ContratoForm 
           safraId={safraId} 
           onClose={() => { setShowForm(false); setEditingContrato(null); }} 
-          onSuccess={fetchContratos}
+          onSuccess={fetchData}
           editData={editingContrato}
         />
       )}
-
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
-      `}</style>
     </main>
   );
 }
