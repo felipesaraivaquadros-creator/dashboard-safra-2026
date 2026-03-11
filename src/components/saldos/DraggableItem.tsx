@@ -28,6 +28,8 @@ export default function DraggableItem({ id, type, nome, valor, dbId, isCustom, o
   };
 
   const isContrato = type === 'contrato';
+  // Garante que o valor seja um número para evitar erro no toLocaleString
+  const valorSeguro = Number(valor) || 0;
 
   return (
     <div 
@@ -55,7 +57,7 @@ export default function DraggableItem({ id, type, nome, valor, dbId, isCustom, o
             {isCustom && <Scissors size={10} className="text-blue-400 shrink-0" />}
           </div>
           <p className={`text-[11px] font-black ${isContrato ? 'text-purple-700 dark:text-purple-400' : 'text-blue-700 dark:text-blue-400'}`}>
-            {valor.toLocaleString('pt-BR')} sc
+            {valorSeguro.toLocaleString('pt-BR')} sc
           </p>
         </div>
       </div>
