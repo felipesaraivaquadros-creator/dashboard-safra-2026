@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useRef, useState } from 'react';
-import { FileUp, Loader2 } from 'lucide-react';
+import { FileUp, Loader2, AlertCircle } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { showSuccess, showError, showLoading, dismissToast } from '../utils/toast';
 import { syncRomaneiosToSupabase } from '../lib/supabaseSync';
 import { useParams } from 'next/navigation';
 import { Romaneio } from '../data/types';
 
-// Mapeamento de abas por Safra
+// Mapeamento rigoroso de abas por Safra
 const ABA_POR_SAFRA: Record<string, string> = {
   'soja2526': 'ROMANEIOS_SOJA',
   'milho26': 'ROMANEIOS_MILHO',
@@ -31,26 +31,28 @@ export default function ImportExcelButton() {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       
-      // Define qual aba ler
+      // 1. Identifica a aba alvo baseada na safra atual
       const abaAlvo = ABA_POR_SAFRA[safraId];
-      let worksheet = null;
-
-      if (abaAlvo) {
-        worksheet = workbook.Sheets[abaAlvo];
-        if (!worksheet) {
-          throw new Error(`A aba "${abaAlvo}" não foi encontrada nesta planilha. Verifique o nome da aba.`);
-        }
-      } else {
-        // Se não houver regra, pega a primeira aba (comportamento padrão para safras antigas)
-        worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      
+      if (!abaAlvo) {
+        throw new Error(`Não há uma aba de romaneios configurada para a safra "${safraId}".`);
       }
 
+      // 2. Tenta acessar a aba específica
+      const worksheet = workbook.Sheets[abaAlvo];
+      
+      if (!worksheet) {
+        throw new Error(`A aba obrigatória "${abaAlvo}" não foi encontrada nesta planilha. Verifique se o nome da aba está correto.`);
+      }
+
+      // 3. Converte apenas a aba alvo para JSON
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
       if (jsonData.length === 0) {
-        throw new Error("A planilha parece estar vazia ou não contém dados válidos.");
+        throw new Error(`A aba "${abaAlvo}" está vazia ou não contém dados válidos.`);
       }
 
+      // 4. Mapeia os dados para o formato do sistema
       const romaneiosFormatados: Romaneio[] = jsonData.map((linha: any) => ({
         data: linha['Data'] || linha['DATA'] || null,
         contrato: linha['Contrato'] || linha['CONTRATO'] || 'S/C',
@@ -80,12 +82,16 @@ export default function ImportExcelButton() {
       }));
 
       dismissToast(toastId);
-      showLoading(`Enviando ${romaneiosFormatados.length} registros da aba "${abaAlvo || 'Principal'}"...`);
+      showLoading(`Sincronizando ${romaneiosFormatados.length} registros da aba "${abaAlvo}"...`);
       
+      // 5. Envia para o Supabase
       const total = await syncRomaneiosToSupabase(safraId, romaneiosFormatados);
       
-      showSuccess(`${total} romaneios importados com sucesso!`);
-      window.location.reload();
+      showSuccess(`${total} romaneios da aba "${abaAlvo}" importados com sucesso!`);
+      
+      // Recarrega a página para atualizar os gráficos e tabelas
+      setTimeout(() => window.location.reload(), 1500);
+      
     } catch (err: any) {
       showError("Erro na importação: " + err.message);
     } finally {
@@ -97,11 +103,18 @@ export default function ImportExcelButton() {
 
   return (
     <>
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".xlsx, .xls, .csv" className="hidden" />
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileChange} 
+        accept=".xlsx, .xls" 
+        className="hidden" 
+      />
       <button 
         disabled={isImporting}
         onClick={() => fileInputRef.current?.click()}
         className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-black uppercase rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md disabled:opacity-50"
+        title={`Importar aba ${ABA_POR_SAFRA[safraId] || 'de romaneios'}`}
       >
         {isImporting ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
         Importar Planilha
