@@ -8,6 +8,12 @@ import { syncRomaneiosToSupabase } from '../lib/supabaseSync';
 import { useParams } from 'next/navigation';
 import { Romaneio } from '../data/types';
 
+// Mapeamento de abas por Safra
+const ABA_POR_SAFRA: Record<string, string> = {
+  'soja2526': 'ROMANEIOS_SOJA',
+  'milho26': 'ROMANEIOS_MILHO',
+};
+
 export default function ImportExcelButton() {
   const params = useParams();
   const safraId = params.safraId as string;
@@ -24,8 +30,26 @@ export default function ImportExcelButton() {
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      
+      // Define qual aba ler
+      const abaAlvo = ABA_POR_SAFRA[safraId];
+      let worksheet = null;
+
+      if (abaAlvo) {
+        worksheet = workbook.Sheets[abaAlvo];
+        if (!worksheet) {
+          throw new Error(`A aba "${abaAlvo}" não foi encontrada nesta planilha. Verifique o nome da aba.`);
+        }
+      } else {
+        // Se não houver regra, pega a primeira aba (comportamento padrão para safras antigas)
+        worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      }
+
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      if (jsonData.length === 0) {
+        throw new Error("A planilha parece estar vazia ou não contém dados válidos.");
+      }
 
       const romaneiosFormatados: Romaneio[] = jsonData.map((linha: any) => ({
         data: linha['Data'] || linha['DATA'] || null,
@@ -56,7 +80,7 @@ export default function ImportExcelButton() {
       }));
 
       dismissToast(toastId);
-      showLoading(`Enviando ${romaneiosFormatados.length} registros para o banco...`);
+      showLoading(`Enviando ${romaneiosFormatados.length} registros da aba "${abaAlvo || 'Principal'}"...`);
       
       const total = await syncRomaneiosToSupabase(safraId, romaneiosFormatados);
       
