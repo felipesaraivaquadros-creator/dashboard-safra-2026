@@ -69,3 +69,55 @@ INSERT INTO public.armazens (nome, cor) VALUES
 ('AMAGGI SINOP', '#2563eb'),
 ('GO AGRO', '#94a3b8')
 ON CONFLICT (nome) DO NOTHING;
+
+-- Limpar contratos existentes para evitar duplicidade na carga inicial
+DELETE FROM public.contratos;
+
+-- 4. Inserir Contratos Soja 25/26
+INSERT INTO public.contratos (safra_id, nome, numero, volume_total, armazem_id) VALUES
+('soja2526', 'Venda Sipal 20 Mil Sacas', '72208', 20000, (SELECT id FROM armazens WHERE nome = 'COFCO NSH')),
+('soja2526', 'BEDIN', '6750SC', 6750, (SELECT id FROM armazens WHERE nome = 'SIPAL MATUPÁ')),
+('soja2526', 'Troca Adubo Sipal 29.500 Sacas', '290925M339', 29500, (SELECT id FROM armazens WHERE nome = 'SIPAL MATUPÁ')),
+('soja2526', 'Arrendamento CT', 'ARR-CST-USIMAT', 10000, (SELECT id FROM armazens WHERE nome = 'SIPAL CLÁUDIA')),
+('soja2526', 'Arrendamento SL', 'ARR-SLZ-COFCO', 4050, (SELECT id FROM armazens WHERE nome = 'COFCO NSH')),
+('soja2526', 'Comissões a Fixar', 'COMISSAO-FIXAR', 1000, NULL),
+('soja2526', 'Venda 800 Sacas Comissão', 'Comissoes', 800, NULL);
+
+-- 5. Inserir Contratos Soja 24/25
+INSERT INTO public.contratos (safra_id, nome, numero, volume_total, armazem_id) VALUES
+('soja2425', 'Barter Amaggi Matupá', '9058-8634', 5754, (SELECT id FROM armazens WHERE nome = 'AMAGGI MATUPÁ')),
+('soja2425', 'Barter Amaggi Sinop', '9058-8633', 18000, (SELECT id FROM armazens WHERE nome = 'AMAGGI SINOP')),
+('soja2425', 'Arrend. + Plant. + Insumos (PC)', 'ARR-PC', 11577, (SELECT id FROM armazens WHERE nome = 'AC GRÃOS')),
+('soja2425', 'Serviço Dieison', 'SERV-D', 1032, NULL),
+('soja2425', 'Venda Sipal M51', '290925M51', 3000, (SELECT id FROM armazens WHERE nome = 'SIPAL LRV')),
+('soja2425', 'Venda Sipal M69', '290925M69', 3000, (SELECT id FROM armazens WHERE nome = 'SIPAL LRV')),
+('soja2425', 'Venda Amaggi Ildiana', 'ILDIANA', 3000, (SELECT id FROM armazens WHERE nome = 'AMAGGI MATUPÁ')),
+('soja2425', 'Venda Amaggi LRV', '20240105500994-1', 18000, (SELECT id FROM armazens WHERE nome = 'AMAGGI LRV')),
+('soja2425', 'Venda ADM 20 Mil Sacas', '1334P50762S', 20000, (SELECT id FROM armazens WHERE nome = 'AC GRÃOS')),
+('soja2425', 'Venda GO AGRO', '51/2025', 5916, (SELECT id FROM armazens WHERE nome = 'GO AGRO')),
+('soja2425', 'Venda Sipal M282', '290925M282', 3471, (SELECT id FROM armazens WHERE nome = 'SIPAL LRV')),
+('soja2425', 'Venda ADM 960732 (Ildo)', '960732', 1000, (SELECT id FROM armazens WHERE nome = 'AC GRÃOS')),
+('soja2425', 'Venda Amaggi Ildo (Total)', 'ILDO-AMAGGI', 19042, (SELECT id FROM armazens WHERE nome = 'AMAGGI SINOP')),
+('soja2425', 'Venda ADM 960734 (Ildo)', '960734', 3948, (SELECT id FROM armazens WHERE nome = 'AC GRÃOS')),
+('soja2425', 'Venda ADM 960737 (Ildiana)', '960737', 393, (SELECT id FROM armazens WHERE nome = 'AC GRÃOS')),
+('soja2425', 'Venda Amaggi LRV 1160', '2025-01-055-01160', 527, (SELECT id FROM armazens WHERE nome = 'AMAGGI LRV')),
+('soja2425', 'Comissão Funcionários', 'COMISSAO-2425', 1500, NULL);
+
+-- 6. Inserir Contratos Milho 25
+INSERT INTO public.contratos (safra_id, nome, numero, volume_total, armazem_id) VALUES
+('milho25', 'Barter Sipal LRV M180', '290924M180', 14297, (SELECT id FROM armazens WHERE nome = 'SIPAL LRV')),
+('milho25', 'Barter Kodiak/Agrofértil', 'SEMENTES-KODIAK', 5063, (SELECT id FROM armazens WHERE nome = 'KODYAK')),
+('milho25', 'Barter Sipal/Agrofértil (Sementes)', 'SEMENTES-SIPAL', 2118, (SELECT id FROM armazens WHERE nome = 'SIPAL LRV')),
+('milho25', 'Barter Sipal/Agrofértil (Insumos)', 'INSUMOS-SIPAL', 380, (SELECT id FROM armazens WHERE nome = 'SIPAL LRV')),
+('milho25', 'Arrendamento Inpasa', 'ARR-INPASA', 6000, (SELECT id FROM armazens WHERE nome = 'INPASA')),
+('milho25', 'Barter Amaggi Matupá', '20240106900533-1', 14460, (SELECT id FROM armazens WHERE nome = 'AMAGGI MATUPÁ')),
+('milho25', 'Venda Inpasa (21960)', '21960', 60000, (SELECT id FROM armazens WHERE nome = 'INPASA')),
+('milho25', 'Venda Inpasa (28614)', '28614', 536, (SELECT id FROM armazens WHERE nome = 'INPASA')),
+('milho25', 'Venda Sipal M216', '290925M216', 10000, (SELECT id FROM armazens WHERE nome = 'SIPAL LRV')),
+('milho25', 'Venda ADM 1334P50494M', '1334P50494M', 23522, (SELECT id FROM armazens WHERE nome = 'AC GRÃOS')),
+('milho25', 'Venda Grão Direto Amaggi Sinop', 'GRAO-DIRETO-AS', 694, (SELECT id FROM armazens WHERE nome = 'AMAGGI SINOP')),
+('milho25', 'Venda Grão Direto Amaggi Matupá', 'GRAO-DIRETO-AM', 10050, (SELECT id FROM armazens WHERE nome = 'AMAGGI MATUPÁ')),
+('milho25', 'Venda Cooperativa Sipal LRV', 'COOP-LRV', 21173, (SELECT id FROM armazens WHERE nome = 'SIPAL LRV')),
+('milho25', 'Venda Cooperativa Sipal Matupá', 'COOP-SM', 935, (SELECT id FROM armazens WHERE nome = 'SIPAL MATUPÁ')),
+('milho25', 'Venda Cooperativa Sipal Cláudia', 'COOP-SC', 7308, (SELECT id FROM armazens WHERE nome = 'SIPAL CLÁUDIA')),
+('milho25', 'Comissão Funcionários', 'COMISSAO-M25', 1500, NULL);
