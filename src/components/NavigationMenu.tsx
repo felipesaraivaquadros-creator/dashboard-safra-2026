@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight, ArrowLeft, FileText } from 'lucide-react';
+import LogoutButton from './LogoutButton';
 
 export default function NavigationMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -86,11 +87,15 @@ export default function NavigationMenu() {
                     <span className="text-xs font-black uppercase tracking-tight">{item.label}</span>
                   </div>
                   {item.active && <div className="w-1.5 h-1.5 rounded-full bg-purple-600" />}
-                  {!item.active && <ChevronRight size={14} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </Link>
               );
             })}
+            
+            <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-700">
+              <LogoutButton variant="menu" />
+            </div>
           </div>
+          
           <div className="p-2 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700">
             <Link 
               href="/"

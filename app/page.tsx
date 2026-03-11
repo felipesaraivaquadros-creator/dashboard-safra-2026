@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { SAFRAS_DISPONIVEIS } from '../src/data/safraConfig';
 import { Leaf, Wheat, Clock, CheckCircle, ArrowRight } from 'lucide-react';
 import { ThemeToggle } from '../src/components/ThemeToggle';
+import LogoutButton from '../src/components/LogoutButton';
 
 // Mapeamento de ícones e cores para o tipo de safra
 const SafraIconMap: Record<string, { icon: React.ElementType, color: string }> = {
@@ -26,10 +27,12 @@ export default function SafraSelectorPage() {
         <h1 className="text-3xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter">
           Selecione a Safra
         </h1>
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <LogoutButton />
+        </div>
       </header>
 
-      {/* Alterado para grid-cols-1 para empilhar verticalmente */}
       <div className="max-w-[600px] mx-auto grid grid-cols-1 gap-6">
         {SAFRAS_DISPONIVEIS.map((safra) => {
           const { icon: SafraIcon, color: safraColor } = SafraIconMap[safra.tipo] || { icon: Leaf, color: 'text-slate-500' };
