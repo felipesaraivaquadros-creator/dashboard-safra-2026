@@ -113,4 +113,5 @@ export interface DataContextType {
   totalEstoque: number;
   totalContratos: number;
   saldoGeral: number;
+  refresh: () => void;
 }

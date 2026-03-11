@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType, DiscountStats, VolumeStats } from '../data/types';
 import { getSafraConfig } from '../data/safraConfig';
 import { CORES_FAZENDAS, CORES_ARMAZENS } from '../data/sharedConfig';
@@ -12,12 +12,19 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
   const [customBalances, setCustomBalances] = useState<any[]>([]);
+  const [refreshTick, setRefreshTick] = useState(0);
 
   const config = useMemo(() => getSafraConfig(safraId), [safraId]);
 
+  const refresh = useCallback(() => {
+    setRefreshTick(prev => prev + 1);
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      // Só mostra o loading principal na primeira carga
+      if (refreshTick === 0) setLoading(true);
+      
       try {
         const { data: romaneios } = await supabase
           .from('romaneios')
@@ -70,7 +77,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     };
 
     fetchData();
-  }, [safraId]);
+  }, [safraId, refreshTick]);
 
   const getCorFazenda = (nome: string): string => CORES_FAZENDAS[nome] || CORES_FAZENDAS["Outros"];
   const getCorArmazem = (nome: string): string => {
@@ -228,6 +235,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     safraId, loading, fazendaFiltro, armazemFiltro, setFazendaFiltro, setArmazemFiltro,
     stats, discountStats, volumeStats: {} as any, romaneiosCount: dadosFiltrados.length,
     contratosProcessados, chartFazendas, chartArmazens, getCorFazenda, getCorArmazem,
-    listaSaldos, totalEstoque, totalContratos, saldoGeral: totalEstoque - totalContratos
+    listaSaldos, totalEstoque, totalContratos, saldoGeral: totalEstoque - totalContratos,
+    refresh
   };
 };

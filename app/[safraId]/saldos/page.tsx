@@ -40,7 +40,8 @@ export default function SaldoPage() {
     contratosProcessados, 
     totalEstoque, 
     totalContratos, 
-    saldoGeral 
+    saldoGeral,
+    refresh
   } = useDataProcessing(safraId);
 
   const [dbContratos, setDbContratos] = useState<any[]>([]);
@@ -64,7 +65,8 @@ export default function SaldoPage() {
     if (error) showError("Erro ao excluir: " + error.message);
     else {
       showSuccess("Contrato excluído!");
-      window.location.reload();
+      refresh();
+      fetchContratos();
     }
   };
 
@@ -80,7 +82,6 @@ export default function SaldoPage() {
     setShowForm(true);
   };
 
-  // Mapeia ProcessedContract para SaldoKpi para compatibilidade com ContratosTab
   const contratosParaTabela = useMemo(() => {
     return [...contratosProcessados.pendentes, ...contratosProcessados.cumpridos].map(c => ({
       nome: c.nome,
@@ -241,7 +242,7 @@ export default function SaldoPage() {
             safraId={safraId}
             listaSaldos={listaSaldos} 
             listaContratos={contratosProcessados.pendentes.concat(contratosProcessados.cumpridos)} 
-            onRefresh={() => window.location.reload()}
+            onRefresh={refresh}
             onEditContrato={handleEdit}
             onDeleteContrato={handleDelete}
           />
@@ -252,7 +253,7 @@ export default function SaldoPage() {
         <ContratoForm 
           safraId={safraId} 
           onClose={() => { setShowForm(false); setEditingContrato(null); }} 
-          onSuccess={() => window.location.reload()}
+          onSuccess={() => { refresh(); fetchContratos(); }}
           editData={editingContrato}
         />
       )}
@@ -261,7 +262,7 @@ export default function SaldoPage() {
         <ArmazemGrupoForm 
           safraId={safraId}
           onClose={() => setShowGrupoForm(false)} 
-          onSuccess={() => window.location.reload()}
+          onSuccess={refresh}
         />
       )}
     </main>
