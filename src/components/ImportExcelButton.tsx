@@ -71,11 +71,11 @@ export default function ImportExcelButton() {
           tipoNF: getVal(['Tipo NF', 'TIPO NF']),
           nfe: parseNum(getVal(['NFe', 'NFE'])),
           numero: parseNum(getVal(['Nº', 'NUMERO', 'Nº Romaneio'])),
-          cidadeEntrega: getVal(['Cidade de Entrega', 'CIDADE']),
+          cidadeEntrega: getVal(['Cidade de Entrega', 'CIDADE', 'Cidade']),
           armazem: getVal(['Armazem', 'ARMAZEM']),
           safra: getVal(['Safra', 'SAFRA']),
           fazenda: getVal(['Fazenda', 'FAZENDA']),
-          talhao: getVal(['Talhão', 'TALHAO']),
+          talhao: getVal(['Talhão', 'TALHAO', 'Talhao']),
           motorista: getVal(['Motorista', 'MOTORISTA']),
           placa: getVal(['Placa', 'PLACA']),
           pesoBrutoKg: parseNum(getVal(['Peso Bruto', 'PESO BRUTO'])),
@@ -86,11 +86,11 @@ export default function ImportExcelButton() {
           impureza: parseNum(getVal(['Impu', 'IMPUREZA', 'Impureza'])),
           ardido: parseNum(getVal(['Ardi', 'ARDIDO', 'Ardido'])),
           avariados: parseNum(getVal(['Avari', 'AVARIADOS', 'Avariados'])),
-          quebrados: parseNum(getVal(['Quebr', 'QUEBRADOS', 'Quebrados'])),
+          quebrados: parseNum(getVal(['Quebr', 'QUEBRADOS', 'Quebrados', 'Quebr'])),
           contaminantes: parseNum(getVal(['Contaminantes', 'CONTAMINANTES'])),
           precofrete: parseNum(getVal(['precofrete', 'PRECO FRETE', 'Preço Frete'])) || null
         };
-      }).filter(r => r.sacasLiquida > 0); // Filtra apenas linhas com volume real
+      }).filter(r => r.sacasLiquida > 0);
 
       dismissToast(toastId);
       
@@ -106,7 +106,6 @@ export default function ImportExcelButton() {
       dismissToast(toastId);
       showSuccess(`${total} romaneios da safra ${safraId} atualizados com sucesso!`);
       
-      // Recarrega para atualizar os gráficos e KPIs
       setTimeout(() => window.location.reload(), 1000);
       
     } catch (err: any) {
