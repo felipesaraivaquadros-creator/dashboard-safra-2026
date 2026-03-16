@@ -8,9 +8,12 @@ import { syncRomaneiosToSupabase } from '../lib/supabaseSync';
 import { useParams } from 'next/navigation';
 import { Romaneio } from '../data/types';
 
+// Mapeamento de qual aba do Excel pertence a cada Safra ID do sistema
 const ABA_POR_SAFRA: Record<string, string> = {
   'soja2526': 'ROMANEIOS_SOJA',
   'milho26': 'ROMANEIOS_MILHO',
+  'milho25': 'ROMANEIO MILHO',
+  'soja2425': 'ROMANEIO SOJA',
 };
 
 export default function ImportExcelButton() {
@@ -28,59 +31,70 @@ export default function ImportExcelButton() {
 
     try {
       const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
+      const workbook = XLSX.read(data, { cellDates: true });
       
       const abaAlvo = ABA_POR_SAFRA[safraId];
-      if (!abaAlvo) throw new Error(`Safra ${safraId} não configurada.`);
+      if (!abaAlvo) throw new Error(`Configuração de aba não encontrada para a safra: ${safraId}`);
 
       const worksheet = workbook.Sheets[abaAlvo];
-      if (!worksheet) throw new Error(`Aba "${abaAlvo}" não encontrada na planilha.`);
+      if (!worksheet) throw new Error(`Aba "${abaAlvo}" não encontrada na planilha selecionada.`);
 
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
-      if (jsonData.length === 0) throw new Error(`A aba "${abaAlvo}" está vazia.`);
+      if (jsonData.length === 0) throw new Error(`A aba "${abaAlvo}" parece estar vazia.`);
 
-      const romaneiosFormatados: Romaneio[] = jsonData.map((linha: any) => ({
-        data: linha['Data'] || linha['DATA'] || null,
-        contrato: linha['Contrato'] || linha['CONTRATO'] || 'S/C',
-        ncontrato: String(linha['ncontrato'] || linha['CONTRATO'] || '').trim() || 'S/C',
-        emitente: linha['Emitente'] || linha['EMITENTE'] || null,
-        tipoNF: linha['Tipo NF'] || linha['TIPO NF'] || null,
-        nfe: Number(linha['NFe'] || linha['NFE']) || null,
-        numero: Number(linha['Nº'] || linha['NUMERO']) || null,
-        cidadeEntrega: linha['Cidade de Entrega'] || linha['CIDADE'] || null,
-        armazem: linha['Armazem'] || linha['ARMAZEM'] || null,
-        safra: linha['Safra'] || linha['SAFRA'] || null,
-        fazenda: linha['Fazenda'] || linha['FAZENDA'] || null,
-        talhao: linha['Talhão'] || linha['TALHAO'] || null,
-        motorista: linha['Motorista'] || linha['MOTORISTA'] || null,
-        placa: linha['Placa'] || linha['PLACA'] || null,
-        pesoBrutoKg: Number(linha['Peso Bruto'] || linha['PESO BRUTO']) || 0,
-        pesoLiquidoKg: Number(linha['Peso Liquido'] || linha['PESO LIQUIDO']) || 0,
-        sacasBruto: Number(linha['Sacas Bruto'] || linha['SACAS BRUTO']) || 0,
-        sacasLiquida: Number(linha['Sacas Liquida'] || linha['SACAS LIQUIDA']) || 0,
-        umidade: Number(linha['Umid'] || linha['UMIDADE']) || 0,
-        impureza: Number(linha['Impu'] || linha['IMPUREZA']) || 0,
-        ardido: Number(linha['Ardi'] || linha['ARDIDO']) || 0,
-        avariados: Number(linha['Avari'] || linha['AVARIADOS']) || 0,
-        quebrados: Number(linha['Quebr'] || linha['QUEBRADOS']) || 0,
-        contaminantes: Number(linha['Contaminantes']) || 0,
-        precofrete: Number(linha['precofrete'] || linha['PRECO FRETE']) || null
-      }));
+      const romaneiosFormatados: Romaneio[] = jsonData.map((linha: any) => {
+        // Helper para buscar valor ignorando case e espaços
+        const getVal = (keys: string[]) => {
+          const foundKey = Object.keys(linha).find(k => 
+            keys.some(target => k.trim().toLowerCase() === target.toLowerCase())
+          );
+          return foundKey ? linha[foundKey] : null;
+        };
 
-      // Atualiza o status do toast
+        return {
+          data: getVal(['Data', 'DATA']),
+          contrato: getVal(['Contrato', 'CONTRATO']) || 'S/C',
+          ncontrato: String(getVal(['ncontrato', 'Nº Contrato']) || 'S/C').trim(),
+          emitente: getVal(['Emitente', 'EMITENTE']),
+          tipoNF: getVal(['Tipo NF', 'TIPO NF']),
+          nfe: Number(getVal(['NFe', 'NFE'])) || null,
+          numero: Number(getVal(['Nº', 'NUMERO', 'Nº Romaneio'])) || null,
+          cidadeEntrega: getVal(['Cidade de Entrega', 'CIDADE']),
+          armazem: getVal(['Armazem', 'ARMAZEM']),
+          safra: getVal(['Safra', 'SAFRA']),
+          fazenda: getVal(['Fazenda', 'FAZENDA']),
+          talhao: getVal(['Talhão', 'TALHAO']),
+          motorista: getVal(['Motorista', 'MOTORISTA']),
+          placa: getVal(['Placa', 'PLACA']),
+          pesoBrutoKg: Number(getVal(['Peso Bruto', 'PESO BRUTO'])) || 0,
+          pesoLiquidoKg: Number(getVal(['Peso Liquido', 'PESO LIQUIDO'])) || 0,
+          sacasBruto: Number(getVal(['Sacas Bruto', 'SACAS BRUTO'])) || 0,
+          sacasLiquida: Number(getVal(['Sacas Liquida', 'SACAS LIQUIDA'])) || 0,
+          umidade: Number(getVal(['Umid', 'UMIDADE', 'Umidade'])) || 0,
+          impureza: Number(getVal(['Impu', 'IMPUREZA', 'Impureza'])) || 0,
+          ardido: Number(getVal(['Ardi', 'ARDIDO', 'Ardido'])) || 0,
+          avariados: Number(getVal(['Avari', 'AVARIADOS', 'Avariados'])) || 0,
+          quebrados: Number(getVal(['Quebr', 'QUEBRADOS', 'Quebrados'])) || 0,
+          contaminantes: Number(getVal(['Contaminantes', 'CONTAMINANTES'])) || 0,
+          precofrete: Number(getVal(['precofrete', 'PRECO FRETE', 'Preço Frete'])) || null
+        };
+      });
+
       dismissToast(toastId);
       toastId = showLoading(`Sincronizando ${romaneiosFormatados.length} registros no banco...`);
       
+      // A função syncRomaneiosToSupabase já deleta os dados antigos da safra antes de inserir os novos
       const total = await syncRomaneiosToSupabase(safraId, romaneiosFormatados);
       
       dismissToast(toastId);
-      showSuccess(`${total} romaneios importados com sucesso!`);
+      showSuccess(`${total} romaneios da safra ${safraId} atualizados com sucesso!`);
       
+      // Recarrega para atualizar os gráficos e KPIs
       setTimeout(() => window.location.reload(), 1000);
       
     } catch (err: any) {
       dismissToast(toastId);
-      showError(err.message || "Erro desconhecido na importação.");
+      showError(err.message || "Erro na importação.");
       console.error("Erro Importação:", err);
     } finally {
       setIsImporting(false);
