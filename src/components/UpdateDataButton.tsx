@@ -11,6 +11,7 @@ const dataMap: Record<string, any> = {
   'soja2526': () => import('../data/soja2526/romaneios_normalizados.json'),
   'soja2425': () => import('../data/soja2425/romaneios_normalizados.json'),
   'milho25': () => import('../data/milho25/romaneios_normalizados.json'),
+  'milho26': () => import('../data/milho26/romaneios_normalizados.json'),
 };
 
 export default function UpdateDataButton() {

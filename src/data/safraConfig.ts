@@ -123,7 +123,7 @@ const MILHO26_CONFIG: SafraConfig = {
   id: 'milho26',
   nome: 'Milho 26',
   tipo: 'Milho',
-  status: 'Futura',
+  status: 'Atual',
   dataPath: './milho26/romaneios_normalizados.json',
   AREAS_FAZENDAS: { 
     "São Luiz": 675, 
