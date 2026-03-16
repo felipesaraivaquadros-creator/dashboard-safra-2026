@@ -51,14 +51,26 @@ export default function ImportExcelButton() {
           return foundKey ? linha[foundKey] : null;
         };
 
+        // Helper para garantir que o valor seja um número válido ou 0
+        const parseNum = (val: any) => {
+          if (val === null || val === undefined || val === "") return 0;
+          const n = Number(val);
+          return isNaN(n) ? 0 : n;
+        };
+
+        const nContratoRaw = getVal(['ncontrato', 'Nº Contrato', 'Contrato Nº']);
+        const nContratoFinal = nContratoRaw !== null && nContratoRaw !== undefined 
+          ? String(nContratoRaw).trim().replace(/\.0$/, '') 
+          : 'S/C';
+
         return {
           data: getVal(['Data', 'DATA']),
           contrato: getVal(['Contrato', 'CONTRATO']) || 'S/C',
-          ncontrato: String(getVal(['ncontrato', 'Nº Contrato']) || 'S/C').trim(),
+          ncontrato: nContratoFinal || 'S/C',
           emitente: getVal(['Emitente', 'EMITENTE']),
           tipoNF: getVal(['Tipo NF', 'TIPO NF']),
-          nfe: Number(getVal(['NFe', 'NFE'])) || null,
-          numero: Number(getVal(['Nº', 'NUMERO', 'Nº Romaneio'])) || null,
+          nfe: parseNum(getVal(['NFe', 'NFE'])),
+          numero: parseNum(getVal(['Nº', 'NUMERO', 'Nº Romaneio'])),
           cidadeEntrega: getVal(['Cidade de Entrega', 'CIDADE']),
           armazem: getVal(['Armazem', 'ARMAZEM']),
           safra: getVal(['Safra', 'SAFRA']),
@@ -66,24 +78,29 @@ export default function ImportExcelButton() {
           talhao: getVal(['Talhão', 'TALHAO']),
           motorista: getVal(['Motorista', 'MOTORISTA']),
           placa: getVal(['Placa', 'PLACA']),
-          pesoBrutoKg: Number(getVal(['Peso Bruto', 'PESO BRUTO'])) || 0,
-          pesoLiquidoKg: Number(getVal(['Peso Liquido', 'PESO LIQUIDO'])) || 0,
-          sacasBruto: Number(getVal(['Sacas Bruto', 'SACAS BRUTO'])) || 0,
-          sacasLiquida: Number(getVal(['Sacas Liquida', 'SACAS LIQUIDA'])) || 0,
-          umidade: Number(getVal(['Umid', 'UMIDADE', 'Umidade'])) || 0,
-          impureza: Number(getVal(['Impu', 'IMPUREZA', 'Impureza'])) || 0,
-          ardido: Number(getVal(['Ardi', 'ARDIDO', 'Ardido'])) || 0,
-          avariados: Number(getVal(['Avari', 'AVARIADOS', 'Avariados'])) || 0,
-          quebrados: Number(getVal(['Quebr', 'QUEBRADOS', 'Quebrados'])) || 0,
-          contaminantes: Number(getVal(['Contaminantes', 'CONTAMINANTES'])) || 0,
-          precofrete: Number(getVal(['precofrete', 'PRECO FRETE', 'Preço Frete'])) || null
+          pesoBrutoKg: parseNum(getVal(['Peso Bruto', 'PESO BRUTO'])),
+          pesoLiquidoKg: parseNum(getVal(['Peso Liquido', 'PESO LIQUIDO'])),
+          sacasBruto: parseNum(getVal(['Sacas Bruto', 'SACAS BRUTO'])),
+          sacasLiquida: parseNum(getVal(['Sacas Liquida', 'SACAS LIQUIDA'])),
+          umidade: parseNum(getVal(['Umid', 'UMIDADE', 'Umidade'])),
+          impureza: parseNum(getVal(['Impu', 'IMPUREZA', 'Impureza'])),
+          ardido: parseNum(getVal(['Ardi', 'ARDIDO', 'Ardido'])),
+          avariados: parseNum(getVal(['Avari', 'AVARIADOS', 'Avariados'])),
+          quebrados: parseNum(getVal(['Quebr', 'QUEBRADOS', 'Quebrados'])),
+          contaminantes: parseNum(getVal(['Contaminantes', 'CONTAMINANTES'])),
+          precofrete: parseNum(getVal(['precofrete', 'PRECO FRETE', 'Preço Frete'])) || null
         };
-      });
+      }).filter(r => r.sacasLiquida > 0); // Filtra apenas linhas com volume real
 
       dismissToast(toastId);
+      
+      if (romaneiosFormatados.length === 0) {
+        showError("Nenhum romaneio com volume líquido encontrado na aba.");
+        return;
+      }
+
       toastId = showLoading(`Sincronizando ${romaneiosFormatados.length} registros no banco...`);
       
-      // A função syncRomaneiosToSupabase já deleta os dados antigos da safra antes de inserir os novos
       const total = await syncRomaneiosToSupabase(safraId, romaneiosFormatados);
       
       dismissToast(toastId);
