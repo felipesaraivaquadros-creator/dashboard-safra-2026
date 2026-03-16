@@ -7,10 +7,11 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
   const config = getSafraConfig(safraId);
 
   try {
-    // 1. Garantir que Fazendas e Armazéns existem (Upsert)
-    const fazendasUnicas = Array.from(new Set(dados.map(d => d.fazenda).filter(Boolean)));
-    const armazensUnicos = Array.from(new Set(dados.map(d => d.armazem).filter(Boolean)));
+    // 1. Limpeza e Normalização de nomes para evitar duplicidade por espaços ou case
+    const fazendasUnicas = Array.from(new Set(dados.map(d => d.fazenda?.trim()).filter(Boolean)));
+    const armazensUnicos = Array.from(new Set(dados.map(d => d.armazem?.trim()).filter(Boolean)));
 
+    // 2. Garantir que Fazendas e Armazéns existem (Upsert)
     if (fazendasUnicas.length > 0) {
       await supabase
         .from('fazendas')
@@ -23,11 +24,10 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
         .upsert(armazensUnicos.map(nome => ({ nome })), { onConflict: 'nome' });
     }
 
-    // 2. Sincronizar Contratos da Configuração (Novo)
-    // Isso garante que contratos como "Arrendamento CT" subam para o banco
+    // 3. Sincronizar Contratos da Configuração local para o Banco
     const contratosConfig = Object.entries(config.VOLUMES_CONTRATADOS).map(([numero, info]) => ({
       safra_id: safraId,
-      numero: numero,
+      numero: String(numero).trim(),
       nome: info.nome,
       volume_total: info.total
     }));
@@ -38,7 +38,7 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
         .upsert(contratosConfig, { onConflict: 'safra_id, numero' });
     }
 
-    // 3. Buscar os IDs gerados para mapeamento
+    // 4. Buscar os IDs do banco para fazer o de-para (mapeamento)
     const { data: fazendasDB } = await supabase.from('fazendas').select('id, nome');
     const { data: armazensDB } = await supabase.from('armazens').select('id, nome');
     const { data: contratosDB } = await supabase.from('contratos').select('id, numero').eq('safra_id', safraId);
@@ -47,9 +47,12 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
     const armazemMap = Object.fromEntries(armazensDB?.map(a => [a.nome, a.id]) || []);
     const contratoMap = Object.fromEntries(contratosDB?.map(c => [String(c.numero), c.id]) || []);
 
-    // 4. Preparar os Romaneios
+    // 5. Preparar os Romaneios para inserção
     const payloadRomaneios = dados.map(d => {
       const nContrato = String(d.ncontrato || '').trim().replace(/\.0$/, '').toUpperCase();
+      const fazendaNome = d.fazenda?.trim() || '';
+      const armazemNome = d.armazem?.trim() || '';
+
       return {
         safra_id: safraId,
         data: d.data,
@@ -60,6 +63,7 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
         talhao: d.talhao,
         motorista: d.motorista,
         placa: d.placa,
+        cidade_entrega: d.cidadeEntrega, // Campo adicionado
         peso_bruto_kg: d.pesoBrutoKg,
         peso_liquid_kg: d.pesoLiquidoKg,
         sacas_bruto: d.sacasBruto,
@@ -71,24 +75,26 @@ export async function syncRomaneiosToSupabase(safraId: string, dados: Romaneio[]
         quebrados: d.quebrados || 0,
         contaminantes: d.contaminantes || 0,
         preco_frete: d.precofrete,
-        fazenda_id: fazendaMap[d.fazenda || ''] || null,
-        armazem_id: armazemMap[d.armazem || ''] || null,
-        armazem_nome: d.armazem,
+        fazenda_id: fazendaMap[fazendaNome] || null,
+        armazem_id: armazemMap[armazemNome] || null,
+        armazem_nome: armazemNome,
         contrato_id: contratoMap[nContrato] || null
       };
     });
 
-    // 5. Limpar e Inserir Romaneios
+    // 6. Substituição Atômica: Deleta os antigos daquela safra e insere os novos
     await supabase.from('romaneios').delete().eq('safra_id', safraId);
+    
     const chunkSize = 100;
     for (let i = 0; i < payloadRomaneios.length; i += chunkSize) {
-      await supabase.from('romaneios').insert(payloadRomaneios.slice(i, i + chunkSize));
+      const { error } = await supabase.from('romaneios').insert(payloadRomaneios.slice(i, i + chunkSize));
+      if (error) throw error;
     }
 
-    // 6. Calcular e Atualizar Tabela de Saldos
+    // 7. Recalcular Tabela de Saldos Físicos
     const saldosAgrupados: Record<string, { sacas: number, kg: number, nome: string }> = {};
     dados.forEach(d => {
-      const aNome = d.armazem || "Outros";
+      const aNome = d.armazem?.trim() || "Outros";
       const aId = armazemMap[aNome];
       if (aId) {
         if (!saldosAgrupados[aId]) saldosAgrupados[aId] = { sacas: 0, kg: 0, nome: aNome };
