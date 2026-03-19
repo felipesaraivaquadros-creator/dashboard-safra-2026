@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { useRouter, usePathname } from 'next/navigation';
@@ -15,36 +15,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
 
+  // 1. Efeito para montar o componente e verificar sessão inicial
   useEffect(() => {
     setMounted(true);
     
-    const checkSession = async () => {
+    const initAuth = async () => {
       const { data: { session: initialSession } } = await supabase.auth.getSession();
       setSession(initialSession);
       setLoading(false);
-
-      if (!initialSession && pathname !== '/login') {
-        router.push('/login');
-      }
     };
 
-    checkSession();
+    initAuth();
 
+    // Listener único para mudanças de estado (não depende de pathname)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
       setSession(currentSession);
       setLoading(false);
-      
-      if (!currentSession && pathname !== '/login') {
-        router.push('/login');
-      } else if (currentSession && pathname === '/login') {
-        router.push('/');
-      }
     });
 
     return () => subscription.unsubscribe();
-  }, [pathname, router]);
+  }, []);
 
-  // Evita renderizar qualquer coisa no servidor que dependa do estado de autenticação
+  // 2. Efeito separado para controle de rotas (redirecionamento)
+  useEffect(() => {
+    if (loading || !mounted) return;
+
+    if (!session && pathname !== '/login') {
+      router.push('/login');
+    } else if (session && pathname === '/login') {
+      router.push('/');
+    }
+  }, [session, loading, pathname, router, mounted]);
+
   if (!mounted) {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-900" />;
   }
@@ -58,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  // Se não estiver logado e não estiver na página de login, mostra tela vazia enquanto redireciona
   if (!session && pathname !== '/login') {
     return <div className="min-h-screen bg-slate-50 dark:bg-slate-900" />;
   }

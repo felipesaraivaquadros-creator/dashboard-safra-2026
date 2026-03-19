@@ -32,7 +32,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     
     const fetchData = async () => {
       setLoading(true);
-      
       try {
         const [romaneiosRes, saldosRes, contratosRes, customRes] = await Promise.all([
           supabase.from('romaneios').select(`*, fazendas(nome), armazens(id, nome, grupo), contratos(numero)`).eq('safra_id', safraId),
@@ -81,7 +80,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
           setRawDados([]);
         }
       } catch (err) {
-        console.error("Erro fatal ao carregar dados:", err);
+        console.error("Erro ao carregar dados:", err);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -91,8 +90,8 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     return () => { isMounted = false; };
   }, [safraId, refreshTick]);
 
-  const getCorFazenda = (nome: string): string => CORES_FAZENDAS[nome] || CORES_FAZENDAS["Outros"];
-  const getCorArmazem = (nome: string): string => CORES_ARMAZENS[nome] || CORES_ARMAZENS["Outros"];
+  const getCorFazenda = useCallback((nome: string): string => CORES_FAZENDAS[nome] || CORES_FAZENDAS["Outros"], []);
+  const getCorArmazem = useCallback((nome: string): string => CORES_ARMAZENS[nome] || CORES_ARMAZENS["Outros"], []);
 
   const dadosFiltrados = useMemo(() => {
     return rawDados.filter(d => {
@@ -121,7 +120,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
       Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
 
-    // Cálculo de VolumeStats
     const romaneiosCount = dadosFiltrados.length;
     const uniqueDays = new Set(dadosFiltrados.map(d => d.data)).size;
     
@@ -168,8 +166,8 @@ export const useDataProcessing = (safraId: string): DataContextType => {
         melhorDiaKg,
         melhorDiaSc,
         melhorDiaData,
-        percentualColhido: "0", // Placeholder
-        metaPercentual: "0" // Placeholder
+        percentualColhido: "0",
+        metaPercentual: "0"
       }
     };
   }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
@@ -185,8 +183,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
     const todos: ProcessedContract[] = dbContratos.map(c => {
       const idNormalizado = String(c.numero).trim().replace(/\.0$/, '').toUpperCase();
-      
-      // Se for Soja 25/26, considera o volume cumprido igual ao contratado
       const cumprido = isSoja2526 ? c.volume_total : (entregasMap[idNormalizado] || 0);
       const aCumprir = isSoja2526 ? 0 : Math.max(c.volume_total - cumprido, 0);
       const perc = isSoja2526 ? 100 : (c.volume_total > 0 ? (cumprido / c.volume_total) * 100 : (cumprido > 0 ? 100 : 0));
