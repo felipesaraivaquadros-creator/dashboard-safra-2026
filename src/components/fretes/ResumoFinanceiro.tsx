@@ -43,6 +43,9 @@ export default function ResumoFinanceiro({
               <p className="text-2xl md:text-3xl font-black text-slate-800 dark:text-white tracking-tighter">
                 R$ {totaisFrete.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
+              <div className="mt-2">
+                <span className="text-[9px] font-bold text-slate-400 uppercase">SEM DESCONTO</span>
+              </div>
             </div>
           </div>
 
