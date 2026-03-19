@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Layers, Warehouse } from 'lucide-react';
+import { Layers, Warehouse, ArrowLeft } from 'lucide-react';
 import { useFretesData } from '../../../src/lib/useFretesData';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
@@ -39,7 +39,8 @@ export default function FretesPage() {
     dadosAdiantamentos, dadosAbastecimentos,
     totaisFreteGlobal, totalAdiantamentos, totaisAbastecimento,
     saldoFinal,
-    calcularTotais
+    calcularTotais,
+    fetchPrecos
   } = useFretesData(safraId);
 
   useEffect(() => {
@@ -96,7 +97,7 @@ export default function FretesPage() {
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:hidden">
           <div className="lg:col-span-4">
-            <TabelaPrecosReferencia safraConfig={safraConfig} />
+            <TabelaPrecosReferencia safraId={safraId} onUpdate={fetchPrecos} />
           </div>
           <div className="lg:col-span-8">
             <FiltrosFrete 

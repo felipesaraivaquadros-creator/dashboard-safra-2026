@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Romaneio } from '../data/types';
 import { getSafraConfig } from '../data/safraConfig';
+import { supabase } from '../integrations/supabase/client';
 
-// Importações estáticas
+// Importações estáticas (fallback)
 import soja2526Data from '../data/soja2526/romaneios_normalizados.json';
 import soja2425Data from '../data/soja2425/romaneios_normalizados.json';
 import milho25Data from '../data/milho25/romaneios_normalizados.json';
@@ -41,11 +42,32 @@ export function useFretesData(safraId: string) {
   const [tipoCalculo, setTipoCalculo] = useState<'com' | 'sem'>('com');
   const [modeloRelatorio, setModeloRelatorio] = useState<'simples' | 'fazenda' | 'consolidado' | 'armazem'>('simples');
   const [showRelatorio, setShowRelatorio] = useState(false);
+  const [precosDb, setPrecosDb] = useState<Record<string, number>>({});
+  const [loadingPrecos, setLoadingPrecos] = useState(true);
   
   const [sortConfig, setSortConfig] = useState<{ key: SortKey, order: SortOrder }>({ 
     key: 'data', 
     order: 'asc' 
   });
+
+  // Busca preços do banco
+  const fetchPrecos = useCallback(async () => {
+    setLoadingPrecos(true);
+    const { data } = await supabase
+      .from('precos_frete')
+      .select('cidade, valor')
+      .eq('safra_id', safraId);
+    
+    if (data) {
+      const map = Object.fromEntries(data.map(p => [p.cidade.toUpperCase(), Number(p.valor)]));
+      setPrecosDb(map);
+    }
+    setLoadingPrecos(false);
+  }, [safraId]);
+
+  useEffect(() => {
+    fetchPrecos();
+  }, [fetchPrecos]);
 
   const romaneios = useMemo(() => (dataMap[safraId] || []) as Romaneio[], [safraId]);
   const adiantamentosRaw = useMemo(() => adiantamentosMap[safraId] || [], [safraId]);
@@ -62,6 +84,7 @@ export function useFretesData(safraId: string) {
     }));
   };
 
+  // Aplica o preço dinâmico aos romaneios
   const dadosFretes = useMemo(() => {
     if (!showRelatorio) return [];
     
@@ -72,7 +95,14 @@ export function useFretesData(safraId: string) {
       return matchM && matchP && matchA;
     });
 
-    return [...filtrados].sort((a, b) => {
+    // Injeta o preço do banco no romaneio para o cálculo
+    const comPrecos = filtrados.map(r => {
+      const cidade = (r.cidadeEntrega || "").toUpperCase();
+      const precoSugerido = precosDb[cidade] || r.precofrete || 0;
+      return { ...r, precofrete: precoSugerido };
+    });
+
+    return [...comPrecos].sort((a, b) => {
       const { key, order } = sortConfig;
       let valA: any = a[key as keyof Romaneio] ?? '';
       let valB: any = b[key as keyof Romaneio] ?? '';
@@ -86,7 +116,7 @@ export function useFretesData(safraId: string) {
       if (valA > valB) return order === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [showRelatorio, romaneios, motoristaFiltro, placaFiltro, armazemFiltro, sortConfig]);
+  }, [showRelatorio, romaneios, motoristaFiltro, placaFiltro, armazemFiltro, sortConfig, precosDb]);
 
   const fretesPorFazenda = useMemo(() => {
     if (modeloRelatorio !== 'fazenda') return {};
@@ -181,6 +211,8 @@ export function useFretesData(safraId: string) {
     dadosAdiantamentos, dadosAbastecimentos,
     totaisFreteGlobal, totalAdiantamentos, totaisAbastecimento,
     saldoFinal,
-    calcularTotais
+    calcularTotais,
+    fetchPrecos,
+    loadingPrecos
   };
 }
