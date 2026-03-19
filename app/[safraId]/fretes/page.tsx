@@ -237,6 +237,9 @@ export default function FretesPage() {
           main { padding: 0 !important; margin: 0 !important; min-height: auto !important; display: block !important; }
           tfoot { display: table-row-group !important; }
           section { break-inside: avoid !important; page-break-inside: avoid !important; margin-top: 0 !important; margin-bottom: 1.5rem !important; }
+          * { color: black !important; text-shadow: none !important; }
+          .text-white { color: white !important; }
+          .bg-black { background-color: black !important; }
         }
       `}</style>
     </main>
