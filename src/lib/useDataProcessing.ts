@@ -23,7 +23,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   }, []);
 
   useEffect(() => {
-    // Se não houver safraId (ex: transição de rota), encerramos o loading para não travar a tela
     if (!safraId) {
       setLoading(false);
       return;
@@ -32,7 +31,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     let isMounted = true;
     
     const fetchData = async () => {
-      // Só mostra o loading global na primeira carga ou se for um refresh manual
       setLoading(true);
       
       try {
@@ -44,11 +42,6 @@ export const useDataProcessing = (safraId: string): DataContextType => {
         ]);
 
         if (!isMounted) return;
-
-        // Logs de erro para debug interno, sem travar a UI
-        if (romaneiosRes.error) console.error("Erro Romaneios:", romaneiosRes.error);
-        if (saldosRes.error) console.error("Erro Saldos:", saldosRes.error);
-        if (contratosRes.error) console.error("Erro Contratos:", contratosRes.error);
 
         setDbSaldos(saldosRes.data || []);
         setCustomBalances(customRes.data || []);
@@ -109,7 +102,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     });
   }, [rawDados, fazendaFiltro, armazemFiltro]);
 
-  const { stats, discountStats } = useMemo(() => {
+  const { stats, discountStats, volumeStats } = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
     const bruta = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasBruto) || 0), 0);
     const liqKg = dadosFiltrados.reduce((acc, d) => acc + (Number(d.pesoLiquidoKg) || 0), 0);
@@ -128,6 +121,30 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
       Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
 
+    // Cálculo de VolumeStats
+    const romaneiosCount = dadosFiltrados.length;
+    const uniqueDays = new Set(dadosFiltrados.map(d => d.data)).size;
+    
+    const dailyTotals: Record<string, { sc: number, kg: number }> = {};
+    dadosFiltrados.forEach(d => {
+      if (!d.data) return;
+      if (!dailyTotals[d.data]) dailyTotals[d.data] = { sc: 0, kg: 0 };
+      dailyTotals[d.data].sc += d.sacasLiquida || 0;
+      dailyTotals[d.data].kg += d.pesoLiquidoKg || 0;
+    });
+
+    let melhorDiaData = "";
+    let melhorDiaSc = 0;
+    let melhorDiaKg = 0;
+
+    Object.entries(dailyTotals).forEach(([data, val]) => {
+      if (val.sc > melhorDiaSc) {
+        melhorDiaSc = val.sc;
+        melhorDiaKg = val.kg;
+        melhorDiaData = data;
+      }
+    });
+
     return {
       stats: {
         totalLiq: liq, totalLiqKg: liqKg, totalBruta: bruta, totalBrutaKg: brutaKg, areaHa: area,
@@ -142,6 +159,17 @@ export const useDataProcessing = (safraId: string): DataContextType => {
         ardidoSc: ardiKg / 60, ardidoKg: ardiKg, avariadosSc: avariKg / 60, avariadosKg: avariKg,
         contaminantesSc: contamKg / 60, contaminantesKg: contamKg, quebradosSc: quebrKg / 60, quebradosKg: quebrKg,
         totalDescontosSc: totalDescontosKg / 60, totalDescontosKg: totalDescontosKg, percentualDesconto: percDesconto
+      },
+      volumeStats: {
+        mediaCargaKg: romaneiosCount > 0 ? liqKg / romaneiosCount : 0,
+        mediaCargaSc: romaneiosCount > 0 ? liq / romaneiosCount : 0,
+        mediaDiaKg: uniqueDays > 0 ? liqKg / uniqueDays : 0,
+        mediaDiaSc: uniqueDays > 0 ? liq / uniqueDays : 0,
+        melhorDiaKg,
+        melhorDiaSc,
+        melhorDiaData,
+        percentualColhido: "0", // Placeholder
+        metaPercentual: "0" // Placeholder
       }
     };
   }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
@@ -223,7 +251,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
 
   return {
     safraId, loading, fazendaFiltro, armazemFiltro, setFazendaFiltro, setArmazemFiltro,
-    stats, discountStats, volumeStats: {} as any, romaneiosCount: dadosFiltrados.length,
+    stats, discountStats, volumeStats, romaneiosCount: dadosFiltrados.length,
     contratosProcessados, chartFazendas, chartArmazens, getCorFazenda, getCorArmazem,
     listaSaldos, totalEstoque, totalContratos, saldoGeral: totalEstoque - totalContratos,
     refresh
