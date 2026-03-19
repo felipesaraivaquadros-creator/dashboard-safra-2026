@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight, ArrowLeft, FileText } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight, ArrowLeft, FileText, Settings } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 
 export default function NavigationMenu() {
@@ -90,6 +90,22 @@ export default function NavigationMenu() {
                 </Link>
               );
             })}
+            
+            <Link
+              href="/configuracoes"
+              className={`
+                flex items-center justify-between p-3 rounded-xl transition-all group
+                ${pathname === '/configuracoes' 
+                  ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-600' 
+                  : 'hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <Settings size={18} className={pathname === '/configuracoes' ? 'text-purple-600' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'} />
+                <span className="text-xs font-black uppercase tracking-tight">Configurações</span>
+              </div>
+            </Link>
             
             <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-700">
               <LogoutButton variant="menu" />

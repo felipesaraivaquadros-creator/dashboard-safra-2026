@@ -1,19 +1,17 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { SAFRAS_DISPONIVEIS } from '../src/data/safraConfig';
-import { Leaf, Wheat, Clock, CheckCircle, ArrowRight } from 'lucide-react';
+import { supabase } from '../src/integrations/supabase/client';
+import { Leaf, Wheat, Clock, CheckCircle, ArrowRight, Settings, Loader2 } from 'lucide-react';
 import { ThemeToggle } from '../src/components/ThemeToggle';
 import LogoutButton from '../src/components/LogoutButton';
 
-// Mapeamento de ícones e cores para o tipo de safra
 const SafraIconMap: Record<string, { icon: React.ElementType, color: string }> = {
   'Soja': { icon: Leaf, color: 'text-green-600' },
   'Milho': { icon: Wheat, color: 'text-amber-500' },
 };
 
-// Mapeamento de status para cores e textos
 const StatusMap: Record<string, { text: string, color: string, icon: React.ElementType }> = {
   'Atual': { text: 'Safra Atual', color: 'bg-green-500', icon: CheckCircle },
   'Passada': { text: 'Safra Passada', color: 'bg-blue-500', icon: CheckCircle },
@@ -21,6 +19,23 @@ const StatusMap: Record<string, { text: string, color: string, icon: React.Eleme
 };
 
 export default function SafraSelectorPage() {
+  const [safras, setSafras] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSafras = async () => {
+      const { data } = await supabase
+        .from('safras')
+        .select('*')
+        .order('status', { ascending: true }) // Atual primeiro
+        .order('nome', { ascending: false });
+      
+      if (data) setSafras(data);
+      setLoading(false);
+    };
+    fetchSafras();
+  }, []);
+
   return (
     <main className="min-h-screen p-8 bg-slate-50 dark:bg-slate-900 font-sans text-slate-900 dark:text-slate-100">
       <header className="max-w-[1000px] mx-auto mb-12 flex justify-between items-center">
@@ -28,13 +43,25 @@ export default function SafraSelectorPage() {
           Selecione a Safra
         </h1>
         <div className="flex items-center gap-3">
+          <Link 
+            href="/configuracoes" 
+            className="flex items-center justify-center w-10 h-10 rounded-lg bg-slate-200 text-slate-700 hover:bg-purple-100 hover:text-purple-600 dark:bg-slate-700 dark:text-white transition-colors shadow-md"
+            title="Configurações"
+          >
+            <Settings size={20} />
+          </Link>
           <ThemeToggle />
           <LogoutButton />
         </div>
       </header>
 
       <div className="max-w-[600px] mx-auto grid grid-cols-1 gap-6">
-        {SAFRAS_DISPONIVEIS.map((safra) => {
+        {loading ? (
+          <div className="flex flex-col items-center py-20">
+            <Loader2 className="animate-spin text-purple-600 mb-4" size={32} />
+            <p className="text-[10px] font-black uppercase text-slate-400">Carregando Safras...</p>
+          </div>
+        ) : safras.map((safra) => {
           const { icon: SafraIcon, color: safraColor } = SafraIconMap[safra.tipo] || { icon: Leaf, color: 'text-slate-500' };
           const { text: statusText, color: statusColor, icon: StatusIcon } = StatusMap[safra.status] || StatusMap['Futura'];
           
