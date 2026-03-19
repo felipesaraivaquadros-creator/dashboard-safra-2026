@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, MapPin, Plus, Trash2, Save, Loader2, X } from 'lucide-react';
+import { DollarSign, MapPin, Plus, Trash2, Save, Loader2, X, Edit2, Check } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
 import { showSuccess, showError } from '../../utils/toast';
 
@@ -16,6 +16,10 @@ export default function TabelaPrecosReferencia({ safraId, onUpdate }: TabelaPrec
   const [saving, setSaving] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [newPreco, setNewPreco] = useState({ cidade: '', valor: '' });
+  
+  // Estados para edição de linha
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
 
   const fetchPrecos = async () => {
     setLoading(true);
@@ -32,17 +36,30 @@ export default function TabelaPrecosReferencia({ safraId, onUpdate }: TabelaPrec
     fetchPrecos();
   }, [safraId]);
 
-  const handleSave = async (id: string, cidade: string, valor: number) => {
-    if (isNaN(valor)) return;
+  const startEditing = (p: any) => {
+    setEditingId(p.id);
+    setEditValue(Number(p.valor).toFixed(2));
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditValue("");
+  };
+
+  const handleSaveEdit = async (id: string, cidade: string) => {
+    const valorNum = parseFloat(editValue);
+    if (isNaN(valorNum)) return;
+    
     setSaving(true);
     const { error } = await supabase
       .from('precos_frete')
-      .update({ cidade: cidade.toUpperCase(), valor })
+      .update({ valor: valorNum })
       .eq('id', id);
     
     if (error) showError("Erro ao salvar");
     else {
       showSuccess("Preço atualizado");
+      setEditingId(null);
       onUpdate();
       fetchPrecos();
     }
@@ -90,7 +107,7 @@ export default function TabelaPrecosReferencia({ safraId, onUpdate }: TabelaPrec
           <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Tabela de Preços</h2>
         </div>
         <button 
-          onClick={() => setIsAdding(!isAdding)}
+          onClick={() => { setIsAdding(!isAdding); setEditingId(null); }}
           className="p-1.5 bg-purple-100 text-purple-600 hover:bg-purple-600 hover:text-white rounded-lg transition-all"
         >
           {isAdding ? <X size={16} /> : <Plus size={16} />}
@@ -104,7 +121,7 @@ export default function TabelaPrecosReferencia({ safraId, onUpdate }: TabelaPrec
               placeholder="CIDADE"
               value={newPreco.cidade}
               onChange={e => setNewPreco({...newPreco, cidade: e.target.value})}
-              className="w-full bg-white dark:bg-slate-900 border-none rounded-lg px-3 py-1.5 text-[10px] font-black uppercase"
+              className="w-full bg-white dark:bg-slate-900 border-none rounded-lg px-3 py-1.5 text-[10px] font-black uppercase focus:ring-2 focus:ring-purple-500"
             />
             <div className="flex gap-2">
               <input 
@@ -113,7 +130,7 @@ export default function TabelaPrecosReferencia({ safraId, onUpdate }: TabelaPrec
                 placeholder="VALOR R$"
                 value={newPreco.valor}
                 onChange={e => setNewPreco({...newPreco, valor: e.target.value})}
-                className="flex-1 bg-white dark:bg-slate-900 border-none rounded-lg px-3 py-1.5 text-[10px] font-black"
+                className="flex-1 bg-white dark:bg-slate-900 border-none rounded-lg px-3 py-1.5 text-[10px] font-black focus:ring-2 focus:ring-purple-500"
               />
               <button onClick={handleAdd} className="bg-purple-600 text-white px-3 rounded-lg">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14}/>}
@@ -125,27 +142,64 @@ export default function TabelaPrecosReferencia({ safraId, onUpdate }: TabelaPrec
         {loading ? (
           <div className="flex justify-center py-4"><Loader2 className="animate-spin text-slate-300" size={20} /></div>
         ) : precos.map((p) => (
-          <div key={p.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700 group">
+          <div key={p.id} className={`flex items-center gap-3 p-3 rounded-xl border transition-all group ${editingId === p.id ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800' : 'bg-slate-50 border-slate-100 dark:bg-slate-700/50 dark:border-slate-700'}`}>
             <MapPin size={12} className="text-slate-400 shrink-0" />
+            
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 truncate">{p.cidade}</p>
-              <div className="flex items-center gap-1">
-                <span className="text-[9px] font-bold text-slate-400">R$</span>
-                <input 
-                  type="number"
-                  step="0.01"
-                  defaultValue={Number(p.valor).toFixed(2)}
-                  onBlur={(e) => handleSave(p.id, p.cidade, parseFloat(e.target.value))}
-                  className="bg-transparent border-none p-0 text-xs font-black text-green-600 dark:text-green-400 w-20 focus:ring-0"
-                />
-              </div>
+              
+              {editingId === p.id ? (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-[9px] font-bold text-blue-500">R$</span>
+                  <input 
+                    autoFocus
+                    type="number"
+                    step="0.01"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    className="bg-white dark:bg-slate-800 border-none p-0 px-1 text-xs font-black text-blue-600 dark:text-blue-400 w-20 rounded focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              ) : (
+                <p className="text-xs font-black text-green-600 dark:text-green-400">
+                  R$ {Number(p.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              )}
             </div>
-            <button 
-              onClick={() => handleDelete(p.id)}
-              className="opacity-0 group-hover:opacity-100 p-1.5 text-red-400 hover:text-red-600 transition-all"
-            >
-              <Trash2 size={14} />
-            </button>
+
+            <div className="flex gap-1">
+              {editingId === p.id ? (
+                <>
+                  <button 
+                    onClick={() => handleSaveEdit(p.id, p.cidade)}
+                    className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    <Check size={14} />
+                  </button>
+                  <button 
+                    onClick={cancelEditing}
+                    className="p-1.5 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => startEditing(p)}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 rounded-lg transition-all"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(p.id)}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/40 rounded-lg transition-all"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ))}
 
