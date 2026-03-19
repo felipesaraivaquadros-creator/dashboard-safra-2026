@@ -181,16 +181,20 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       if (id && id !== "S/C") entregasMap[id] = (entregasMap[id] || 0) + (Number(d.sacasLiquida) || 0);
     });
 
+    const isSoja2526 = safraId === 'soja2526';
+
     const todos: ProcessedContract[] = dbContratos.map(c => {
       const idNormalizado = String(c.numero).trim().replace(/\.0$/, '').toUpperCase();
-      const cumprido = entregasMap[idNormalizado] || 0;
-      const aCumprir = Math.max(c.volume_total - cumprido, 0);
-      const perc = c.volume_total > 0 ? (cumprido / c.volume_total) * 100 : (cumprido > 0 ? 100 : 0);
+      
+      // Se for Soja 25/26, considera o volume cumprido igual ao contratado
+      const cumprido = isSoja2526 ? c.volume_total : (entregasMap[idNormalizado] || 0);
+      const aCumprir = isSoja2526 ? 0 : Math.max(c.volume_total - cumprido, 0);
+      const perc = isSoja2526 ? 100 : (c.volume_total > 0 ? (cumprido / c.volume_total) * 100 : (cumprido > 0 ? 100 : 0));
       
       return { 
         id: String(c.numero), db_id: c.id, nome: c.nome, contratado: c.volume_total, 
         cumprido: parseFloat(cumprido.toFixed(2)), aCumprir: parseFloat(aCumprir.toFixed(2)), 
-        porcentagem: Math.min(perc, 100).toFixed(1), isConcluido: aCumprir < 1, grupo: c.grupo
+        porcentagem: Math.min(perc, 100).toFixed(1), isConcluido: isSoja2526 || aCumprir < 1, grupo: c.grupo
       };
     });
 
@@ -198,7 +202,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
       pendentes: todos.filter(x => !x.isConcluido && x.contratado > 0).sort((a,b) => b.cumprido - a.cumprido),
       cumpridos: todos.filter(x => x.isConcluido || x.contratado === 0).sort((a,b) => b.cumprido - a.cumprido)
     };
-  }, [rawDados, dbContratos]);
+  }, [rawDados, dbContratos, safraId]);
 
   const listaSaldos = useMemo(() => {
     const finalSaldos: any[] = [];
