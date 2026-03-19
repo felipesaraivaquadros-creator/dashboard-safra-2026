@@ -202,27 +202,27 @@ export default function FretesPage() {
               <TabelaConsolidada lista={fretesConsolidados} />
             )}
 
-            {isSoja2526 && (
-              <>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:block print:space-y-8">
-                  <TabelaAdiantamentos lista={dadosAdiantamentos} total={totalAdiantamentos} />
-                  <TabelaAbastecimentos lista={dadosAbastecimentos} totais={totaisAbastecimento} />
-                </div>
-
-                <ResumoFinanceiro 
-                  totaisFrete={totaisFreteGlobal.valor}
-                  totalAdiantamentos={totalAdiantamentos}
-                  totalAbastecimentos={totaisAbastecimento.valor}
-                  saldoFinal={saldoFinal}
-                />
-              </>
+            {/* Tabelas de Adiantamento e Diesel (Apenas se houver dados) */}
+            {(dadosAdiantamentos.length > 0 || dadosAbastecimentos.length > 0) && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:block print:space-y-8">
+                <TabelaAdiantamentos lista={dadosAdiantamentos} total={totalAdiantamentos} />
+                <TabelaAbastecimentos lista={dadosAbastecimentos} totais={totaisAbastecimento} />
+              </div>
             )}
+
+            {/* Resumo Financeiro - Agora visível para todas as safras */}
+            <ResumoFinanceiro 
+              totaisFrete={totaisFreteGlobal.valor}
+              totalAdiantamentos={totalAdiantamentos}
+              totalAbastecimentos={totaisAbastecimento.valor}
+              saldoFinal={saldoFinal}
+            />
 
             {/* Botões de Ação Finais */}
             <AcoesRelatorio 
               dados={dadosFretes} 
               motorista={motoristaFiltro} 
-              totalValor={isSoja2526 ? saldoFinal : totaisFreteGlobal.valor}
+              totalValor={saldoFinal}
               fazendas={dadosFretes.map(r => r.fazenda || "")}
             />
           </div>
