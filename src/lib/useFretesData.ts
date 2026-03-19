@@ -5,36 +5,11 @@ import { Romaneio } from '../data/types';
 import { getSafraConfig } from '../data/safraConfig';
 import { supabase } from '../integrations/supabase/client';
 
-// Importações estáticas (fallback)
-import soja2526Data from '../data/soja2526/romaneios_normalizados.json';
-import soja2425Data from '../data/soja2425/romaneios_normalizados.json';
-import milho25Data from '../data/milho25/romaneios_normalizados.json';
-import milho26Data from '../data/milho26/romaneios_normalizados.json';
-
-import soja2526Adiantamentos from '../data/soja2526/adiantamentos_normalizados.json';
-import soja2526Abastecimentos from '../data/soja2526/abastecimentos_normalizados.json';
-
-const dataMap: Record<string, any[]> = {
-  'soja2526': soja2526Data,
-  'soja2425': soja2425Data,
-  'milho25': milho25Data,
-  'milho26': milho26Data,
-};
-
-const adiantamentosMap: Record<string, any[]> = {
-  'soja2526': soja2526Adiantamentos,
-};
-
-const abastecimentosMap: Record<string, any[]> = {
-  'soja2526': soja2526Abastecimentos,
-};
-
 export type SortKey = 'data' | 'sacasBruto' | 'placa' | 'nfe' | 'armazem' | 'motorista';
 export type SortOrder = 'asc' | 'desc';
 
 export function useFretesData(safraId: string) {
   const safraConfig = getSafraConfig(safraId);
-  const isSoja2526 = safraId === 'soja2526';
 
   const [motoristaFiltro, setMotoristaFiltro] = useState("");
   const [placaFiltro, setPlacaFiltro] = useState("");
@@ -42,36 +17,73 @@ export function useFretesData(safraId: string) {
   const [tipoCalculo, setTipoCalculo] = useState<'com' | 'sem'>('com');
   const [modeloRelatorio, setModeloRelatorio] = useState<'simples' | 'fazenda' | 'consolidado' | 'armazem'>('simples');
   const [showRelatorio, setShowRelatorio] = useState(false);
+  
+  const [romaneios, setRomaneios] = useState<Romaneio[]>([]);
+  const [adiantamentos, setAdiantamentos] = useState<any[]>([]);
+  const [abastecimentos, setAbastecimentos] = useState<any[]>([]);
   const [precosDb, setPrecosDb] = useState<Record<string, number>>({});
-  const [loadingPrecos, setLoadingPrecos] = useState(true);
+  const [loading, setLoading] = useState(true);
   
   const [sortConfig, setSortConfig] = useState<{ key: SortKey, order: SortOrder }>({ 
     key: 'data', 
     order: 'asc' 
   });
 
-  // Busca preços do banco
-  const fetchPrecos = useCallback(async () => {
-    setLoadingPrecos(true);
-    const { data } = await supabase
-      .from('precos_frete')
-      .select('cidade, valor')
-      .eq('safra_id', safraId);
-    
-    if (data) {
-      const map = Object.fromEntries(data.map(p => [p.cidade.toUpperCase(), Number(p.valor)]));
-      setPrecosDb(map);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [romRes, adiantRes, abastRes, precosRes] = await Promise.all([
+        supabase.from('romaneios').select(`*, fazendas(nome), armazens(nome)`).eq('safra_id', safraId),
+        supabase.from('adiantamentos').select('*').eq('safra_id', safraId),
+        supabase.from('abastecimentos').select('*').eq('safra_id', safraId),
+        supabase.from('precos_frete').select('cidade, valor').eq('safra_id', safraId)
+      ]);
+
+      if (romRes.data) {
+        setRomaneios(romRes.data.map(d => ({
+          data: d.data,
+          nfe: d.nfe,
+          placa: d.placa,
+          motorista: d.motorista,
+          armazem: d.armazem_nome || d.armazens?.nome || "Outros",
+          fazenda: d.fazendas?.nome || "Outros",
+          sacasBruto: Number(d.sacas_bruto) || 0,
+          precofrete: Number(d.preco_frete) || 0,
+          cidadeEntrega: d.cidade_entrega,
+          // Campos obrigatórios da interface Romaneio com valores padrão
+          contrato: "S/C",
+          ncontrato: "S/C",
+          tipoNF: d.tipo_nf || null,
+          numero: d.numero_romaneio || null,
+          talhao: d.talhao || null,
+          pesoLiquidoKg: Number(d.peso_liquid_kg) || 0,
+          pesoBrutoKg: Number(d.peso_bruto_kg) || 0,
+          sacasLiquida: Number(d.sacas_liquida) || 0,
+          umidade: Number(d.umidade) || 0,
+          impureza: Number(d.impureza) || 0,
+          ardido: Number(d.ardido) || 0,
+          avariados: Number(d.avariados) || 0,
+          quebrados: Number(d.quebrados) || 0
+        })));
+      }
+
+      if (adiantRes.data) setAdiantamentos(adiantRes.data);
+      if (abastRes.data) setAbastecimentos(abastRes.data);
+      
+      if (precosRes.data) {
+        const map = Object.fromEntries(precosRes.data.map(p => [p.cidade.toUpperCase(), Number(p.valor)]));
+        setPrecosDb(map);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    setLoadingPrecos(false);
   }, [safraId]);
 
   useEffect(() => {
-    fetchPrecos();
-  }, [fetchPrecos]);
-
-  const romaneios = useMemo(() => (dataMap[safraId] || []) as Romaneio[], [safraId]);
-  const adiantamentosRaw = useMemo(() => adiantamentosMap[safraId] || [], [safraId]);
-  const abastecimentosRaw = useMemo(() => abastecimentosMap[safraId] || [], [safraId]);
+    fetchData();
+  }, [fetchData]);
 
   const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => r.motorista).filter(Boolean))).sort() as string[], [romaneios]);
   const placas = useMemo(() => Array.from(new Set(romaneios.map(r => r.placa).filter(Boolean))).sort() as string[], [romaneios]);
@@ -84,7 +96,6 @@ export function useFretesData(safraId: string) {
     }));
   };
 
-  // Aplica o preço dinâmico aos romaneios
   const dadosFretes = useMemo(() => {
     if (!showRelatorio) return [];
     
@@ -95,7 +106,6 @@ export function useFretesData(safraId: string) {
       return matchM && matchP && matchA;
     });
 
-    // Injeta o preço do banco no romaneio para o cálculo
     const comPrecos = filtrados.map(r => {
       const cidade = (r.cidadeEntrega || "").toUpperCase();
       const precoSugerido = precosDb[cidade] || r.precofrete || 0;
@@ -106,12 +116,7 @@ export function useFretesData(safraId: string) {
       const { key, order } = sortConfig;
       let valA: any = a[key as keyof Romaneio] ?? '';
       let valB: any = b[key as keyof Romaneio] ?? '';
-
-      if (key === 'sacasBruto') {
-        valA = Number(valA);
-        valB = Number(valB);
-      }
-
+      if (key === 'sacasBruto') { valA = Number(valA); valB = Number(valB); }
       if (valA < valB) return order === 'asc' ? -1 : 1;
       if (valA > valB) return order === 'asc' ? 1 : -1;
       return 0;
@@ -143,31 +148,27 @@ export function useFretesData(safraId: string) {
   const fretesConsolidados = useMemo(() => {
     if (modeloRelatorio !== 'consolidado') return [];
     const groups: Record<string, { motorista: string, sacasBruto: number, valorTotal: number }> = {};
-    
     dadosFretes.forEach(r => {
       const m = r.motorista || "Não Informado";
       if (!groups[m]) groups[m] = { motorista: m, sacasBruto: 0, valorTotal: 0 };
-      
       const sacasOriginal = Number(r.sacasBruto) || 0;
       const sacasUsada = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : Number(sacasOriginal.toFixed(2));
       const preco = Number(r.precofrete) || 0;
-      
       groups[m].sacasBruto += sacasUsada;
       groups[m].valorTotal += sacasUsada * preco;
     });
-
     return Object.values(groups).sort((a, b) => b.valorTotal - a.valorTotal);
   }, [dadosFretes, modeloRelatorio, tipoCalculo]);
 
   const dadosAdiantamentos = useMemo(() => {
-    if (!showRelatorio || !isSoja2526) return [];
-    return adiantamentosRaw.filter(a => !motoristaFiltro || a.motorista === motoristaFiltro);
-  }, [showRelatorio, isSoja2526, adiantamentosRaw, motoristaFiltro]);
+    if (!showRelatorio) return [];
+    return adiantamentos.filter(a => !motoristaFiltro || a.motorista === motoristaFiltro);
+  }, [showRelatorio, adiantamentos, motoristaFiltro]);
 
   const dadosAbastecimentos = useMemo(() => {
-    if (!showRelatorio || !isSoja2526) return [];
-    return abastecimentosRaw.filter(a => !motoristaFiltro || a.motorista === motoristaFiltro);
-  }, [showRelatorio, isSoja2526, abastecimentosRaw, motoristaFiltro]);
+    if (!showRelatorio) return [];
+    return abastecimentos.filter(a => !motoristaFiltro || a.motorista === motoristaFiltro);
+  }, [showRelatorio, abastecimentos, motoristaFiltro]);
 
   const calcularTotais = (lista: Romaneio[]) => {
     return lista.reduce((acc, r) => {
@@ -181,24 +182,15 @@ export function useFretesData(safraId: string) {
   };
 
   const totaisFreteGlobal = useMemo(() => calcularTotais(dadosFretes), [dadosFretes, tipoCalculo]);
-
-  const totalAdiantamentos = useMemo(() => 
-    dadosAdiantamentos.reduce((sum, a) => sum + (Number(a.valor) || 0), 0)
-  , [dadosAdiantamentos]);
-
-  const totaisAbastecimento = useMemo(() => 
-    dadosAbastecimentos.reduce((acc, a) => {
-      acc.litros += (Number(a.litros) || 0);
-      acc.valor += (Number(a.total) || 0);
-      return acc;
-    }, { litros: 0, valor: 0 })
-  , [dadosAbastecimentos]);
-
-  const saldoFinal = totaisFreteGlobal.valor - totalAdiantamentos - totaisAbastecimento.valor;
+  const totalAdiantamentos = useMemo(() => dadosAdiantamentos.reduce((sum, a) => sum + Number(a.valor), 0), [dadosAdiantamentos]);
+  const totaisAbastecimento = useMemo(() => dadosAbastecimentos.reduce((acc, a) => {
+    acc.litros += Number(a.litros);
+    acc.valor += Number(a.total);
+    return acc;
+  }, { litros: 0, valor: 0 }), [dadosAbastecimentos]);
 
   return {
     safraConfig,
-    isSoja2526,
     motoristaFiltro, setMotoristaFiltro,
     placaFiltro, setPlacaFiltro,
     armazemFiltro, setArmazemFiltro,
@@ -210,9 +202,9 @@ export function useFretesData(safraId: string) {
     dadosFretes, fretesPorFazenda, fretesPorArmazem, fretesConsolidados,
     dadosAdiantamentos, dadosAbastecimentos,
     totaisFreteGlobal, totalAdiantamentos, totaisAbastecimento,
-    saldoFinal,
+    saldoFinal: totaisFreteGlobal.valor - totalAdiantamentos - totaisAbastecimento.valor,
     calcularTotais,
-    fetchPrecos,
-    loadingPrecos
+    fetchPrecos: fetchData,
+    loading
   };
 }

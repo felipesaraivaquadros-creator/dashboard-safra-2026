@@ -26,7 +26,6 @@ export default function FretesPage() {
 
   const {
     safraConfig,
-    isSoja2526,
     motoristaFiltro, setMotoristaFiltro,
     placaFiltro, setPlacaFiltro,
     armazemFiltro, setArmazemFiltro,
@@ -40,7 +39,8 @@ export default function FretesPage() {
     totaisFreteGlobal, totalAdiantamentos, totaisAbastecimento,
     saldoFinal,
     calcularTotais,
-    fetchPrecos
+    fetchPrecos,
+    loading
   } = useFretesData(safraId);
 
   useEffect(() => {

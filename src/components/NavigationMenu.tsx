@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight, ArrowLeft, FileText, Settings } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight, ArrowLeft, FileText, Settings, Scissors } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 
 export default function NavigationMenu() {
@@ -13,7 +13,6 @@ export default function NavigationMenu() {
   const pathname = usePathname();
   const safraId = params.safraId as string;
 
-  // Fecha o menu ao clicar fora ou mudar de rota
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -47,6 +46,12 @@ export default function NavigationMenu() {
       active: pathname.includes('/fretes')
     },
     { 
+      label: 'Descontos', 
+      href: `/${safraId}/descontos`, 
+      icon: Scissors,
+      active: pathname.includes('/descontos')
+    },
+    { 
       label: 'Recibos', 
       href: `/${safraId}/recibos`, 
       icon: FileText,
@@ -59,7 +64,6 @@ export default function NavigationMenu() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center"
-        aria-label="Menu de navegação"
       >
         {isOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
