@@ -17,12 +17,12 @@ export default function ResumoFinanceiro({
   saldoFinal
 }: ResumoFinanceiroProps) {
   return (
-    <section className="bg-slate-900 dark:bg-purple-950 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden group print:bg-white print:text-black print:shadow-none print:border-2 print:border-black print:rounded-none print:p-8 print:mt-10 print:block print:visible">
+    <section className="bg-slate-900 dark:bg-purple-950 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden group print:bg-white print:text-black print:shadow-none print:border-2 print:border-black print:rounded-none print:p-8 print:mt-10 print:block">
       <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-700 print:hidden">
         <Wallet size={180} />
       </div>
       
-      <div className="relative z-10 print:text-black">
+      <div className="relative z-10">
         <div className="flex items-center gap-3 mb-8 print:mb-6">
           <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md print:hidden"><Wallet size={32} /></div>
           <div>
@@ -31,7 +31,7 @@ export default function ResumoFinanceiro({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-start print:grid-cols-1 print:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 items-start print:flex print:flex-col print:gap-4">
           {/* Ganhos */}
           <div className="space-y-1 print:flex print:justify-between print:items-center print:border-b print:border-slate-200 print:pb-2">
             <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-black print:text-xs">
@@ -43,7 +43,7 @@ export default function ResumoFinanceiro({
           <div className="text-white/30 hidden md:block print:hidden pt-4"><ArrowRight size={24}/></div>
 
           {/* Descontos */}
-          <div className="space-y-4 print:space-y-2">
+          <div className="space-y-4 print:w-full print:space-y-2">
             {totalAdiantamentos > 0 && (
               <div className="space-y-1 print:flex print:justify-between print:items-center print:border-b print:border-slate-200 print:pb-2">
                 <p className="text-[10px] font-black uppercase text-white/50 flex items-center gap-2 print:text-black print:text-xs">
@@ -62,10 +62,10 @@ export default function ResumoFinanceiro({
             )}
           </div>
 
-          {/* Resultado Final - Destaque Total na Impressão */}
-          <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1 print:bg-slate-100 print:border-2 print:border-black print:rounded-none print:p-6 print:mt-4 print:block">
+          {/* Resultado Final - Forçando visibilidade total na impressão */}
+          <div className="bg-white/10 backdrop-blur-xl p-6 rounded-3xl border border-white/10 md:col-span-1 print:bg-slate-100 print:border-2 print:border-black print:rounded-none print:p-6 print:mt-4 print:w-full print:block">
             <p className="text-[10px] font-black uppercase text-purple-300 mb-1 print:text-black print:text-sm print:font-black">Valor Líquido a Pagar</p>
-            <p className="text-4xl font-black tracking-tighter text-white print:text-black print:text-5xl">
+            <p className="text-4xl font-black tracking-tighter text-white print:text-black print:text-5xl print:my-2">
               R$ {saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center print:border-black print:mt-4 print:pt-4">
