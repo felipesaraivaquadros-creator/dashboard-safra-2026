@@ -16,7 +16,7 @@ import AbastecimentoForm from '../../../src/components/descontos/AbastecimentoFo
 
 type TabType = 'adiantamentos' | 'abastecimentos';
 type SortOrder = 'asc' | 'desc';
-type SortKey = 'data' | 'motorista' | 'valor' | 'total' | 'litros' | 'preco';
+type SortKey = 'data' | 'motorista' | 'valor' | 'total' | 'litros' | 'preco' | 'produto';
 
 export default function DescontosPage() {
   const params = useParams();
@@ -32,7 +32,6 @@ export default function DescontosPage() {
   const [editItem, setEditItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Estado de ordenação
   const [sortConfig, setSortConfig] = useState<{ key: SortKey, order: SortOrder }>({ 
     key: 'data', 
     order: 'desc' 
@@ -49,7 +48,6 @@ export default function DescontosPage() {
       if (error) throw error;
       setData(res || []);
 
-      // Busca motoristas únicos dos romaneios para o autocomplete
       const { data: roms } = await supabase
         .from('romaneios')
         .select('motorista')
@@ -95,11 +93,9 @@ export default function DescontosPage() {
     return [...filtered].sort((a, b) => {
       const { key, order } = sortConfig;
       
-      // Tratamento especial para chaves que podem não existir em ambos os tipos
       let valA = a[key];
       let valB = b[key];
 
-      // Fallback para valor/total dependendo da aba
       if (key === 'valor' && activeTab === 'abastecimentos') valA = a.total;
       if (key === 'valor' && activeTab === 'abastecimentos') valB = b.total;
 
@@ -132,10 +128,8 @@ export default function DescontosPage() {
     </th>
   );
 
-  // Função para formatar data sem erro de fuso horário
   const formatarDataExibicao = (dataStr: string) => {
     if (!dataStr) return "-";
-    // Se a data vier no formato AAAA-MM-DD, apenas inverte para DD/MM/AAAA
     const partes = dataStr.split('T')[0].split('-');
     if (partes.length === 3) {
       return `${partes[2]}/${partes[1]}/${partes[0]}`;
@@ -170,7 +164,6 @@ export default function DescontosPage() {
 
       <div className="max-w-[1200px] mx-auto space-y-6">
         
-        {/* Tabs e Busca */}
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="flex bg-slate-200/50 dark:bg-slate-800 p-1 rounded-2xl w-full md:w-auto">
             <button 
@@ -199,7 +192,6 @@ export default function DescontosPage() {
           </div>
         </div>
 
-        {/* Tabela de Dados */}
         <div className="bg-white dark:bg-slate-800 rounded-[32px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
@@ -215,6 +207,7 @@ export default function DescontosPage() {
                     <HeaderCell label="Motorista" sortKey="motorista" />
                     {activeTab === 'abastecimentos' && (
                       <>
+                        <HeaderCell label="Produto" sortKey="produto" />
                         <HeaderCell label="Litros" sortKey="litros" align="right" />
                         <HeaderCell label="Preço Unit." sortKey="preco" align="right" />
                       </>
@@ -232,6 +225,11 @@ export default function DescontosPage() {
                       <td className="px-6 py-4 uppercase text-slate-700 dark:text-slate-200">{item.motorista}</td>
                       {activeTab === 'abastecimentos' && (
                         <>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${item.produto === 'ARLA' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>
+                              {item.produto || 'DIESEL'}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">{Number(item.litros).toLocaleString('pt-BR')} L</td>
                           <td className="px-6 py-4 text-right text-slate-400">R$ {Number(item.preco).toFixed(2)}</td>
                         </>
@@ -259,7 +257,7 @@ export default function DescontosPage() {
                   ))}
                   {sortedData.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-20 text-center text-slate-400 italic uppercase text-[10px]">
+                      <td colSpan={activeTab === 'abastecimentos' ? 8 : 6} className="px-6 py-20 text-center text-slate-400 italic uppercase text-[10px]">
                         Nenhum registro encontrado para esta safra.
                       </td>
                     </tr>

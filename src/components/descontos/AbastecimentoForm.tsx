@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../integrations/supabase/client';
-import { X, Save, Loader2, Fuel } from 'lucide-react';
+import { X, Save, Loader2, Fuel, Zap } from 'lucide-react';
 import { showSuccess, showError } from '../../utils/toast';
 
 interface AbastecimentoFormProps {
@@ -16,7 +16,6 @@ interface AbastecimentoFormProps {
 export default function AbastecimentoForm({ safraId, onClose, onSuccess, editData, motoristas }: AbastecimentoFormProps) {
   const [loading, setLoading] = useState(false);
   
-  // Garante que a data seja apenas a parte YYYY-MM-DD para o input type="date"
   const initialDate = editData?.data ? editData.data.split('T')[0] : new Date().toISOString().split('T')[0];
 
   const [formData, setFormData] = useState({
@@ -25,9 +24,9 @@ export default function AbastecimentoForm({ safraId, onClose, onSuccess, editDat
     litros: editData?.litros || '',
     preco: editData?.preco || '',
     total: editData?.total || '',
+    produto: editData?.produto || 'DIESEL',
   });
 
-  // Cálculo automático do total
   useEffect(() => {
     const l = parseFloat(formData.litros);
     const p = parseFloat(formData.preco);
@@ -88,6 +87,30 @@ export default function AbastecimentoForm({ safraId, onClose, onSuccess, editDat
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Produto</label>
+              <select
+                value={formData.produto}
+                onChange={(e) => setFormData({ ...formData, produto: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-500 transition-all"
+              >
+                <option value="DIESEL">DIESEL</option>
+                <option value="ARLA">ARLA</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Data</label>
+              <input
+                required
+                type="date"
+                value={formData.data}
+                onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-500 transition-all"
+              />
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Motorista</label>
             <input
@@ -97,17 +120,6 @@ export default function AbastecimentoForm({ safraId, onClose, onSuccess, editDat
               onChange={(e) => setFormData({ ...formData, motorista: e.target.value.toUpperCase() })}
               className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-500 transition-all"
               placeholder="NOME DO MOTORISTA"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Data</label>
-            <input
-              required
-              type="date"
-              value={formData.data}
-              onChange={(e) => setFormData({ ...formData, data: e.target.value })}
-              className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-500 transition-all"
             />
           </div>
 

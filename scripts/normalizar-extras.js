@@ -83,6 +83,7 @@ function normalizar(tipo, safraId, inputFileName) {
       const litrosKey = Object.keys(linha).find(k => k.trim() === 'Litros');
       const precoKey = Object.keys(linha).find(k => k.trim() === 'Preço');
       const totalKey = Object.keys(linha).find(k => k.trim() === 'TOTAL');
+      const produtoKey = Object.keys(linha).find(k => k.trim().toUpperCase() === 'PRODUTO');
 
       return {
         safra: String(linha[safraKey] || '').trim(),
@@ -90,7 +91,8 @@ function normalizar(tipo, safraId, inputFileName) {
         motorista: String(linha[motoristaKey] || '').trim().toUpperCase(),
         litros: parseNumero(linha[litrosKey]),
         preco: parseNumero(linha[precoKey]),
-        total: parseNumero(linha[totalKey])
+        total: parseNumero(linha[totalKey]),
+        produto: linha[produtoKey] ? String(linha[produtoKey]).trim().toUpperCase() : 'DIESEL'
       };
     }).filter(d => d.motorista && d.total > 0);
   }
