@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { HandCoins, Fuel, Plus, Edit2, Trash2, Loader2, ArrowLeft, Search } from 'lucide-react';
+import { HandCoins, Fuel, Plus, Edit2, Trash2, Loader2, ArrowLeft, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../../../src/integrations/supabase/client';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
@@ -15,6 +15,8 @@ import AdiantamentoForm from '../../../src/components/descontos/AdiantamentoForm
 import AbastecimentoForm from '../../../src/components/descontos/AbastecimentoForm';
 
 type TabType = 'adiantamentos' | 'abastecimentos';
+type SortOrder = 'asc' | 'desc';
+type SortKey = 'data' | 'motorista' | 'valor' | 'total' | 'litros' | 'preco';
 
 export default function DescontosPage() {
   const params = useParams();
@@ -30,14 +32,19 @@ export default function DescontosPage() {
   const [editItem, setEditItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Estado de ordenação
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey, order: SortOrder }>({ 
+    key: 'data', 
+    order: 'desc' 
+  });
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const { data: res, error } = await supabase
         .from(activeTab)
         .select('*')
-        .eq('safra_id', safraId)
-        .order('data', { ascending: false });
+        .eq('safra_id', safraId);
       
       if (error) throw error;
       setData(res || []);
@@ -73,8 +80,56 @@ export default function DescontosPage() {
     }
   };
 
-  const filteredData = data.filter(item => 
-    item.motorista?.toLowerCase().includes(searchTerm.toLowerCase())
+  const handleSort = (key: SortKey) => {
+    setSortConfig(prev => ({
+      key,
+      order: prev.key === key && prev.order === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const sortedData = useMemo(() => {
+    const filtered = data.filter(item => 
+      item.motorista?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return [...filtered].sort((a, b) => {
+      const { key, order } = sortConfig;
+      
+      // Tratamento especial para chaves que podem não existir em ambos os tipos
+      let valA = a[key];
+      let valB = b[key];
+
+      // Fallback para valor/total dependendo da aba
+      if (key === 'valor' && activeTab === 'abastecimentos') valA = a.total;
+      if (key === 'valor' && activeTab === 'abastecimentos') valB = b.total;
+
+      if (valA === undefined || valA === null) return 1;
+      if (valB === undefined || valB === null) return -1;
+
+      if (typeof valA === 'string') {
+        const comparison = valA.localeCompare(valB);
+        return order === 'asc' ? comparison : -comparison;
+      }
+
+      return order === 'asc' ? valA - valB : valB - valA;
+    });
+  }, [data, searchTerm, sortConfig, activeTab]);
+
+  const SortIcon = ({ column }: { column: SortKey }) => {
+    if (sortConfig.key !== column) return <ArrowUpDown size={12} className="opacity-20 group-hover:opacity-50 transition-opacity" />;
+    return sortConfig.order === 'asc' ? <ArrowUp size={12} className="text-purple-500" /> : <ArrowDown size={12} className="text-purple-500" />;
+  };
+
+  const HeaderCell = ({ label, sortKey, align = 'left' }: { label: string, sortKey: SortKey, align?: 'left' | 'right' | 'center' }) => (
+    <th 
+      onClick={() => handleSort(sortKey)}
+      className={`px-6 py-4 cursor-pointer group hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
+    >
+      <div className={`flex items-center gap-1.5 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
+        <span className={sortConfig.key === sortKey ? 'text-slate-900 dark:text-white' : ''}>{label}</span>
+        <SortIcon column={sortKey} />
+      </div>
+    </th>
   );
 
   return (
@@ -108,13 +163,13 @@ export default function DescontosPage() {
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="flex bg-slate-200/50 dark:bg-slate-800 p-1 rounded-2xl w-full md:w-auto">
             <button 
-              onClick={() => setActiveTab('adiantamentos')}
+              onClick={() => { setActiveTab('adiantamentos'); setSortConfig({ key: 'data', order: 'desc' }); }}
               className={`flex-1 md:w-48 flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase rounded-xl transition-all ${activeTab === 'adiantamentos' ? 'bg-white dark:bg-slate-700 text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <HandCoins size={16} /> Adiantamentos
             </button>
             <button 
-              onClick={() => setActiveTab('abastecimentos')}
+              onClick={() => { setActiveTab('abastecimentos'); setSortConfig({ key: 'data', order: 'desc' }); }}
               className={`flex-1 md:w-48 flex items-center justify-center gap-2 py-2.5 text-[10px] font-black uppercase rounded-xl transition-all ${activeTab === 'abastecimentos' ? 'bg-white dark:bg-slate-700 text-red-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <Fuel size={16} /> Abastecimentos
@@ -145,20 +200,20 @@ export default function DescontosPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
-                    <th className="px-6 py-4">Data</th>
-                    <th className="px-6 py-4">Motorista</th>
+                    <HeaderCell label="Data" sortKey="data" />
+                    <HeaderCell label="Motorista" sortKey="motorista" />
                     {activeTab === 'abastecimentos' && (
                       <>
-                        <th className="px-6 py-4 text-right">Litros</th>
-                        <th className="px-6 py-4 text-right">Preço Unit.</th>
+                        <HeaderCell label="Litros" sortKey="litros" align="right" />
+                        <HeaderCell label="Preço Unit." sortKey="preco" align="right" />
                       </>
                     )}
-                    <th className="px-6 py-4 text-right">Valor Total</th>
+                    <HeaderCell label="Valor Total" sortKey={activeTab === 'adiantamentos' ? 'valor' : 'total'} align="right" />
                     <th className="px-6 py-4 text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="text-xs font-bold">
-                  {filteredData.map((item) => (
+                  {sortedData.map((item) => (
                     <tr key={item.id} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/30 dark:hover:bg-slate-700/20 transition-colors">
                       <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
                         {new Date(item.data).toLocaleDateString('pt-BR')}
@@ -191,7 +246,7 @@ export default function DescontosPage() {
                       </td>
                     </tr>
                   ))}
-                  {filteredData.length === 0 && (
+                  {sortedData.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-6 py-20 text-center text-slate-400 italic uppercase text-[10px]">
                         Nenhum registro encontrado para esta safra.
