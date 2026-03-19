@@ -132,6 +132,17 @@ export default function DescontosPage() {
     </th>
   );
 
+  // Função para formatar data sem erro de fuso horário
+  const formatarDataExibicao = (dataStr: string) => {
+    if (!dataStr) return "-";
+    // Se a data vier no formato AAAA-MM-DD, apenas inverte para DD/MM/AAAA
+    const partes = dataStr.split('T')[0].split('-');
+    if (partes.length === 3) {
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+    return dataStr;
+  };
+
   return (
     <main className="min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-900 font-sans">
       <header className="max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -216,7 +227,7 @@ export default function DescontosPage() {
                   {sortedData.map((item) => (
                     <tr key={item.id} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/30 dark:hover:bg-slate-700/20 transition-colors">
                       <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
-                        {new Date(item.data).toLocaleDateString('pt-BR')}
+                        {formatarDataExibicao(item.data)}
                       </td>
                       <td className="px-6 py-4 uppercase text-slate-700 dark:text-slate-200">{item.motorista}</td>
                       {activeTab === 'abastecimentos' && (

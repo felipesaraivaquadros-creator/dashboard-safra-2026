@@ -15,9 +15,13 @@ interface AbastecimentoFormProps {
 
 export default function AbastecimentoForm({ safraId, onClose, onSuccess, editData, motoristas }: AbastecimentoFormProps) {
   const [loading, setLoading] = useState(false);
+  
+  // Garante que a data seja apenas a parte YYYY-MM-DD para o input type="date"
+  const initialDate = editData?.data ? editData.data.split('T')[0] : new Date().toISOString().split('T')[0];
+
   const [formData, setFormData] = useState({
     motorista: editData?.motorista || '',
-    data: editData?.data || new Date().toISOString().split('T')[0],
+    data: initialDate,
     litros: editData?.litros || '',
     preco: editData?.preco || '',
     total: editData?.total || '',

@@ -15,9 +15,13 @@ interface AdiantamentoFormProps {
 
 export default function AdiantamentoForm({ safraId, onClose, onSuccess, editData, motoristas }: AdiantamentoFormProps) {
   const [loading, setLoading] = useState(false);
+  
+  // Garante que a data seja apenas a parte YYYY-MM-DD para o input type="date"
+  const initialDate = editData?.data ? editData.data.split('T')[0] : new Date().toISOString().split('T')[0];
+
   const [formData, setFormData] = useState({
     motorista: editData?.motorista || '',
-    data: editData?.data || new Date().toISOString().split('T')[0],
+    data: initialDate,
     valor: editData?.valor || '',
   });
 
