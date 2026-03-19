@@ -56,6 +56,7 @@ export function useFretesData(safraId: string) {
           tipoNF: d.tipo_nf || null,
           numero: d.numero_romaneio || null,
           talhao: d.talhao || null,
+          safra: d.safra_id || null,
           pesoLiquidoKg: Number(d.peso_liquid_kg) || 0,
           pesoBrutoKg: Number(d.peso_bruto_kg) || 0,
           sacasLiquida: Number(d.sacas_liquida) || 0,
