@@ -78,7 +78,8 @@ export default function TabelaFretes({
             {lista.map((r, i) => {
               const sacasOriginal = Number(r.sacasBruto) || 0;
               const sacas = tipoCalculo === 'com' ? Math.floor(sacasOriginal) : Number(sacasOriginal.toFixed(2));
-              const subtotalValor = sacas * (Number(r.precofrete) || 0);
+              const preco = Number(r.precofrete) || 0;
+              const subtotalValor = sacas * preco;
               return (
                 <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/30 dark:hover:bg-slate-700/20">
                   <td className="px-4 py-4 text-slate-500 dark:text-slate-400 print:px-2">{formatarDataBR(r.data)}</td>
@@ -86,7 +87,7 @@ export default function TabelaFretes({
                   <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.placa}</td>
                   <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.armazem}</td>
                   <td className="px-4 py-4 text-right print:px-2">{sacas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="px-4 py-4 text-right text-blue-600 print:px-2">R$ {(Number(r.precofrete) || 0).toFixed(2)}</td>
+                  <td className="px-4 py-4 text-right text-blue-600 print:px-2">R$ {preco.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="px-6 py-4 text-right font-black print:px-2">R$ {subtotalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               );

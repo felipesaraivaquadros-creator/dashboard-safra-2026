@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, MapPin, Plus, Trash2, Save, Loader2, Edit2, X } from 'lucide-react';
+import { DollarSign, MapPin, Plus, Trash2, Save, Loader2, X } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
 import { showSuccess, showError } from '../../utils/toast';
 
@@ -33,6 +33,7 @@ export default function TabelaPrecosReferencia({ safraId, onUpdate }: TabelaPrec
   }, [safraId]);
 
   const handleSave = async (id: string, cidade: string, valor: number) => {
+    if (isNaN(valor)) return;
     setSaving(true);
     const { error } = await supabase
       .from('precos_frete')
@@ -108,12 +109,15 @@ export default function TabelaPrecosReferencia({ safraId, onUpdate }: TabelaPrec
             <div className="flex gap-2">
               <input 
                 type="number"
+                step="0.01"
                 placeholder="VALOR R$"
                 value={newPreco.valor}
                 onChange={e => setNewPreco({...newPreco, valor: e.target.value})}
                 className="flex-1 bg-white dark:bg-slate-900 border-none rounded-lg px-3 py-1.5 text-[10px] font-black"
               />
-              <button onClick={handleAdd} className="bg-purple-600 text-white px-3 rounded-lg"><Save size={14}/></button>
+              <button onClick={handleAdd} className="bg-purple-600 text-white px-3 rounded-lg">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14}/>}
+              </button>
             </div>
           </div>
         )}
@@ -129,9 +133,10 @@ export default function TabelaPrecosReferencia({ safraId, onUpdate }: TabelaPrec
                 <span className="text-[9px] font-bold text-slate-400">R$</span>
                 <input 
                   type="number"
-                  defaultValue={p.valor}
+                  step="0.01"
+                  defaultValue={Number(p.valor).toFixed(2)}
                   onBlur={(e) => handleSave(p.id, p.cidade, parseFloat(e.target.value))}
-                  className="bg-transparent border-none p-0 text-xs font-black text-green-600 dark:text-green-400 w-16 focus:ring-0"
+                  className="bg-transparent border-none p-0 text-xs font-black text-green-600 dark:text-green-400 w-20 focus:ring-0"
                 />
               </div>
             </div>
