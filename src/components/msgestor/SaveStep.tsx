@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Loader2, CheckCircle, AlertCircle, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, ArrowLeft, ArrowRight, UploadCloud } from 'lucide-react';
 import { SaveResults } from './types';
 
 interface SaveStepProps {

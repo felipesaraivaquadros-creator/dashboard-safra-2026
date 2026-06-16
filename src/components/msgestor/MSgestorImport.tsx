@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import { FileUploadStep } from './FileUploadStep';
 import { ColumnMappingStep } from './ColumnMappingStep';
 import { DataReviewStep } from './DataReviewStep';
@@ -147,6 +148,3 @@ export default function MSgestorImport() {
     </div>
   );
 }
-
-// Helper para useParams (precisa ser importado do next/navigation)
-import { useParams } from 'next/navigation';
