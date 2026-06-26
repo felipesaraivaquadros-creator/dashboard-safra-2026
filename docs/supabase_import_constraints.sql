@@ -8,12 +8,11 @@ where numero is not null
 group by safra_id, numero
 having count(*) > 1;
 
-select safra_id, numero_romaneio, nfe, peso_bruto_kg, count(*) as total
+select safra_id, numero_romaneio, nfe, count(*) as total
 from public.romaneios
 where nfe is not null
   and numero_romaneio is not null
-  and peso_bruto_kg is not null
-group by safra_id, numero_romaneio, nfe, peso_bruto_kg
+group by safra_id, numero_romaneio, nfe
 having count(*) > 1;
 
 select safra_id, armazem_id, count(*) as total
@@ -34,14 +33,16 @@ begin
       add constraint contratos_safra_id_numero_key unique (safra_id, numero);
   end if;
 
-  if not exists (
+  if exists (
     select 1 from pg_constraint
     where conname = 'romaneios_import_key'
       and conrelid = 'public.romaneios'::regclass
   ) then
-    alter table public.romaneios
-      add constraint romaneios_import_key unique (safra_id, numero_romaneio, nfe, peso_bruto_kg);
+    alter table public.romaneios drop constraint romaneios_import_key;
   end if;
+
+  alter table public.romaneios
+    add constraint romaneios_import_key unique (safra_id, numero_romaneio, nfe);
 
   if not exists (
     select 1 from pg_constraint

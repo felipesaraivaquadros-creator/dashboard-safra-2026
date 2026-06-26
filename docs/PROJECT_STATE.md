@@ -311,3 +311,18 @@ Proximo passo imediato:
 
 * `npm run build` foi executado novamente e passou com sucesso.
 * Proximo passo: revisar `git diff --stat`, conferir arquivos staged e preparar o commit com os arquivos de codigo, SQL e documentacao.
+
+## Atualizacao da regra de atualizacao incremental - 2026-06-26
+
+O usuario confirmou que, dentro da mesma safra, nao existira o mesmo numero de romaneio para o mesmo numero de nota fiscal.
+
+Decisao aplicada:
+
+* A chave de importacao/atualizacao de `romaneios` passa a ser somente `safra_id + numero_romaneio + nfe`.
+* `peso_bruto_kg` deixa de fazer parte da chave, pois e um dado mutavel.
+* Quando um romaneio vier primeiro com peso zerado e depois com peso preenchido, o app deve atualizar o registro existente em vez de criar um novo.
+* O `onConflict` do Supabase foi alterado para `safra_id,numero_romaneio,nfe`.
+* A verificacao visual de duplicidade no app tambem foi alinhada para a mesma chave.
+* `docs/supabase_import_constraints.sql` foi atualizado para recriar `romaneios_import_key` em `(safra_id, numero_romaneio, nfe)`.
+* `docs/supabase_dedupe_before_constraints.sql` foi atualizado para revisar duplicatas pelo mesmo criterio de 3 campos.
+* `npm run build` foi executado apos a alteracao e passou com sucesso.

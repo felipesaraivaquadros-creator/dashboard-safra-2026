@@ -6,13 +6,11 @@ select
   safra_id,
   numero_romaneio,
   nfe,
-  peso_bruto_kg,
   count(*) as total
 from public.romaneios
 where nfe is not null
   and numero_romaneio is not null
-  and peso_bruto_kg is not null
-group by safra_id, numero_romaneio, nfe, peso_bruto_kg
+group by safra_id, numero_romaneio, nfe
 having count(*) > 1
 order by total desc, safra_id, numero_romaneio, nfe;
 
@@ -26,18 +24,17 @@ with ranked as (
     peso_bruto_kg,
     created_at,
     row_number() over (
-      partition by safra_id, numero_romaneio, nfe, peso_bruto_kg
+      partition by safra_id, numero_romaneio, nfe
       order by created_at asc nulls last, id asc
     ) as rn
   from public.romaneios
   where nfe is not null
     and numero_romaneio is not null
-    and peso_bruto_kg is not null
 )
 select *
 from ranked
 where rn > 1
-order by safra_id, numero_romaneio, nfe, peso_bruto_kg, rn;
+order by safra_id, numero_romaneio, nfe, rn;
 
 -- 3) Delete duplicated rows, keeping the oldest row for each import key.
 -- Uncomment and run this block only after reviewing the previews above.
@@ -46,13 +43,12 @@ with ranked as (
   select
     id,
     row_number() over (
-      partition by safra_id, numero_romaneio, nfe, peso_bruto_kg
+      partition by safra_id, numero_romaneio, nfe
       order by created_at asc nulls last, id asc
     ) as rn
   from public.romaneios
   where nfe is not null
     and numero_romaneio is not null
-    and peso_bruto_kg is not null
 )
 delete from public.romaneios r
 using ranked d

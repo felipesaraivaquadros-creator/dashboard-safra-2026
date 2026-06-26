@@ -112,8 +112,7 @@ const buildImportKey = (row: {
   safra_id?: string | null;
   nfe?: number | string | null;
   numero_romaneio?: number | string | null;
-  peso_bruto_kg?: number | string | null;
-}) => `${row.safra_id || ''}-${row.numero_romaneio || ''}-${row.nfe || ''}-${row.peso_bruto_kg || ''}`.toUpperCase();
+}) => `${row.safra_id || ''}-${row.numero_romaneio || ''}-${row.nfe || ''}`.toUpperCase();
 
 export function useMSgestorImport(safraId: string) {
   const [stage, setStage] = useState<'upload' | 'sheet' | 'mapping' | 'review' | 'saving' | 'done'>('upload');
@@ -305,7 +304,7 @@ export function useMSgestorImport(safraId: string) {
     try {
       const { data: existing } = await supabase
         .from('romaneios')
-        .select('safra_id, nfe, numero_romaneio, peso_bruto_kg')
+        .select('safra_id, nfe, numero_romaneio')
         .eq('safra_id', safraId);
 
       const existingKeys = new Set(
@@ -593,7 +592,7 @@ export function useMSgestorImport(safraId: string) {
         const { error } = await supabase
           .from('romaneios')
           .upsert(batch, { 
-            onConflict: 'safra_id,numero_romaneio,nfe,peso_bruto_kg',
+            onConflict: 'safra_id,numero_romaneio,nfe',
             ignoreDuplicates: false 
           });
 
