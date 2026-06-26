@@ -14,8 +14,7 @@ import { getSafraConfig } from '../../src/data/safraConfig';
 import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
 import UpdateDataButton from '../../src/components/UpdateDataButton';
-import ImportExcelButton from '../../src/components/ImportExcelButton';
-import { Loader2 } from 'lucide-react';
+import { FileUp, Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
   const params = useParams();
@@ -83,7 +82,13 @@ export default function Dashboard() {
         
         <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2">
-            <ImportExcelButton />
+            <Link
+              href={`/${safraId}/importar`}
+              className="flex items-center gap-1.5 px-3 py-2 text-[10px] font-black uppercase rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md"
+            >
+              <FileUp size={14} />
+              Importar Planilha
+            </Link>
             <UpdateDataButton />
             
             <Link 
