@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { FileUploadStep } from './FileUploadStep';
+import { SheetSelectionStep } from './SheetSelectionStep';
 import { ColumnMappingStep } from './ColumnMappingStep';
 import { DataReviewStep } from './DataReviewStep';
 import { SaveStep } from './SaveStep';
@@ -18,6 +19,9 @@ export default function MSgestorImport() {
     setStage,
     parsedData,
     setParsedData,
+    sheetNames,
+    selectedSheet,
+    setSelectedSheet,
     columnMapping,
     setColumnMapping,
     defaultValues,
@@ -29,6 +33,7 @@ export default function MSgestorImport() {
     validRowsToSave,
     loading,
     handleFileChange,
+    processSelectedSheet,
     checkDuplicatesInDB,
     updateRowField,
     updateDefaultValue,
@@ -53,6 +58,16 @@ export default function MSgestorImport() {
             onFileChange={handleFileChange}
             onDownloadTemplate={downloadTemplate}
             columns={MS_GESTOR_COLUMNS}
+          />
+        );
+      case 'sheet':
+        return (
+          <SheetSelectionStep
+            sheetNames={sheetNames}
+            selectedSheet={selectedSheet}
+            onSheetChange={setSelectedSheet}
+            onBack={() => setStage('upload')}
+            onNext={processSelectedSheet}
           />
         );
       case 'mapping':
@@ -119,18 +134,18 @@ export default function MSgestorImport() {
               Importação MS Gestor → <span className="text-purple-600">{safraId}</span>
             </h2>
             <div className="flex items-center gap-4">
-              {['upload', 'mapping', 'review', 'saving', 'done'].map((step, idx) => (
+              {['upload', 'sheet', 'mapping', 'review', 'saving', 'done'].map((step, idx) => (
                 <div key={step} className="flex items-center">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${
-                    ['upload', 'mapping', 'review'].indexOf(stage) >= idx 
+                    ['upload', 'sheet', 'mapping', 'review', 'saving', 'done'].indexOf(stage) >= idx
                       ? 'bg-purple-600 text-white' 
                       : 'bg-slate-200 dark:bg-slate-700 text-slate-400'
                   }`}>
                     {idx + 1}
                   </div>
-                  {idx < 4 && (
+                  {idx < 5 && (
                     <div className={`w-16 h-1 mx-2 rounded ${
-                      ['upload', 'mapping', 'review'].indexOf(stage) > idx 
+                      ['upload', 'sheet', 'mapping', 'review', 'saving', 'done'].indexOf(stage) > idx
                         ? 'bg-purple-600' 
                         : 'bg-slate-200 dark:bg-slate-700'
                     }`} />

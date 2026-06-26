@@ -4,9 +4,12 @@ export interface Romaneio {
   ncontrato: string;
   emitente?: string | null;
   tipoNF: string | null;
+  tipo_nf?: string | null;
   nfe: number | null;
   numero: number | null;
+  numero_romaneio?: number | string | null;
   cidadeEntrega: string | null;
+  cidade_entrega?: string | null;
   armazem: string | null;
   armazem_id?: string | null;
   safra: string | null;
@@ -14,8 +17,12 @@ export interface Romaneio {
   talhao: string | null;
   motorista?: string | null;
   placa?: string | null;
+  peso_bruto_kg?: number | null;
+  peso_liquid_kg?: number | null;
   pesoLiquidoKg: number | null;
   pesoBrutoKg: number | null;
+  sacas_liquida?: number | null;
+  sacas_bruto?: number | null;
   sacasLiquida: number | null;
   sacasBruto: number | null;
   umidade: number | null;
@@ -25,6 +32,7 @@ export interface Romaneio {
   quebrados: number | null;
   contaminantes?: number | null;
   precofrete?: number | null;
+  preco_frete?: number | null;
   // Campos do MS Gestor
   produto?: string | null;
   classificacao?: string | null;
@@ -66,25 +74,32 @@ export interface SaveResults {
 
 export const MS_GESTOR_COLUMNS: Record<string, string> = {
   'Data': 'data',
-  'Tp': 'tipoNF',
+  'Tipo NF': 'tipoNF',
   'Nº': 'numero_romaneio',
   'NFe': 'nfe',
-  'Produto': 'produto',
+  'Emitente': 'emitente',
+  'Destinatário': '',
   'Placa': 'placa',
-  'Arm': 'armazem',
+  'Motorista': 'motorista',
+  'Cidade de Entrega': 'cidade_entrega',
+  'Armazem': 'armazem',
+  'Contrato': 'contrato',
+  'ncontrato': 'ncontrato',
+  'Venc.': '',
   'Safra': 'safra',
+  'Fazenda': 'fazenda',
   'Talhão': 'talhao',
-  'Pesol': 'peso_bruto_kg',
+  'Peso Bruto': 'peso_bruto_kg',
   'Umid': 'umidade',
   'Impu': 'impureza',
   'Ardi': 'ardido',
   'Avari': 'avariados',
-  'Verdes': 'verdes',
+  'Contaminantes': 'contaminantes',
   'Quebr': 'quebrados',
-  'Seca': 'seca',
-  'Class': 'classificacao',
-  'Entrada': 'entrada',
-  'Saída': 'saida'
+  'Peso Liquido': 'peso_liquid_kg',
+  'Sacas Bruto': 'sacas_bruto',
+  'Sacas Liquido': 'sacas_liquida',
+  'precofrete': 'preco_frete'
 };
 
 export const TARGET_FIELDS = [
@@ -104,6 +119,7 @@ export const TARGET_FIELDS = [
   { value: 'impureza', label: 'Impureza' },
   { value: 'ardido', label: 'Ardido' },
   { value: 'avariados', label: 'Avariados' },
+  { value: 'contaminantes', label: 'Contaminantes' },
   { value: 'verdes', label: 'Verdes' },
   { value: 'quebrados', label: 'Quebrados' },
   { value: 'seca', label: 'Seca' },

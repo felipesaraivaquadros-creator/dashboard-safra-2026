@@ -28,8 +28,9 @@ export function ColumnMappingStep({
   const mappedSources = Object.keys(columnMapping);
   const unmappedSources = allSourceColumns.filter(c => !mappedSources.includes(c));
 
-  const canProceed = parsedData.length > 0 && 
-    (columnMapping['Data'] || columnMapping['NFe'] || columnMapping['Nº']);
+  const mappedTargets = Object.values(columnMapping);
+  const canProceed = parsedData.length > 0 &&
+    ['data', 'nfe', 'numero_romaneio'].some(field => mappedTargets.includes(field));
 
   return (
     <div className="max-w-4xl mx-auto">

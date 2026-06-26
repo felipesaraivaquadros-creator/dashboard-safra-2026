@@ -135,6 +135,7 @@ export function DataReviewStep({
               <button onClick={() => onRemoveRows(Array.from(selectedRows))} className="px-4 py-2 text-sm font-bold uppercase rounded-xl bg-red-100 text-red-600 hover:bg-red-200 transition-all">
                 <Trash2 size={14} className="inline" /> Excluir Selecionados
               </button>
+            </>
             )}
           </div>
         </div>
@@ -186,7 +187,6 @@ export function DataReviewStep({
                     <input 
                       type="checkbox" 
                       checked={allSelected} 
-                      indeterminate={someSelected && !allSelected}
                       onChange={onToggleAll} 
                       className="rounded border-slate-300" 
                     />
@@ -377,5 +377,4 @@ export function DataReviewStep({
         </div>
       </div>
     );
-  }
 }

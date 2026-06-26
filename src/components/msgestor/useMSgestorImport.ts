@@ -6,9 +6,121 @@ import { supabase } from '../../integrations/supabase/client';
 import { showSuccess, showError, showLoading, dismissToast } from '../../utils/toast';
 import { ParsedRow, ColumnMapping, DefaultValues, FilterState, SaveResults, MS_GESTOR_COLUMNS, TARGET_FIELDS } from './types';
 
+const normalizeText = (value: any) => String(value || '').trim();
+const normalizeMapKey = (value: any) => normalizeText(value).toUpperCase();
+const normalizeColumnKey = (value: any) =>
+  normalizeText(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[º°ª]/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toLowerCase();
+
+const MS_GESTOR_NORMALIZED_COLUMNS: Record<string, string> = {
+  data: 'data',
+  tp: 'tipoNF',
+  tiponf: 'tipoNF',
+  n: 'numero_romaneio',
+  nromaneio: 'numero_romaneio',
+  numero: 'numero_romaneio',
+  numeroromaneio: 'numero_romaneio',
+  nfe: 'nfe',
+  emitente: 'emitente',
+  placa: 'placa',
+  motorista: 'motorista',
+  cidadedeentrega: 'cidade_entrega',
+  cidadeentrega: 'cidade_entrega',
+  armazem: 'armazem',
+  arm: 'armazem',
+  contrato: 'contrato',
+  ncontrato: 'ncontrato',
+  numerocontrato: 'ncontrato',
+  safra: 'safra',
+  fazenda: 'fazenda',
+  talhao: 'talhao',
+  pesol: 'peso_liquid_kg',
+  pesobruto: 'peso_bruto_kg',
+  pesobrutokg: 'peso_bruto_kg',
+  pesoliquido: 'peso_liquid_kg',
+  pesoliquidokg: 'peso_liquid_kg',
+  sacasbruto: 'sacas_bruto',
+  sacasbrutas: 'sacas_bruto',
+  sacasliquido: 'sacas_liquida',
+  sacasliquidos: 'sacas_liquida',
+  sacasliquida: 'sacas_liquida',
+  sacasliquidas: 'sacas_liquida',
+  umid: 'umidade',
+  umidade: 'umidade',
+  impu: 'impureza',
+  impureza: 'impureza',
+  ardi: 'ardido',
+  ardido: 'ardido',
+  avari: 'avariados',
+  avariados: 'avariados',
+  contaminantes: 'contaminantes',
+  quebr: 'quebrados',
+  quebrados: 'quebrados',
+  precofrete: 'preco_frete',
+  preçofrete: 'preco_frete',
+  precofretesc: 'preco_frete',
+  produto: 'produto',
+  verdes: 'verdes',
+  seca: 'seca',
+  class: 'classificacao',
+  classificacao: 'classificacao',
+  entrada: 'entrada',
+  saida: 'saida',
+};
+
+const SHEET_BY_SAFRA: Record<string, string> = {
+  milho26: 'ROMANEIOS_MILHO',
+  soja2526: 'ROMANEIOS_SOJA',
+  milho25: 'ROMANEIO MILHO',
+  soja2425: 'ROMANEIO SOJA',
+};
+
+const parseNumber = (value: any) => {
+  if (value === null || value === undefined || value === '') return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+
+  const text = String(value).trim().replace(/\s/g, '');
+  if (!text) return null;
+
+  const normalized = text.includes(',')
+    ? text.replace(/\./g, '').replace(',', '.')
+    : text.includes('.') && /^\d{1,3}(\.\d{3})+$/.test(text)
+      ? text.replace(/\./g, '')
+      : text.replace(/,/g, '');
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const findWorksheet = (workbook: XLSX.WorkBook, safraId: string) => {
+  const desiredSheet = SHEET_BY_SAFRA[safraId];
+  const normalizedDesired = desiredSheet ? normalizeColumnKey(desiredSheet) : '';
+  const sheetName = workbook.SheetNames.find(name => normalizeColumnKey(name) === normalizedDesired)
+    || workbook.SheetNames[0];
+
+  return {
+    sheetName,
+    worksheet: sheetName ? workbook.Sheets[sheetName] : undefined
+  };
+};
+
+const buildImportKey = (row: {
+  safra_id?: string | null;
+  nfe?: number | string | null;
+  numero_romaneio?: number | string | null;
+  peso_bruto_kg?: number | string | null;
+}) => `${row.safra_id || ''}-${row.numero_romaneio || ''}-${row.nfe || ''}-${row.peso_bruto_kg || ''}`.toUpperCase();
+
 export function useMSgestorImport(safraId: string) {
-  const [stage, setStage] = useState<'upload' | 'mapping' | 'review' | 'saving' | 'done'>('upload');
+  const [stage, setStage] = useState<'upload' | 'sheet' | 'mapping' | 'review' | 'saving' | 'done'>('upload');
   const [parsedData, setParsedData] = useState<ParsedRow[]>([]);
+  const [pendingWorkbook, setPendingWorkbook] = useState<XLSX.WorkBook | null>(null);
+  const [sheetNames, setSheetNames] = useState<string[]>([]);
+  const [selectedSheet, setSelectedSheet] = useState('');
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({});
   const [defaultValues, setDefaultValues] = useState<DefaultValues>({});
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
@@ -30,18 +142,57 @@ export function useMSgestorImport(safraId: string) {
     if (!file) return;
 
     setLoading(true);
-    const toastId = showLoading("Lendo arquivo do MS Gestor...");
+    const toastId = showLoading("Lendo abas do arquivo...");
 
     try {
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { cellDates: true, raw: false });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
+      const sheets = workbook.SheetNames;
+      if (sheets.length === 0) {
+        dismissToast(toastId);
+        showError("Nenhuma aba encontrada na planilha.");
+        return;
+      }
+
+      const { sheetName } = findWorksheet(workbook, safraId);
+      setPendingWorkbook(workbook);
+      setSheetNames(sheets);
+      setSelectedSheet(sheetName || sheets[0]);
+      setParsedData([]);
+      setStage('sheet');
+      dismissToast(toastId);
+      showSuccess(`${sheets.length} aba(s) encontrada(s). Escolha qual deseja importar.`);
+    } catch (err: any) {
+      dismissToast(toastId);
+      showError("Erro ao ler arquivo: " + err.message);
+    } finally {
+      setLoading(false);
+      if (e.target) (e.target as HTMLInputElement).value = "";
+    }
+  }, [safraId]);
+
+  const processSelectedSheet = useCallback(() => {
+    if (!pendingWorkbook || !selectedSheet) {
+      showError("Selecione uma aba antes de continuar.");
+      return;
+    }
+
+    setLoading(true);
+    const toastId = showLoading(`Lendo aba "${selectedSheet}"...`);
+
+    try {
+      const worksheet = pendingWorkbook.Sheets[selectedSheet];
+      if (!worksheet) {
+        dismissToast(toastId);
+        showError(`Aba "${selectedSheet}" não encontrada na planilha.`);
+        return;
+      }
+
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: null, raw: false });
 
       if (jsonData.length === 0) {
         dismissToast(toastId);
-        showError("Arquivo vazio ou sem dados válidos.");
+        showError(`A aba "${selectedSheet}" está vazia ou sem dados válidos.`);
         return;
       }
 
@@ -52,19 +203,23 @@ export function useMSgestorImport(safraId: string) {
       
       detectedColumns.forEach(col => {
         const normalized = col.trim();
-        if (MS_GESTOR_COLUMNS[normalized as keyof typeof MS_GESTOR_COLUMNS]) {
+        const normalizedKey = normalizeColumnKey(col);
+        if (MS_GESTOR_NORMALIZED_COLUMNS[normalizedKey]) {
+          autoMapping[col] = MS_GESTOR_NORMALIZED_COLUMNS[normalizedKey];
+        } else if (MS_GESTOR_COLUMNS[normalized as keyof typeof MS_GESTOR_COLUMNS]) {
           autoMapping[col] = MS_GESTOR_COLUMNS[normalized as keyof typeof MS_GESTOR_COLUMNS];
         }
       });
 
-      setColumnMapping(prev => ({ ...prev, ...autoMapping }));
-      localStorage.setItem(`msgestor_mapping_${safraId}`, JSON.stringify({ ...columnMapping, ...autoMapping }));
+      const effectiveMapping = { ...columnMapping, ...autoMapping };
+      setColumnMapping(effectiveMapping);
+      localStorage.setItem(`msgestor_mapping_${safraId}`, JSON.stringify(effectiveMapping));
 
       // Processa linhas
       const processed: ParsedRow[] = jsonData.map((row: any, index: number) => {
         const mapped: Partial<ParsedRow['mapped']> = {};
         
-        Object.entries(columnMapping).forEach(([sourceCol, targetField]) => {
+        Object.entries(effectiveMapping).forEach(([sourceCol, targetField]) => {
           const value = row[sourceCol];
           if (value !== null && value !== undefined && value !== '') {
             (mapped as any)[targetField] = value;
@@ -93,9 +248,8 @@ export function useMSgestorImport(safraId: string) {
         const numericFields = ['peso_bruto_kg', 'peso_liquid_kg', 'sacas_bruto', 'sacas_liquida', 'umidade', 'impureza', 'ardido', 'avariados', 'verdes', 'quebrados', 'seca', 'nfe', 'numero_romaneio', 'preco_frete'];
         numericFields.forEach(f => {
           if (mapped[f as keyof typeof mapped]) {
-            const val = String(mapped[f as keyof typeof mapped]).replace(/\./g, '').replace(',', '.');
-            const num = parseFloat(val);
-            if (!isNaN(num)) (mapped as any)[f] = num;
+            const num = parseNumber(mapped[f as keyof typeof mapped]);
+            if (num !== null) (mapped as any)[f] = num;
           }
         });
 
@@ -106,7 +260,7 @@ export function useMSgestorImport(safraId: string) {
           mapped.sacas_bruto = Math.round((mapped.peso_bruto_kg / 60) * 100) / 100;
         }
 
-        const uniqueKey = `${mapped.nfe || ''}-${mapped.numero_romaneio || ''}-${mapped.data || ''}-${mapped.placa || ''}`.toUpperCase();
+        const uniqueKey = buildImportKey({ ...mapped, safra_id: safraId });
 
         return {
           raw: row,
@@ -135,16 +289,15 @@ export function useMSgestorImport(safraId: string) {
       setParsedData(processed);
       setStage('mapping');
       dismissToast(toastId);
-      showSuccess(`${processed.length} linhas lidas. Configure o mapeamento de colunas.`);
+      showSuccess(`${processed.length} linhas lidas da aba "${selectedSheet}". Configure o mapeamento de colunas.`);
       
     } catch (err: any) {
       dismissToast(toastId);
-      showError("Erro ao ler arquivo: " + err.message);
+      showError("Erro ao processar aba: " + err.message);
     } finally {
       setLoading(false);
-      if (e.target) (e.target as HTMLInputElement).value = "";
     }
-  }, [safraId, columnMapping, defaultValues]);
+  }, [pendingWorkbook, selectedSheet, safraId, columnMapping, defaultValues]);
 
   // ===== DUPLICATE CHECK =====
   const checkDuplicatesInDB = useCallback(async () => {
@@ -152,13 +305,11 @@ export function useMSgestorImport(safraId: string) {
     try {
       const { data: existing } = await supabase
         .from('romaneios')
-        .select('nfe, numero_romaneio, data, placa')
+        .select('safra_id, nfe, numero_romaneio, peso_bruto_kg')
         .eq('safra_id', safraId);
 
       const existingKeys = new Set(
-        (existing || []).map(r => 
-          `${r.nfe || ''}-${r.numero_romaneio || ''}-${r.data || ''}-${r.placa || ''}`.toUpperCase()
-        )
+        (existing || []).map(r => buildImportKey(r))
       );
 
       setParsedData(prev => prev.map(row => {
@@ -199,10 +350,62 @@ export function useMSgestorImport(safraId: string) {
     setColumnMapping(prev => {
       const newMapping = { ...prev, [sourceCol]: targetField };
       localStorage.setItem(`msgestor_mapping_${safraId}`, JSON.stringify(newMapping));
+      setParsedData(prevData => prevData.map(row => {
+        const mapped: Partial<ParsedRow['mapped']> = {};
+
+        Object.entries(newMapping).forEach(([source, target]) => {
+          if (!target) return;
+          const value = row.raw[source];
+          if (value !== null && value !== undefined && value !== '') {
+            (mapped as any)[target] = value;
+          }
+        });
+
+        Object.entries(defaultValues).forEach(([field, value]) => {
+          if (!mapped[field as keyof typeof mapped] && value) {
+            (mapped as any)[field] = value;
+          }
+        });
+
+        const numericFields = ['peso_bruto_kg', 'peso_liquid_kg', 'sacas_bruto', 'sacas_liquida', 'umidade', 'impureza', 'ardido', 'avariados', 'verdes', 'quebrados', 'seca', 'nfe', 'numero_romaneio', 'preco_frete'];
+        numericFields.forEach(f => {
+          if (mapped[f as keyof typeof mapped]) {
+            const num = parseNumber(mapped[f as keyof typeof mapped]);
+            if (num !== null) (mapped as any)[f] = num;
+          }
+        });
+
+        if (mapped.data && typeof mapped.data === 'string' && mapped.data.includes('/')) {
+          const parts = mapped.data.split('/');
+          if (parts.length === 3) {
+            mapped.data = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+          }
+        }
+
+        if ((mapped as any).peso_liquid_kg && !mapped.sacas_liquida) {
+          mapped.sacas_liquida = Math.round(((mapped as any).peso_liquid_kg / 60) * 100) / 100;
+        }
+        if (mapped.peso_bruto_kg && !mapped.sacas_bruto) {
+          mapped.sacas_bruto = Math.round((mapped.peso_bruto_kg / 60) * 100) / 100;
+        }
+
+        const uniqueKey = buildImportKey({ ...mapped, safra_id: safraId });
+
+        return {
+          ...row,
+          mapped: {
+            ...mapped,
+            _uniqueKey: uniqueKey,
+            _rowIndex: row.mapped._rowIndex,
+            safra_id: safraId,
+            _message: row.mapped._message,
+            _status: row.mapped._status === 'error' ? 'valid' as const : row.mapped._status
+          }
+        };
+      }));
       return newMapping;
     });
-    reprocessData();
-  }, [safraId]);
+  }, [safraId, defaultValues]);
 
   const reprocessData = useCallback(() => {
     setParsedData(prev => prev.map(row => {
@@ -300,14 +503,97 @@ export function useMSgestorImport(safraId: string) {
     const errorDetails: string[] = [];
 
     try {
+      const fazendasUnicas = Array.from(new Set(validRowsToSave.map(r => normalizeText(r.fazenda)).filter(Boolean)));
+      const armazensUnicos = Array.from(new Set(validRowsToSave.map(r => normalizeText(r.armazem)).filter(Boolean)));
+
+      if (fazendasUnicas.length > 0) {
+        const { error } = await supabase
+          .from('fazendas')
+          .upsert(fazendasUnicas.map(nome => ({ nome })), { onConflict: 'nome' });
+        if (error) throw error;
+      }
+
+      if (armazensUnicos.length > 0) {
+        const { error } = await supabase
+          .from('armazens')
+          .upsert(armazensUnicos.map(nome => ({ nome })), { onConflict: 'nome' });
+        if (error) throw error;
+      }
+
+      const contratosUnicos = Array.from(new Map(
+        validRowsToSave
+          .map(row => {
+            const numero = normalizeText(row.ncontrato || row.contrato).replace(/\.0$/, '');
+            if (!numero) return null;
+            return [normalizeMapKey(numero), {
+              safra_id: safraId,
+              numero,
+              nome: normalizeText(row.contrato) || numero,
+              volume_total: 0
+            }];
+          })
+          .filter(Boolean) as [string, { safra_id: string; numero: string; nome: string; volume_total: number }][]
+      ).values());
+
+      if (contratosUnicos.length > 0) {
+        const { error } = await supabase
+          .from('contratos')
+          .upsert(contratosUnicos, { onConflict: 'safra_id,numero' });
+        if (error) throw error;
+      }
+
+      const [{ data: fazendasDB }, { data: armazensDB }, { data: contratosDB }] = await Promise.all([
+        supabase.from('fazendas').select('id, nome'),
+        supabase.from('armazens').select('id, nome'),
+        supabase.from('contratos').select('id, numero').eq('safra_id', safraId)
+      ]);
+
+      const fazendaMap = Object.fromEntries((fazendasDB || []).map(f => [normalizeMapKey(f.nome), f.id]));
+      const armazemMap = Object.fromEntries((armazensDB || []).map(a => [normalizeMapKey(a.nome), a.id]));
+      const contratoMap = Object.fromEntries((contratosDB || []).map(c => [normalizeMapKey(c.numero), c.id]));
+
+      const rowsToSave = validRowsToSave.map(row => {
+        const fazendaNome = normalizeText(row.fazenda);
+        const armazemNome = normalizeText(row.armazem);
+        const contratoNumero = normalizeText(row.ncontrato || row.contrato).replace(/\.0$/, '');
+
+        return {
+          safra_id: safraId,
+          data: row.data || null,
+          nfe: row.nfe || null,
+          numero_romaneio: row.numero_romaneio || null,
+          emitente: row.emitente || null,
+          tipo_nf: row.tipoNF || row.tipo_nf || null,
+          talhao: row.talhao || null,
+          motorista: row.motorista || null,
+          placa: row.placa || null,
+          cidade_entrega: row.cidade_entrega || null,
+          peso_bruto_kg: row.peso_bruto_kg || null,
+          peso_liquid_kg: row.peso_liquid_kg || null,
+          sacas_bruto: row.sacas_bruto || null,
+          sacas_liquida: row.sacas_liquida || null,
+          umidade: row.umidade || 0,
+          impureza: row.impureza || 0,
+          ardido: row.ardido || 0,
+          avariados: row.avariados || 0,
+          quebrados: row.quebrados || 0,
+          contaminantes: row.contaminantes || 0,
+          preco_frete: row.preco_frete || null,
+          fazenda_id: fazendaMap[normalizeMapKey(fazendaNome)] || null,
+          armazem_id: armazemMap[normalizeMapKey(armazemNome)] || null,
+          armazem_nome: armazemNome || null,
+          contrato_id: contratoMap[normalizeMapKey(contratoNumero)] || null
+        };
+      });
+
       const batchSize = 50;
-      for (let i = 0; i < validRowsToSave.length; i += batchSize) {
-        const batch = validRowsToSave.slice(i, i + batchSize);
+      for (let i = 0; i < rowsToSave.length; i += batchSize) {
+        const batch = rowsToSave.slice(i, i + batchSize);
         
         const { error } = await supabase
           .from('romaneios')
           .upsert(batch, { 
-            onConflict: 'safra_id,nfe,numero_romaneio,data,placa',
+            onConflict: 'safra_id,numero_romaneio,nfe,peso_bruto_kg',
             ignoreDuplicates: false 
           });
 
@@ -341,11 +627,11 @@ export function useMSgestorImport(safraId: string) {
   // ===== UTILITIES =====
   const downloadTemplate = useCallback(() => {
     const headers = [
-      'Data', 'Tp', 'Nº', 'NFe', 'Produto', 'Placa', 'Arm', 'Safra', 'Talhão',
-      'Pesol', 'Umid', 'Impu', 'Ardi', 'Avari', 'Verdes', 'Quebr', 'Seca', 'Class',
-      'Entrada', 'Saída',
-      'Contrato', 'nContrato', 'Emitente', 'CidadeEntrega', 'Fazenda', 'Motorista',
-      'PesoLiquido', 'SacasLiquida', 'PrecoFrete'
+      'Data', 'Tipo NF', 'Nº', 'NFe', 'Emitente', 'Destinatário', 'Placa',
+      'Motorista', 'Cidade de Entrega', 'Armazem', 'Contrato', 'ncontrato',
+      'Venc.', 'Safra', 'Fazenda', 'Talhão', 'Peso Bruto', 'Umid', 'Impu',
+      'Ardi', 'Avari', 'Contaminantes', 'Quebr', 'Peso Liquido',
+      'Sacas Bruto', 'Sacas Liquido', 'precofrete'
     ];
     
     const ws = XLSX.utils.aoa_to_sheet([headers]);
@@ -372,6 +658,9 @@ export function useMSgestorImport(safraId: string) {
     setStage,
     parsedData,
     setParsedData,
+    sheetNames,
+    selectedSheet,
+    setSelectedSheet,
     columnMapping,
     setColumnMapping,
     defaultValues,
@@ -384,6 +673,7 @@ export function useMSgestorImport(safraId: string) {
     loading,
     saveResults,
     handleFileChange,
+    processSelectedSheet,
     checkDuplicatesInDB,
     updateRowField,
     updateDefaultValue,

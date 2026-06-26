@@ -6,7 +6,7 @@ import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
 import NavigationMenu from '../../../src/components/NavigationMenu';
 import { getSafraConfig } from '../../../src/data/safraConfig';
-import MSgestorImport from '../../../src/components/MSgestorImport';
+import MSgestorImport from '../../../src/components/msgestor/MSgestorImport';
 
 export default function ImportarPage() {
   const params = useParams();
