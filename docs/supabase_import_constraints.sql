@@ -24,6 +24,17 @@ having count(*) > 1;
 -- Add the unique constraints used by supabase-js upsert(..., { onConflict }).
 do $$
 begin
+  if exists (
+    select 1
+    from public.romaneios
+    where nfe is not null
+      and numero_romaneio is not null
+    group by safra_id, numero_romaneio, nfe
+    having count(*) > 1
+  ) then
+    raise exception 'Existem romaneios duplicados por safra_id + numero_romaneio + nfe. Rode docs/supabase_dedupe_before_constraints.sql antes de criar romaneios_import_key.';
+  end if;
+
   if not exists (
     select 1 from pg_constraint
     where conname = 'contratos_safra_id_numero_key'

@@ -326,3 +326,20 @@ Decisao aplicada:
 * `docs/supabase_import_constraints.sql` foi atualizado para recriar `romaneios_import_key` em `(safra_id, numero_romaneio, nfe)`.
 * `docs/supabase_dedupe_before_constraints.sql` foi atualizado para revisar duplicatas pelo mesmo criterio de 3 campos.
 * `npm run build` foi executado apos a alteracao e passou com sucesso.
+
+## Atualizacao Supabase - duplicata historica milho25
+
+Ao tentar recriar `romaneios_import_key` com `(safra_id, numero_romaneio, nfe)`, o Supabase retornou duplicidade historica em:
+
+* `(safra_id, numero_romaneio, nfe) = (milho25, 49028, 142)`.
+
+Conclusao:
+
+* A regra nova continua correta para importacao incremental.
+* Antes da constraint, o banco precisa colapsar duplicados antigos pela nova chave.
+* `docs/supabase_dedupe_before_constraints.sql` foi ajustado para manter a linha mais completa/recente:
+  * peso bruto preenchido primeiro;
+  * peso liquido preenchido depois;
+  * `created_at` mais novo;
+  * maior `id`.
+* `docs/supabase_import_constraints.sql` agora interrompe com mensagem clara se ainda houver duplicados, orientando rodar o dedupe primeiro.
