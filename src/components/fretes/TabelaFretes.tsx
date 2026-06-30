@@ -62,13 +62,15 @@ export default function TabelaFretes({
         )}
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[800px] print:min-w-full">
+        <table className="w-full text-left border-collapse min-w-[1050px] print:min-w-full">
           <thead>
             <tr className="text-[10px] font-black uppercase text-slate-400 tracking-widest border-b dark:border-slate-700">
               <HeaderCell label="Data" sortKey="data" />
               <HeaderCell label="NFe" sortKey="nfe" />
+              <HeaderCell label="Motorista" sortKey="motorista" />
               <HeaderCell label="Placa" sortKey="placa" />
               <HeaderCell label="Armazém" sortKey="armazem" />
+              <HeaderCell label="Peso Bruto kg" sortKey="pesoBrutoKg" align="right" />
               <HeaderCell label="Sacas Bruto" sortKey="sacasBruto" align="right" />
               <th className="px-4 py-4 text-right">Preço</th>
               <th className="px-6 py-4 text-right">Subtotal</th>
@@ -84,8 +86,10 @@ export default function TabelaFretes({
                 <tr key={i} className="border-b border-slate-50 dark:border-slate-700/50 hover:bg-slate-50/30 dark:hover:bg-slate-700/20">
                   <td className="px-4 py-4 text-slate-500 dark:text-slate-400 print:px-2">{formatarDataBR(r.data)}</td>
                   <td className="px-4 py-4 print:px-2">{r.nfe}</td>
-                  <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.placa}</td>
+                  <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.motorista || '-'}</td>
+                  <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.placa || '-'}</td>
                   <td className="px-4 py-4 uppercase text-[10px] print:px-2">{r.armazem}</td>
+                  <td className="px-4 py-4 text-right print:px-2">{(Number(r.pesoBrutoKg) || 0).toLocaleString('pt-BR')}</td>
                   <td className="px-4 py-4 text-right print:px-2">{sacas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="px-4 py-4 text-right text-blue-600 print:px-2">R$ {preco.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td className="px-6 py-4 text-right font-black print:px-2">R$ {subtotalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -95,7 +99,7 @@ export default function TabelaFretes({
           </tbody>
           <tfoot className="print:table-row-group">
             <tr className="bg-blue-50/50 dark:bg-blue-900/10 font-black text-blue-700 dark:text-blue-300">
-              <td colSpan={4} className="px-6 py-4 text-right uppercase text-[10px] print:px-2">{subtotal ? "Subtotal Fazenda" : "Total Fretes"}</td>
+              <td colSpan={6} className="px-6 py-4 text-right uppercase text-[10px] print:px-2">{subtotal ? "Subtotal Fazenda" : "Total Fretes"}</td>
               <td className="px-4 py-4 text-right print:px-2">{totais.sacas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} sc</td>
               <td className="px-4 py-4 print:px-2">-</td>
               <td className="px-6 py-4 text-right text-base print:px-2">R$ {totais.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

@@ -71,7 +71,7 @@ export default function DescontosPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Deseja realmente excluir este registro?")) return;
     const { error } = await supabase.from(activeTab).delete().eq('id', id);
-    if (error) showError("Erro ao excluir");
+    if (error) showError("Erro ao excluir: " + error.message);
     else {
       showSuccess("Registro removido!");
       fetchData();
@@ -230,12 +230,12 @@ export default function DescontosPage() {
                               {item.produto || 'DIESEL'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">{Number(item.litros).toLocaleString('pt-BR')} L</td>
-                          <td className="px-6 py-4 text-right text-slate-400">R$ {Number(item.preco).toFixed(2)}</td>
+                          <td className="px-6 py-4 text-right text-slate-600 dark:text-slate-400">{Number(item.litros || 0).toLocaleString('pt-BR')} L</td>
+                          <td className="px-6 py-4 text-right text-slate-400">R$ {Number(item.preco || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                         </>
                       )}
                       <td className={`px-6 py-4 text-right font-black ${activeTab === 'adiantamentos' ? 'text-orange-600' : 'text-red-600'}`}>
-                        R$ {Number(item.valor || item.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        R$ {Number(item.valor || item.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-2">

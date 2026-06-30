@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../../integrations/supabase/client';
-import { X, Save, Loader2, HandCoins } from 'lucide-react';
-import { showSuccess, showError } from '../../utils/toast';
+import { HandCoins, Loader2, Save, X } from 'lucide-react';
+import { showError, showSuccess } from '../../utils/toast';
 
 interface AdiantamentoFormProps {
   safraId: string;
@@ -13,16 +13,29 @@ interface AdiantamentoFormProps {
   motoristas: string[];
 }
 
+const parseLocaleNumber = (value: string | number) => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  const normalized = String(value || '').trim().replace(/\./g, '').replace(',', '.');
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const getErrorMessage = (err: any) => {
+  const message = err?.message || 'Erro desconhecido';
+  if (message.includes('row-level security')) {
+    return 'Sem permissao para gravar no banco. Rode o SQL de politicas RLS enviado.';
+  }
+  return message;
+};
+
 export default function AdiantamentoForm({ safraId, onClose, onSuccess, editData, motoristas }: AdiantamentoFormProps) {
   const [loading, setLoading] = useState(false);
-  
-  // Garante que a data seja apenas a parte YYYY-MM-DD para o input type="date"
   const initialDate = editData?.data ? editData.data.split('T')[0] : new Date().toISOString().split('T')[0];
 
   const [formData, setFormData] = useState({
     motorista: editData?.motorista || '',
     data: initialDate,
-    valor: editData?.valor || '',
+    valor: editData?.valor?.toString() || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,33 +43,31 @@ export default function AdiantamentoForm({ safraId, onClose, onSuccess, editData
     setLoading(true);
 
     try {
+      const motorista = formData.motorista.trim().toUpperCase();
+      const valor = parseLocaleNumber(formData.valor);
+
+      if (!motorista) throw new Error('Informe o motorista.');
+      if (!formData.data) throw new Error('Informe a data.');
+      if (valor <= 0) throw new Error('Informe o valor do adiantamento.');
+
       const payload = {
-        ...formData,
         safra_id: safraId,
-        valor: parseFloat(formData.valor)
+        motorista,
+        data: formData.data,
+        valor,
       };
 
-      let error;
-      if (editData?.id) {
-        const { error: updateError } = await supabase
-          .from('adiantamentos')
-          .update(payload)
-          .eq('id', editData.id);
-        error = updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('adiantamentos')
-          .insert([payload]);
-        error = insertError;
-      }
+      const { error } = editData?.id
+        ? await supabase.from('adiantamentos').update(payload).eq('id', editData.id)
+        : await supabase.from('adiantamentos').insert([payload]);
 
       if (error) throw error;
 
-      showSuccess(editData ? "Adiantamento atualizado!" : "Adiantamento registrado!");
+      showSuccess(editData ? 'Adiantamento atualizado!' : 'Adiantamento registrado!');
       onSuccess();
       onClose();
     } catch (err: any) {
-      showError("Erro ao salvar: " + err.message);
+      showError('Erro ao salvar: ' + getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -81,7 +92,7 @@ export default function AdiantamentoForm({ safraId, onClose, onSuccess, editData
               required
               list="motoristas-list"
               value={formData.motorista}
-              onChange={(e) => setFormData({ ...formData, motorista: e.target.value.toUpperCase() })}
+              onChange={e => setFormData({ ...formData, motorista: e.target.value.toUpperCase() })}
               className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500 transition-all"
               placeholder="NOME DO MOTORISTA"
             />
@@ -97,7 +108,7 @@ export default function AdiantamentoForm({ safraId, onClose, onSuccess, editData
                 required
                 type="date"
                 value={formData.data}
-                onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                onChange={e => setFormData({ ...formData, data: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500 transition-all"
               />
             </div>
@@ -105,10 +116,10 @@ export default function AdiantamentoForm({ safraId, onClose, onSuccess, editData
               <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Valor (R$)</label>
               <input
                 required
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 value={formData.valor}
-                onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+                onChange={e => setFormData({ ...formData, valor: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500 transition-all"
                 placeholder="0,00"
               />

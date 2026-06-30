@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '../../integrations/supabase/client';
-import { X, Save, Loader2, Fuel, Zap } from 'lucide-react';
-import { showSuccess, showError } from '../../utils/toast';
+import { Fuel, Loader2, Save, X } from 'lucide-react';
+import { showError, showSuccess } from '../../utils/toast';
 
 interface AbastecimentoFormProps {
   safraId: string;
@@ -13,62 +13,89 @@ interface AbastecimentoFormProps {
   motoristas: string[];
 }
 
+const parseLocaleNumber = (value: string | number) => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  const normalized = String(value || '').trim().replace(/\./g, '').replace(',', '.');
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const getErrorMessage = (err: any) => {
+  const message = err?.message || 'Erro desconhecido';
+  if (message.includes('row-level security')) {
+    return 'Sem permissao para gravar no banco. Rode o SQL de politicas RLS enviado.';
+  }
+  return message;
+};
+
 export default function AbastecimentoForm({ safraId, onClose, onSuccess, editData, motoristas }: AbastecimentoFormProps) {
   const [loading, setLoading] = useState(false);
-  
   const initialDate = editData?.data ? editData.data.split('T')[0] : new Date().toISOString().split('T')[0];
 
   const [formData, setFormData] = useState({
     motorista: editData?.motorista || '',
     data: initialDate,
-    litros: editData?.litros || '',
-    preco: editData?.preco || '',
-    total: editData?.total || '',
+    litros: editData?.litros?.toString() || '',
+    preco: editData?.preco?.toString() || '',
+    total: editData?.total?.toString() || '',
     produto: editData?.produto || 'DIESEL',
   });
 
   useEffect(() => {
-    const l = parseFloat(formData.litros);
-    const p = parseFloat(formData.preco);
-    if (!isNaN(l) && !isNaN(p)) {
-      setFormData(prev => ({ ...prev, total: (l * p).toFixed(2) }));
+    const litros = parseLocaleNumber(formData.litros);
+    const preco = parseLocaleNumber(formData.preco);
+    if (litros > 0 && preco > 0) {
+      setFormData(prev => ({ ...prev, total: (litros * preco).toFixed(2) }));
     }
   }, [formData.litros, formData.preco]);
+
+  const savePayload = (payload: Record<string, any>) => {
+    if (editData?.id) {
+      return supabase.from('abastecimentos').update(payload).eq('id', editData.id);
+    }
+    return supabase.from('abastecimentos').insert([payload]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const motorista = formData.motorista.trim().toUpperCase();
+      const litros = parseLocaleNumber(formData.litros);
+      const preco = parseLocaleNumber(formData.preco);
+      const total = parseLocaleNumber(formData.total) || litros * preco;
+
+      if (!motorista) throw new Error('Informe o motorista.');
+      if (!formData.data) throw new Error('Informe a data.');
+      if (litros <= 0) throw new Error('Informe a quantidade de litros.');
+      if (preco <= 0) throw new Error('Informe o preco unitario.');
+
       const payload = {
-        ...formData,
         safra_id: safraId,
-        litros: parseFloat(formData.litros),
-        preco: parseFloat(formData.preco),
-        total: parseFloat(formData.total)
+        motorista,
+        data: formData.data,
+        produto: formData.produto || 'DIESEL',
+        litros,
+        preco,
+        total,
       };
 
-      let error;
-      if (editData?.id) {
-        const { error: updateError } = await supabase
-          .from('abastecimentos')
-          .update(payload)
-          .eq('id', editData.id);
-        error = updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('abastecimentos')
-          .insert([payload]);
-        error = insertError;
+      let { error } = await savePayload(payload);
+
+      if (error?.code === '42703' && error.message?.includes('produto')) {
+        const { produto, ...payloadSemProduto } = payload;
+        const retry = await savePayload(payloadSemProduto);
+        error = retry.error;
       }
 
       if (error) throw error;
 
-      showSuccess(editData ? "Abastecimento atualizado!" : "Abastecimento registrado!");
+      showSuccess(editData ? 'Abastecimento atualizado!' : 'Abastecimento registrado!');
       onSuccess();
       onClose();
     } catch (err: any) {
-      showError("Erro ao salvar: " + err.message);
+      showError('Erro ao salvar: ' + getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -92,7 +119,7 @@ export default function AbastecimentoForm({ safraId, onClose, onSuccess, editDat
               <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Produto</label>
               <select
                 value={formData.produto}
-                onChange={(e) => setFormData({ ...formData, produto: e.target.value })}
+                onChange={e => setFormData({ ...formData, produto: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-500 transition-all"
               >
                 <option value="DIESEL">DIESEL</option>
@@ -105,7 +132,7 @@ export default function AbastecimentoForm({ safraId, onClose, onSuccess, editDat
                 required
                 type="date"
                 value={formData.data}
-                onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                onChange={e => setFormData({ ...formData, data: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-500 transition-all"
               />
             </div>
@@ -117,10 +144,13 @@ export default function AbastecimentoForm({ safraId, onClose, onSuccess, editDat
               required
               list="motoristas-list"
               value={formData.motorista}
-              onChange={(e) => setFormData({ ...formData, motorista: e.target.value.toUpperCase() })}
+              onChange={e => setFormData({ ...formData, motorista: e.target.value.toUpperCase() })}
               className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-500 transition-all"
               placeholder="NOME DO MOTORISTA"
             />
+            <datalist id="motoristas-list">
+              {motoristas.map(m => <option key={m} value={m} />)}
+            </datalist>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -128,31 +158,33 @@ export default function AbastecimentoForm({ safraId, onClose, onSuccess, editDat
               <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Litros</label>
               <input
                 required
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="decimal"
                 value={formData.litros}
-                onChange={(e) => setFormData({ ...formData, litros: e.target.value })}
+                onChange={e => setFormData({ ...formData, litros: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-500 transition-all"
-                placeholder="0.00"
+                placeholder="0,00"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Preço Unit. (R$)</label>
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Preco Unit. (R$)</label>
               <input
                 required
-                type="number"
-                step="0.001"
+                type="text"
+                inputMode="decimal"
                 value={formData.preco}
-                onChange={(e) => setFormData({ ...formData, preco: e.target.value })}
+                onChange={e => setFormData({ ...formData, preco: e.target.value })}
                 className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-red-500 transition-all"
-                placeholder="0.00"
+                placeholder="0,00"
               />
             </div>
           </div>
 
           <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-800">
             <p className="text-[10px] font-black text-red-400 uppercase mb-1">Valor Total Calculado</p>
-            <p className="text-2xl font-black text-red-600 dark:text-red-400">R$ {Number(formData.total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+            <p className="text-2xl font-black text-red-600 dark:text-red-400">
+              R$ {Number(parseLocaleNumber(formData.total)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
           </div>
 
           <div className="pt-4">

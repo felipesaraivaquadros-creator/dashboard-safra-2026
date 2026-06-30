@@ -13,7 +13,6 @@ import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../src/data/safraConfig';
 import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
-import UpdateDataButton from '../../src/components/UpdateDataButton';
 import { FileUp, Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -89,7 +88,6 @@ export default function Dashboard() {
               <FileUp size={14} />
               Importar Planilha
             </Link>
-            <UpdateDataButton />
             
             <Link 
               href={`/${safraId}/fretes`} 

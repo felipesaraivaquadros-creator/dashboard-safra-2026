@@ -112,7 +112,37 @@ const buildImportKey = (row: {
   safra_id?: string | null;
   nfe?: number | string | null;
   numero_romaneio?: number | string | null;
-}) => `${row.safra_id || ''}-${row.numero_romaneio || ''}-${row.nfe || ''}`.toUpperCase();
+}) => [
+  normalizeMapKey(row.safra_id),
+  normalizeMapKey(row.numero_romaneio).replace(/\.0$/, ''),
+  normalizeMapKey(row.nfe).replace(/\.0$/, '')
+].join('-');
+
+const hasImportKey = (row: {
+  safra_id?: string | null;
+  nfe?: number | string | null;
+  numero_romaneio?: number | string | null;
+}) => Boolean(normalizeText(row.safra_id) && normalizeText(row.numero_romaneio) && normalizeText(row.nfe));
+
+const rowCompletenessScore = (row: Record<string, any>) => {
+  let score = 0;
+  if (Number(row.peso_bruto_kg) > 0) score += 100;
+  if (Number(row.peso_liquid_kg) > 0) score += 80;
+  if (Number(row.sacas_bruto) > 0) score += 40;
+  if (Number(row.sacas_liquida) > 0) score += 40;
+  if (normalizeText(row.motorista)) score += 20;
+  if (normalizeText(row.placa)) score += 20;
+  if (normalizeText(row.armazem) || normalizeText(row.armazem_nome) || normalizeText(row.armazem_id)) score += 10;
+  if (normalizeText(row.fazenda) || normalizeText(row.fazenda_id)) score += 10;
+  if (normalizeText(row.data)) score += 5;
+  return score;
+};
+
+const pickBetterRow = <T extends Record<string, any>>(current: T, candidate: T) => {
+  const currentScore = rowCompletenessScore(current);
+  const candidateScore = rowCompletenessScore(candidate);
+  return candidateScore >= currentScore ? candidate : current;
+};
 
 export function useMSgestorImport(safraId: string) {
   const [stage, setStage] = useState<'upload' | 'sheet' | 'mapping' | 'review' | 'saving' | 'done'>('upload');
@@ -273,16 +303,28 @@ export function useMSgestorImport(safraId: string) {
         };
       });
 
-      // Verifica duplicatas no arquivo
-      const seenKeys = new Set<string>();
+      const bestRowByKey = new Map<string, ParsedRow>();
       processed.forEach(row => {
-        const key = row.mapped._uniqueKey;
-        if (seenKeys.has(key)) {
-          row.mapped._status = 'duplicate';
-          row.mapped._message = 'Duplicado no arquivo';
-        } else {
-          seenKeys.add(key);
+        if (!hasImportKey(row.mapped)) {
+          row.mapped._status = 'error';
+          row.mapped._message = 'Informe safra, numero do romaneio e NFe para atualizar sem duplicar';
+          return;
         }
+
+        const key = row.mapped._uniqueKey;
+        const current = bestRowByKey.get(key);
+        if (!current) {
+          bestRowByKey.set(key, row);
+          return;
+        }
+
+        const better = pickBetterRow(current.mapped, row.mapped) === row.mapped ? row : current;
+        const duplicate = better === row ? current : row;
+        duplicate.mapped._status = 'duplicate';
+        duplicate.mapped._message = 'Duplicado no arquivo; outra linha mais completa sera usada';
+        better.mapped._status = 'valid';
+        better.mapped._message = 'Linha mais completa para este romaneio/NF';
+        bestRowByKey.set(key, better);
       });
 
       setParsedData(processed);
@@ -313,7 +355,7 @@ export function useMSgestorImport(safraId: string) {
 
       setParsedData(prev => prev.map(row => {
         if (existingKeys.has(row.mapped._uniqueKey)) {
-          return { ...row, mapped: { ...row.mapped, _status: 'duplicate' as const, _message: 'Já existe no banco' } };
+          return { ...row, mapped: { ...row.mapped, _status: 'valid' as const, _message: 'Ja existe no banco e sera atualizado' } };
         }
         return row;
       }));
@@ -457,7 +499,7 @@ export function useMSgestorImport(safraId: string) {
       const newSet = new Set(selectedRows);
       filtered.forEach((_, idx) => {
         const realIdx = parsedData.indexOf(filtered[idx]);
-        if (filtered[idx].mapped._status !== 'error') {
+        if (filtered[idx].mapped._status !== 'error' && filtered[idx].mapped._status !== 'duplicate') {
           newSet.add(realIdx);
         }
       });
@@ -479,13 +521,19 @@ export function useMSgestorImport(safraId: string) {
 
   // ===== VALID ROWS TO SAVE =====
   const validRowsToSave = useMemo(() => {
-    return parsedData
+    const rowsByKey = new Map<string, any>();
+
+    parsedData
       .filter((row, idx) => selectedRows.has(idx))
-      .filter(row => row.mapped._status !== 'error')
-      .map(row => {
+      .filter(row => row.mapped._status !== 'error' && row.mapped._status !== 'duplicate')
+      .filter(row => hasImportKey(row.mapped))
+      .forEach(row => {
         const { _status, _message, _rowIndex, _uniqueKey, ...cleanData } = row.mapped;
-        return cleanData;
+        const current = rowsByKey.get(_uniqueKey);
+        rowsByKey.set(_uniqueKey, current ? pickBetterRow(current, cleanData) : cleanData);
       });
+
+    return Array.from(rowsByKey.values());
   }, [parsedData, selectedRows]);
 
   // ===== SAVE =====
@@ -585,23 +633,96 @@ export function useMSgestorImport(safraId: string) {
         };
       });
 
-      const batchSize = 50;
-      for (let i = 0; i < rowsToSave.length; i += batchSize) {
-        const batch = rowsToSave.slice(i, i + batchSize);
-        
-        const { error } = await supabase
-          .from('romaneios')
-          .upsert(batch, { 
-            onConflict: 'safra_id,numero_romaneio,nfe',
-            ignoreDuplicates: false 
-          });
+      const importKeys = new Set(rowsToSave.filter(row => hasImportKey(row)).map(row => buildImportKey(row)));
+      const { data: existingRows, error: existingError } = await supabase
+        .from('romaneios')
+        .select('id,safra_id,numero_romaneio,nfe,peso_bruto_kg,peso_liquid_kg,sacas_bruto,sacas_liquida,motorista,placa,armazem_id,fazenda_id,data,created_at')
+        .eq('safra_id', safraId);
+
+      if (existingError) throw existingError;
+
+      const existingByKey = new Map<string, any>();
+      const duplicatedExistingIds: string[] = [];
+
+      (existingRows || []).forEach(row => {
+        const key = buildImportKey(row);
+        if (!importKeys.has(key)) return;
+
+        const current = existingByKey.get(key);
+        if (!current) {
+          existingByKey.set(key, row);
+          return;
+        }
+
+        const better = pickBetterRow(current, row) === row ? row : current;
+        const duplicate = better === row ? current : row;
+        if (duplicate?.id) duplicatedExistingIds.push(duplicate.id);
+        existingByKey.set(key, better);
+      });
+
+      const deleteChunkSize = 100;
+      for (let i = 0; i < duplicatedExistingIds.length; i += deleteChunkSize) {
+        const chunk = duplicatedExistingIds.slice(i, i + deleteChunkSize);
+        const { error } = await supabase.from('romaneios').delete().in('id', chunk);
+        if (error) throw error;
+      }
+
+      for (const row of rowsToSave) {
+        if (!hasImportKey(row)) {
+          errorCount += 1;
+          errorDetails.push(`Romaneio sem chave de importacao: ${JSON.stringify({ numero_romaneio: row.numero_romaneio, nfe: row.nfe })}`);
+          continue;
+        }
+
+        const key = buildImportKey(row);
+        const existing = existingByKey.get(key);
+        const { error } = existing?.id
+          ? await supabase.from('romaneios').update(row).eq('id', existing.id)
+          : await supabase.from('romaneios').insert(row);
 
         if (error) {
-          errorCount += batch.length;
-          errorDetails.push(`Lote ${i/batchSize + 1}: ${error.message}`);
+          errorCount += 1;
+          errorDetails.push(`Romaneio ${row.numero_romaneio} / NFe ${row.nfe}: ${error.message}`);
         } else {
-          successCount += batch.length;
+          successCount += 1;
         }
+      }
+
+      const { data: saldoRows, error: saldoRowsError } = await supabase
+        .from('romaneios')
+        .select('armazem_id,armazem_nome,peso_liquid_kg,sacas_liquida')
+        .eq('safra_id', safraId);
+
+      if (saldoRowsError) throw saldoRowsError;
+
+      const saldosAgrupados = new Map<string, { armazem_id: string; armazem_nome: string; total_kg: number; total_sacas: number }>();
+      (saldoRows || []).forEach(row => {
+        if (!row.armazem_id) return;
+        const current = saldosAgrupados.get(row.armazem_id) || {
+          armazem_id: row.armazem_id,
+          armazem_nome: row.armazem_nome || 'Outros',
+          total_kg: 0,
+          total_sacas: 0
+        };
+        current.total_kg += Number(row.peso_liquid_kg) || 0;
+        current.total_sacas += Number(row.sacas_liquida) || 0;
+        saldosAgrupados.set(row.armazem_id, current);
+      });
+
+      const { error: deleteSaldosError } = await supabase.from('saldos').delete().eq('safra_id', safraId);
+      if (deleteSaldosError) throw deleteSaldosError;
+
+      const saldosPayload = Array.from(saldosAgrupados.values()).map(row => ({
+        safra_id: safraId,
+        armazem_id: row.armazem_id,
+        armazem_nome: row.armazem_nome,
+        total_kg: Math.round(row.total_kg),
+        total_sacas: Number(row.total_sacas.toFixed(2))
+      }));
+
+      if (saldosPayload.length > 0) {
+        const { error: insertSaldosError } = await supabase.from('saldos').insert(saldosPayload);
+        if (insertSaldosError) throw insertSaldosError;
       }
 
       dismissToast(toastId);
@@ -621,7 +742,7 @@ export function useMSgestorImport(safraId: string) {
       showError("Erro crítico ao salvar: " + err.message);
       setStage('review');
     }
-  }, [validRowsToSave]);
+  }, [validRowsToSave, safraId]);
 
   // ===== UTILITIES =====
   const downloadTemplate = useCallback(() => {

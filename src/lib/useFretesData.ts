@@ -5,7 +5,7 @@ import { Romaneio } from '../data/types';
 import { getSafraConfig } from '../data/safraConfig';
 import { supabase } from '../integrations/supabase/client';
 
-export type SortKey = 'data' | 'sacasBruto' | 'placa' | 'nfe' | 'armazem' | 'motorista';
+export type SortKey = 'data' | 'sacasBruto' | 'pesoBrutoKg' | 'placa' | 'nfe' | 'armazem' | 'motorista';
 export type SortOrder = 'asc' | 'desc';
 
 export function useFretesData(safraId: string) {
@@ -57,7 +57,7 @@ export function useFretesData(safraId: string) {
           numero: d.numero_romaneio || null,
           talhao: d.talhao || null,
           safra: d.safra_id || null,
-          pesoLiquidoKg: Number(d.peso_liquid_kg) || 0,
+          pesoLiquidoKg: Number(d.peso_liquid_kg ?? (d as any).peso_liquido_kg) || 0,
           pesoBrutoKg: Number(d.peso_bruto_kg) || 0,
           sacasLiquida: Number(d.sacas_liquida) || 0,
           umidade: Number(d.umidade) || 0,
@@ -117,7 +117,7 @@ export function useFretesData(safraId: string) {
       const { key, order } = sortConfig;
       let valA: any = a[key as keyof Romaneio] ?? '';
       let valB: any = b[key as keyof Romaneio] ?? '';
-      if (key === 'sacasBruto') { valA = Number(valA); valB = Number(valB); }
+      if (key === 'sacasBruto' || key === 'pesoBrutoKg') { valA = Number(valA); valB = Number(valB); }
       if (valA < valB) return order === 'asc' ? -1 : 1;
       if (valA > valB) return order === 'asc' ? 1 : -1;
       return 0;

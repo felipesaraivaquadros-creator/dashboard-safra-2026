@@ -343,3 +343,41 @@ Conclusao:
   * `created_at` mais novo;
   * maior `id`.
 * `docs/supabase_import_constraints.sql` agora interrompe com mensagem clara se ainda houver duplicados, orientando rodar o dedupe primeiro.
+
+## Atualizacao de fluxo oficial - planilhas pelo app
+
+O usuario definiu que a planilha base do MS Gestor sera a fonte oficial para todas as safras.
+
+Decisoes aplicadas:
+
+* O fluxo operacional por JSON local esta descontinuado.
+* O painel deve consumir dados do Supabase.
+* A entrada de romaneios passa a ser feita pela tela `/[safraId]/importar`.
+* O botao antigo de sincronizacao do banco a partir de JSON local foi removido do painel.
+* Ao importar, linhas ja existentes no banco por `safra_id + numero_romaneio + nfe` devem ser atualizadas, nao bloqueadas como duplicadas.
+* Duplicatas dentro da propria planilha sao consolidadas antes da gravacao, mantendo a linha mais completa.
+* A gravacao agora procura registros existentes por chave, atualiza por `id`, insere somente quando nao existe e remove duplicatas antigas encontradas para a mesma chave importada.
+* A tabela `saldos` e recalculada apos cada importacao com base nos romaneios gravados da safra.
+* A tela de fretes foi ajustada para exibir Motorista, Placa, Peso Bruto kg e Sacas Bruto a partir do banco.
+* Criado `docs/supabase_reset_safras_for_reimport.sql` para limpar safras selecionadas antes de reimportar as planilhas oficiais pelo app.
+
+## Atualizacao CRUD financeiro - 2026-06-30
+
+O usuario informou erro ao gravar novo abastecimento e pediu um fluxo profissional para adicionar, editar e remover abastecimentos e adiantamentos em qualquer safra.
+
+Diagnostico:
+
+* `abastecimentos` nao possuia a coluna `produto`, mas o formulario tentava gravar `produto`.
+* Uma tentativa controlada de insert com a chave publica retornou RLS: `new row violates row-level security policy`.
+* As telas devem considerar o Supabase como fonte oficial para todas as safras.
+
+Alteracoes:
+
+* `src/components/descontos/AbastecimentoForm.tsx` foi recriado com validacao, suporte a numero com virgula/ponto, mensagens melhores e fallback quando `produto` ainda nao existir no banco.
+* `src/components/descontos/AdiantamentoForm.tsx` foi recriado com validacao e suporte a numero com virgula/ponto.
+* `app/[safraId]/descontos/page.tsx` passou a exibir erros de exclusao com detalhe do banco e formatar numeros nulos de forma segura.
+* Criado `docs/supabase_finance_crud_policies.sql` para:
+  * adicionar `abastecimentos.produto`;
+  * habilitar RLS;
+  * conceder select/insert/update/delete para usuarios autenticados;
+  * criar politicas CRUD para `adiantamentos` e `abastecimentos`.
