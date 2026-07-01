@@ -475,3 +475,32 @@ Status desta atualizacao:
 * `git diff --check` executado sem erros finais.
 * `npm run build` executado com sucesso.
 * Antes de testar gravacao em producao, executar no Supabase SQL Editor: `docs/supabase_precos_frete_motorista.sql`.
+
+## Atualizacao visual precos de frete - 2026-07-01
+
+Pedido do usuario:
+
+* Melhorar o visual da area de precos por motorista na pagina de fretes.
+* A lista ficou extensa quando existem varios registros de precos para diferentes motoristas.
+* Os precos devem acompanhar a selecao de motoristas da configuracao de fechamento:
+  * nenhum motorista selecionado: mostrar apenas precos `GERAL`;
+  * um motorista selecionado: mostrar apenas os precos dele;
+  * varios motoristas selecionados: mostrar apenas os precos dos selecionados.
+
+Alteracoes aplicadas:
+
+* `src/components/fretes/TabelaPrecosReferencia.tsx`
+  * Recebe `motoristasSelecionados` da pagina de fretes.
+  * Filtra visualmente os precos pelo contexto da selecao.
+  * Quando nenhum motorista esta selecionado, mostra somente `GERAL`.
+  * Compactou os registros em linhas mais enxutas, reduzindo o tamanho visual da lista.
+  * Ao adicionar novo preco, preenche automaticamente `GERAL` quando nenhum motorista esta selecionado, ou o motorista selecionado quando houver apenas um.
+
+* `app/[safraId]/fretes/page.tsx`
+  * Passa `motoristasFiltro` para a tabela de precos.
+
+Status desta atualizacao:
+
+* Edicoes feitas.
+* `git diff --check` executado sem erros finais.
+* `npm run build` executado com sucesso.

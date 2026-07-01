@@ -22,6 +22,7 @@ interface PrecoForm {
 interface TabelaPrecosReferenciaProps {
   safraId: string;
   motoristas: string[];
+  motoristasSelecionados: string[];
   cidades: string[];
   onUpdate: () => void;
 }
@@ -44,7 +45,7 @@ const parseLocaleNumber = (value: string) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-export default function TabelaPrecosReferencia({ safraId, motoristas, cidades, onUpdate }: TabelaPrecosReferenciaProps) {
+export default function TabelaPrecosReferencia({ safraId, motoristas, motoristasSelecionados, cidades, onUpdate }: TabelaPrecosReferenciaProps) {
   const [precos, setPrecos] = useState<PrecoFrete[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,6 +56,17 @@ export default function TabelaPrecosReferencia({ safraId, motoristas, cidades, o
 
   const motoristasOrdenados = useMemo(() => [...motoristas].sort(), [motoristas]);
   const cidadesOrdenadas = useMemo(() => [...cidades].sort(), [cidades]);
+  const motoristasContexto = useMemo(() => {
+    const selecionados = motoristasSelecionados.map(normalizeText).filter(Boolean);
+    return selecionados.length > 0 ? selecionados : ['GERAL'];
+  }, [motoristasSelecionados]);
+  const precosVisiveis = useMemo(() => {
+    const contexto = new Set(motoristasContexto);
+    return precos.filter(preco => contexto.has(normalizeText(preco.motorista || 'GERAL')));
+  }, [precos, motoristasContexto]);
+  const contextoLabel = motoristasSelecionados.length === 0
+    ? 'Mostrando somente precos GERAL'
+    : `${motoristasSelecionados.length} motorista(s) selecionado(s)`;
 
   const fetchPrecos = async () => {
     setLoading(true);
@@ -117,6 +129,19 @@ export default function TabelaPrecosReferencia({ safraId, motoristas, cidades, o
       onUpdate();
     }
     setSaving(false);
+  };
+
+  const openAddForm = () => {
+    const nextAdding = !isAdding;
+    setIsAdding(nextAdding);
+    cancelEditing();
+    if (nextAdding) {
+      setNewPreco({
+        motorista: motoristasContexto.length === 1 ? motoristasContexto[0] : '',
+        cidade: '',
+        valor: ''
+      });
+    }
   };
 
   const startEditing = (preco: PrecoFrete) => {
@@ -223,13 +248,14 @@ export default function TabelaPrecosReferencia({ safraId, motoristas, cidades, o
         </div>
         <button
           type="button"
-          onClick={() => { setIsAdding(!isAdding); cancelEditing(); }}
+          onClick={openAddForm}
           className="p-1.5 bg-purple-100 text-purple-600 hover:bg-purple-600 hover:text-white rounded-lg transition-all"
           title={isAdding ? 'Cancelar' : 'Adicionar preco'}
         >
           {isAdding ? <X size={16} /> : <Plus size={16} />}
         </button>
       </div>
+      <p className="mb-4 text-[10px] font-bold uppercase text-slate-400">{contextoLabel}</p>
 
       <div className="space-y-3">
         {isAdding && (
@@ -249,12 +275,12 @@ export default function TabelaPrecosReferencia({ safraId, motoristas, cidades, o
 
         {loading ? (
           <div className="flex justify-center py-4"><Loader2 className="animate-spin text-slate-300" size={20} /></div>
-        ) : precos.map(preco => {
+        ) : precosVisiveis.map(preco => {
           const isEditing = editingId === preco.id;
           const motoristaLabel = preco.motorista || 'GERAL';
 
           return (
-            <div key={preco.id} className={`p-3 rounded-xl border transition-all group ${isEditing ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800' : 'bg-slate-50 border-slate-100 dark:bg-slate-700/50 dark:border-slate-700'}`}>
+            <div key={preco.id} className={`rounded-xl border transition-all group ${isEditing ? 'p-3 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800' : 'bg-slate-50 border-slate-100 dark:bg-slate-700/50 dark:border-slate-700'}`}>
               {isEditing ? (
                 <div className="space-y-3">
                   <FormFields form={editPreco} onChange={setEditPreco} />
@@ -278,14 +304,16 @@ export default function TabelaPrecosReferencia({ safraId, motoristas, cidades, o
                   </div>
                 </div>
               ) : (
-                <div className="flex items-start gap-3">
-                  <Truck size={13} className="text-slate-400 shrink-0 mt-0.5" />
+                <div className="flex items-center gap-2 px-3 py-2">
+                  <Truck size={12} className="text-slate-400 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-200 truncate">{motoristaLabel}</p>
-                    <p className="text-[10px] font-bold uppercase text-slate-400 flex items-center gap-1 mt-1">
+                    <p className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-200 truncate leading-tight">{motoristaLabel}</p>
+                    <p className="text-[9px] font-bold uppercase text-slate-400 flex items-center gap-1 mt-0.5 leading-tight">
                       <MapPin size={10} /> {preco.cidade}
                     </p>
-                    <p className="text-xs font-black text-green-600 dark:text-green-400 mt-1">
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs font-black text-green-600 dark:text-green-400">
                       R$ {Number(preco.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </div>
@@ -313,8 +341,8 @@ export default function TabelaPrecosReferencia({ safraId, motoristas, cidades, o
           );
         })}
 
-        {precos.length === 0 && !loading && !isAdding && (
-          <p className="text-[10px] text-slate-400 italic text-center py-4">Nenhum preco configurado.</p>
+        {precosVisiveis.length === 0 && !loading && !isAdding && (
+          <p className="text-[10px] text-slate-400 italic text-center py-4">Nenhum preco neste filtro.</p>
         )}
       </div>
     </section>

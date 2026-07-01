@@ -103,6 +103,7 @@ export default function FretesPage() {
             <TabelaPrecosReferencia
               safraId={safraId}
               motoristas={motoristas}
+              motoristasSelecionados={motoristasFiltro}
               cidades={cidadesEntrega}
               onUpdate={fetchPrecos}
             />
