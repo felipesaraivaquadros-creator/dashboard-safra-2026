@@ -26,7 +26,7 @@ export default function FretesPage() {
 
   const {
     safraConfig,
-    motoristaFiltro, setMotoristaFiltro,
+    motoristasFiltro, setMotoristasFiltro,
     placaFiltro, setPlacaFiltro,
     armazemFiltro, setArmazemFiltro,
     tipoCalculo, setTipoCalculo,
@@ -47,8 +47,11 @@ export default function FretesPage() {
     setMounted(true);
   }, []);
 
+  const motoristasSelecionadosLabel = motoristasFiltro.length === 0 ? "Todos" : motoristasFiltro.join(", ");
+  const motoristasRelatorio = motoristasFiltro.length === 0 ? "" : motoristasSelecionadosLabel;
+
   const handleLimpar = () => {
-    setMotoristaFiltro("");
+    setMotoristasFiltro([]);
     setPlacaFiltro("");
     setArmazemFiltro("");
     setTipoCalculo('com');
@@ -101,7 +104,7 @@ export default function FretesPage() {
           </div>
           <div className="lg:col-span-8">
             <FiltrosFrete 
-              motoristaFiltro={motoristaFiltro} setMotoristaFiltro={setMotoristaFiltro}
+              motoristasFiltro={motoristasFiltro} setMotoristasFiltro={setMotoristasFiltro}
               placaFiltro={placaFiltro} setPlacaFiltro={setPlacaFiltro}
               armazemFiltro={armazemFiltro} setArmazemFiltro={setArmazemFiltro}
               tipoCalculo={tipoCalculo} setTipoCalculo={setTipoCalculo}
@@ -119,7 +122,7 @@ export default function FretesPage() {
             <div className="hidden print:block border-b-2 border-slate-900 pb-4 mb-6">
               <h1 className="text-2xl font-black uppercase tracking-tighter mb-2">Relatório de Fretes</h1>
               <div className="grid grid-cols-2 gap-y-1 text-xs font-bold uppercase">
-                <p><span className="text-slate-500">Motorista:</span> {motoristaFiltro || "Todos"}</p>
+                <p><span className="text-slate-500">Motoristas:</span> {motoristasSelecionadosLabel}</p>
                 <p><span className="text-slate-500">Safra:</span> {safraConfig.nome}</p>
                 {placaFiltro && <p><span className="text-slate-500">Placa:</span> {placaFiltro}</p>}
                 {armazemFiltro && <p><span className="text-slate-500">Armazém:</span> {armazemFiltro}</p>}
@@ -221,7 +224,7 @@ export default function FretesPage() {
             {/* Botões de Ação Finais */}
             <AcoesRelatorio 
               dados={dadosFretes} 
-              motorista={motoristaFiltro} 
+              motorista={motoristasRelatorio}
               totalValor={saldoFinal}
               fazendas={dadosFretes.map(r => r.fazenda || "")}
             />

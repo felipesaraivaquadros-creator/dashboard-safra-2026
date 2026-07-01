@@ -15,7 +15,10 @@ interface AbastecimentoFormProps {
 
 const parseLocaleNumber = (value: string | number) => {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
-  const normalized = String(value || '').trim().replace(/\./g, '').replace(',', '.');
+  const text = String(value || '').trim().replace(/\s/g, '');
+  const normalized = text.includes(',')
+    ? text.replace(/\./g, '').replace(',', '.')
+    : text;
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 };

@@ -11,7 +11,7 @@ export type SortOrder = 'asc' | 'desc';
 export function useFretesData(safraId: string) {
   const safraConfig = getSafraConfig(safraId);
 
-  const [motoristaFiltro, setMotoristaFiltro] = useState("");
+  const [motoristasFiltro, setMotoristasFiltro] = useState<string[]>([]);
   const [placaFiltro, setPlacaFiltro] = useState("");
   const [armazemFiltro, setArmazemFiltro] = useState("");
   const [tipoCalculo, setTipoCalculo] = useState<'com' | 'sem'>('com');
@@ -101,7 +101,7 @@ export function useFretesData(safraId: string) {
     if (!showRelatorio) return [];
     
     const filtrados = romaneios.filter(r => {
-      const matchM = !motoristaFiltro || r.motorista === motoristaFiltro;
+      const matchM = motoristasFiltro.length === 0 || motoristasFiltro.includes(r.motorista || "");
       const matchP = !placaFiltro || r.placa === placaFiltro;
       const matchA = !armazemFiltro || r.armazem === armazemFiltro;
       return matchM && matchP && matchA;
@@ -122,7 +122,7 @@ export function useFretesData(safraId: string) {
       if (valA > valB) return order === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [showRelatorio, romaneios, motoristaFiltro, placaFiltro, armazemFiltro, sortConfig, precosDb]);
+  }, [showRelatorio, romaneios, motoristasFiltro, placaFiltro, armazemFiltro, sortConfig, precosDb]);
 
   const fretesPorFazenda = useMemo(() => {
     if (modeloRelatorio !== 'fazenda') return {};
@@ -163,13 +163,13 @@ export function useFretesData(safraId: string) {
 
   const dadosAdiantamentos = useMemo(() => {
     if (!showRelatorio) return [];
-    return adiantamentos.filter(a => !motoristaFiltro || a.motorista === motoristaFiltro);
-  }, [showRelatorio, adiantamentos, motoristaFiltro]);
+    return adiantamentos.filter(a => motoristasFiltro.length === 0 || motoristasFiltro.includes(a.motorista || ""));
+  }, [showRelatorio, adiantamentos, motoristasFiltro]);
 
   const dadosAbastecimentos = useMemo(() => {
     if (!showRelatorio) return [];
-    return abastecimentos.filter(a => !motoristaFiltro || a.motorista === motoristaFiltro);
-  }, [showRelatorio, abastecimentos, motoristaFiltro]);
+    return abastecimentos.filter(a => motoristasFiltro.length === 0 || motoristasFiltro.includes(a.motorista || ""));
+  }, [showRelatorio, abastecimentos, motoristasFiltro]);
 
   const calcularTotais = (lista: Romaneio[]) => {
     return lista.reduce((acc, r) => {
@@ -192,7 +192,7 @@ export function useFretesData(safraId: string) {
 
   return {
     safraConfig,
-    motoristaFiltro, setMotoristaFiltro,
+    motoristasFiltro, setMotoristasFiltro,
     placaFiltro, setPlacaFiltro,
     armazemFiltro, setArmazemFiltro,
     tipoCalculo, setTipoCalculo,

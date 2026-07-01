@@ -381,3 +381,47 @@ Alteracoes:
   * habilitar RLS;
   * conceder select/insert/update/delete para usuarios autenticados;
   * criar politicas CRUD para `adiantamentos` e `abastecimentos`.
+
+## Atualizacao calculo abastecimento e fretes - 2026-07-01
+
+Pedido atual do usuario:
+
+* Corrigir o calculo do total em novo abastecimento.
+* Permitir selecionar mais de um motorista na configuracao de fechamento de fretes.
+* Atualizar este arquivo antes de encerrar a sessao.
+* Depois destes pontos, o proximo passo sera evoluir a logica de preco de frete para permitir preco por motorista e cidade, editavel e salvo no banco.
+
+Alteracoes aplicadas:
+
+* `src/components/descontos/AbastecimentoForm.tsx`
+  * Corrigido o parser numerico para nao tratar ponto decimal como separador de milhar quando nao ha virgula.
+  * Exemplo validado: `529` litros x `6.65` ou `6,65` agora calcula `3517.85`, exibindo `R$ 3.517,85`.
+
+* `src/components/descontos/AdiantamentoForm.tsx`
+  * Aplicada a mesma normalizacao numerica para manter o padrao dos formularios financeiros.
+
+* `src/lib/useFretesData.ts`
+  * O filtro de motorista passou de valor unico para lista de motoristas.
+  * Lista vazia continua significando todos os motoristas.
+  * Fretes, adiantamentos e abastecimentos do relatorio agora respeitam a selecao multipla.
+
+* `src/components/fretes/FiltrosFrete.tsx`
+  * O campo Motorista foi substituido por uma selecao multipla com checkboxes.
+  * Adicionados atalhos para selecionar todos e limpar.
+
+* `app/[safraId]/fretes/page.tsx`
+  * A pagina foi ajustada para usar a selecao multipla.
+  * O cabecalho de impressao mostra todos os motoristas selecionados.
+
+* `src/components/fretes/AcoesRelatorio.tsx`
+  * Exportacao Excel passou a incluir a coluna Motorista.
+  * Geracao de recibo passou a usar `URLSearchParams`, evitando problemas quando ha varios nomes no parametro.
+  * Nome do arquivo exportado agora e sanitizado quando houver varios motoristas.
+
+Status desta atualizacao:
+
+* Edicoes feitas.
+* Teste numerico validado: `529 x 6,65 = 3517,85`.
+* `git diff --check` executado sem erros finais.
+* `npm run build` executado com sucesso.
+* Proximo passo operacional: commit e push para o GitHub.

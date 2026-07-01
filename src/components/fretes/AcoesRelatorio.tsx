@@ -25,12 +25,14 @@ export default function AcoesRelatorio({ dados, motorista, totalValor, fazendas 
     return `${date}_${time}`;
   };
 
-  const nomeArquivo = `relatorio_frete_${motorista || 'geral'}_${getTimestamp()}`;
+  const motoristaSlug = (motorista || 'geral').replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '');
+  const nomeArquivo = `relatorio_frete_${motoristaSlug || 'geral'}_${getTimestamp()}`;
 
   const handleExportExcel = () => {
     const dataToExport = dados.map(r => ({
       Data: r.data,
       NFe: r.nfe,
+      Motorista: r.motorista,
       Placa: r.placa,
       Armazem: r.armazem,
       Fazenda: r.fazenda,
@@ -48,7 +50,12 @@ export default function AcoesRelatorio({ dados, motorista, totalValor, fazendas 
   const handleGerarRecibo = () => {
     const valorFormatado = totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const fazendasUnicas = Array.from(new Set(fazendas)).join(', ');
-    router.push(`/${safraId}/recibos?valor=${valorFormatado}&motorista=${motorista}&fazendas=${fazendasUnicas}`);
+    const query = new URLSearchParams({
+      valor: valorFormatado,
+      motorista,
+      fazendas: fazendasUnicas
+    });
+    router.push(`/${safraId}/recibos?${query.toString()}`);
   };
 
   return (

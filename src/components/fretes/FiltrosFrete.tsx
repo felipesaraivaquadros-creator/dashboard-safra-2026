@@ -1,11 +1,11 @@
 "use client";
 
 import React from 'react';
-import { Filter, Settings2, LayoutList, Layers, Search, Users, Warehouse } from 'lucide-react';
+import { Filter, Settings2, LayoutList, Layers, Search, Users, Warehouse, CheckSquare, Square } from 'lucide-react';
 
 interface FiltrosFreteProps {
-  motoristaFiltro: string;
-  setMotoristaFiltro: (v: string) => void;
+  motoristasFiltro: string[];
+  setMotoristasFiltro: (v: string[]) => void;
   placaFiltro: string;
   setPlacaFiltro: (v: string) => void;
   armazemFiltro: string;
@@ -21,7 +21,7 @@ interface FiltrosFreteProps {
 }
 
 export default function FiltrosFrete({
-  motoristaFiltro, setMotoristaFiltro,
+  motoristasFiltro, setMotoristasFiltro,
   placaFiltro, setPlacaFiltro,
   armazemFiltro, setArmazemFiltro,
   tipoCalculo, setTipoCalculo,
@@ -29,6 +29,17 @@ export default function FiltrosFrete({
   motoristas, placas, armazens,
   onGerar
 }: FiltrosFreteProps) {
+  const toggleMotorista = (motorista: string) => {
+    setMotoristasFiltro(
+      motoristasFiltro.includes(motorista)
+        ? motoristasFiltro.filter(m => m !== motorista)
+        : [...motoristasFiltro, motorista]
+    );
+  };
+
+  const selecionarTodosMotoristas = () => setMotoristasFiltro(motoristas);
+  const limparMotoristas = () => setMotoristasFiltro([]);
+
   return (
     <section className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
       <div className="flex items-center gap-2 mb-6">
@@ -36,12 +47,50 @@ export default function FiltrosFrete({
         <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">Configurar Fechamento</h2>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Motorista</label>
-          <select value={motoristaFiltro} onChange={(e) => setMotoristaFiltro(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-2 focus:ring-purple-500 transition-all">
-            <option value="">Todos os Motoristas</option>
-            {motoristas.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+        <div className="sm:col-span-2 space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Motoristas</label>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={selecionarTodosMotoristas} className="text-[10px] font-black uppercase text-purple-600 hover:text-purple-700">
+                Selecionar todos
+              </button>
+              <button type="button" onClick={limparMotoristas} className="text-[10px] font-black uppercase text-slate-400 hover:text-red-500">
+                Limpar
+              </button>
+            </div>
+          </div>
+          <div className="max-h-40 overflow-y-auto rounded-xl bg-slate-50 dark:bg-slate-900 p-2 grid grid-cols-1 md:grid-cols-2 gap-1">
+            {motoristas.length === 0 && (
+              <div className="px-3 py-2 text-xs font-bold text-slate-400">Nenhum motorista encontrado</div>
+            )}
+            {motoristas.map(motorista => {
+              const selected = motoristasFiltro.includes(motorista);
+              return (
+                <label
+                  key={motorista}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold cursor-pointer transition-all ${
+                    selected
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => toggleMotorista(motorista)}
+                    className="sr-only"
+                  />
+                  {selected ? <CheckSquare size={14} /> : <Square size={14} />}
+                  <span className="truncate">{motorista}</span>
+                </label>
+              );
+            })}
+          </div>
+          <p className="text-[10px] font-bold uppercase text-slate-400 ml-1">
+            {motoristasFiltro.length === 0
+              ? 'Todos os motoristas entram no fechamento'
+              : `${motoristasFiltro.length} motorista(s) selecionado(s)`}
+          </p>
         </div>
         <div className="space-y-1.5">
           <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Placa</label>
