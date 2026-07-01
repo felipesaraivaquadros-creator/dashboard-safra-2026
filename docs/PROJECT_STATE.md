@@ -425,3 +425,53 @@ Status desta atualizacao:
 * `git diff --check` executado sem erros finais.
 * `npm run build` executado com sucesso.
 * Proximo passo operacional: commit e push para o GitHub.
+
+## Atualizacao preco de frete por motorista e cidade - 2026-07-01
+
+Pedido do usuario:
+
+* Evoluir a logica de preco de frete para todas as safras.
+* Cada motorista deve poder ter seu proprio preco por cidade.
+* Os valores devem ser editaveis e gravaveis no banco.
+
+Decisao aplicada:
+
+* A tabela `precos_frete` passa a trabalhar com a chave `safra_id + motorista + cidade`.
+* O app procura o preco nesta ordem:
+  * preco especifico do motorista naquela cidade;
+  * preco `GERAL` da cidade, para compatibilidade com cadastros antigos;
+  * preco vindo do romaneio/planilha, quando nao houver preco configurado.
+* Cidade e motorista sao normalizados sem acento e em maiusculas para reduzir duplicidades como `CLAUDIA` x `CLÁUDIA`.
+
+Alteracoes aplicadas:
+
+* `src/lib/useFretesData.ts`
+  * Consulta `precos_frete` com `cidade`, `motorista` e `valor`.
+  * Monta mapa de precos por `motorista|cidade`.
+  * Expos `cidadesEntrega` vindas dos romaneios da safra para apoiar o cadastro.
+
+* `src/components/fretes/TabelaPrecosReferencia.tsx`
+  * Recriado como cadastro de preco por Motorista + Cidade + Valor.
+  * Permite adicionar, editar e excluir valores.
+  * Usa `upsert` em `safra_id,motorista,cidade`.
+  * Usa listas sugeridas de motoristas e cidades da propria safra.
+
+* `app/[safraId]/fretes/page.tsx`
+  * Passa motoristas e cidades da safra para a tabela de precos.
+
+* `docs/supabase_precos_frete_motorista.sql`
+  * Novo SQL de migracao para criar/adaptar `precos_frete`.
+  * Adiciona coluna `motorista`.
+  * Migra precos antigos para motorista `GERAL`.
+  * Remove constraint antiga por cidade, consolida duplicatas e cria indice unico por `safra_id, motorista, cidade`.
+  * Habilita RLS e politica CRUD para usuarios autenticados.
+
+* `scripts/cadastrar_precos_milho26.sql`
+  * Atualizado para inserir fallback `GERAL` usando a nova chave.
+
+Status desta atualizacao:
+
+* Edicoes feitas.
+* `git diff --check` executado sem erros finais.
+* `npm run build` executado com sucesso.
+* Antes de testar gravacao em producao, executar no Supabase SQL Editor: `docs/supabase_precos_frete_motorista.sql`.

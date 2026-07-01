@@ -8,6 +8,13 @@ import { supabase } from '../integrations/supabase/client';
 export type SortKey = 'data' | 'sacasBruto' | 'pesoBrutoKg' | 'placa' | 'nfe' | 'armazem' | 'motorista';
 export type SortOrder = 'asc' | 'desc';
 
+const normalizeKey = (value: string | null | undefined) =>
+  (value || "")
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase();
+
 export function useFretesData(safraId: string) {
   const safraConfig = getSafraConfig(safraId);
 
@@ -36,7 +43,7 @@ export function useFretesData(safraId: string) {
         supabase.from('romaneios').select(`*, fazendas(nome), armazens(nome)`).eq('safra_id', safraId),
         supabase.from('adiantamentos').select('*').eq('safra_id', safraId),
         supabase.from('abastecimentos').select('*').eq('safra_id', safraId),
-        supabase.from('precos_frete').select('cidade, valor').eq('safra_id', safraId)
+        supabase.from('precos_frete').select('cidade, motorista, valor').eq('safra_id', safraId)
       ]);
 
       if (romRes.data) {
@@ -72,7 +79,11 @@ export function useFretesData(safraId: string) {
       if (abastRes.data) setAbastecimentos(abastRes.data);
       
       if (precosRes.data) {
-        const map = Object.fromEntries(precosRes.data.map(p => [p.cidade.toUpperCase(), Number(p.valor)]));
+        const map = Object.fromEntries(precosRes.data.map(p => {
+          const cidade = normalizeKey(p.cidade);
+          const motorista = normalizeKey((p as any).motorista || "GERAL");
+          return [`${motorista}|${cidade}`, Number(p.valor)];
+        }));
         setPrecosDb(map);
       }
     } catch (err) {
@@ -89,6 +100,7 @@ export function useFretesData(safraId: string) {
   const motoristas = useMemo(() => Array.from(new Set(romaneios.map(r => r.motorista).filter(Boolean))).sort() as string[], [romaneios]);
   const placas = useMemo(() => Array.from(new Set(romaneios.map(r => r.placa).filter(Boolean))).sort() as string[], [romaneios]);
   const armazens = useMemo(() => Array.from(new Set(romaneios.map(r => r.armazem).filter(Boolean))).sort() as string[], [romaneios]);
+  const cidadesEntrega = useMemo(() => Array.from(new Set(romaneios.map(r => r.cidadeEntrega).filter(Boolean))).sort() as string[], [romaneios]);
 
   const handleSort = (key: SortKey) => {
     setSortConfig(prev => ({
@@ -108,8 +120,9 @@ export function useFretesData(safraId: string) {
     });
 
     const comPrecos = filtrados.map(r => {
-      const cidade = (r.cidadeEntrega || "").toUpperCase();
-      const precoSugerido = precosDb[cidade] || r.precofrete || 0;
+      const cidade = normalizeKey(r.cidadeEntrega);
+      const motorista = normalizeKey(r.motorista);
+      const precoSugerido = precosDb[`${motorista}|${cidade}`] || precosDb[`GERAL|${cidade}`] || r.precofrete || 0;
       return { ...r, precofrete: precoSugerido };
     });
 
@@ -199,7 +212,7 @@ export function useFretesData(safraId: string) {
     modeloRelatorio, setModeloRelatorio,
     showRelatorio, setShowRelatorio,
     sortConfig, handleSort,
-    motoristas, placas, armazens,
+    motoristas, placas, armazens, cidadesEntrega,
     dadosFretes, fretesPorFazenda, fretesPorArmazem, fretesConsolidados,
     dadosAdiantamentos, dadosAbastecimentos,
     totaisFreteGlobal, totalAdiantamentos, totaisAbastecimento,
