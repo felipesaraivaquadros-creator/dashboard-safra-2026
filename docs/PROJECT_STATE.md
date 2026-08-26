@@ -604,3 +604,45 @@ Próximos passos recomendados:
 2. Cadastrar as áreas plantadas da safra `milho26` em `/milho26/areas` e conferir os indicadores de produtividade do painel.
 3. Importar primeiro uma planilha pequena de teste em cada modelo e confirmar o salvamento real no Supabase antes de reimportar arquivos completos.
 4. Depois da validação operacional, publicar as alterações do repositório no GitHub/Vercel.
+
+## Atualização - talhões e produtividade por hectare - 2026-08-26
+
+Pedido implementado:
+
+* Criar cadastro de talhões com nome, área em hectares e associação obrigatória a uma fazenda.
+* Permitir editar e excluir talhões sem remover romaneios históricos.
+* Exibir no painel um ranking visual de produtividade bruta por talhão.
+
+Alterações aplicadas:
+
+* Criada a rota `/[safraId]/talhoes`, disponível no menu lateral e no atalho `Talhões` do painel.
+* Criado `src/components/talhoes/TalhoesManager.tsx`:
+  * cria talhões para a safra em aberto;
+  * exige fazenda, nome e área maior que zero;
+  * permite editar fazenda, nome e hectares;
+  * permite excluir somente o cadastro do talhão, sem apagar romaneios.
+* Criado `docs/supabase_talhoes.sql`:
+  * tabela `talhoes` por `safra_id + fazenda_id + nome`;
+  * área em hectares maior que zero;
+  * índice, RLS, permissões e política CRUD para usuários autenticados.
+* `setup.sql` passou a incluir a estrutura de talhões para instalações novas.
+* `src/lib/useDataProcessing.ts` agora calcula um ranking de produtividade bruta:
+  * fórmula: `sacas_bruto / área_ha`;
+  * quando `sacas_bruto` estiver vazio, usa `peso_bruto_kg / 60`;
+  * os dados são ordenados do maior para o menor resultado;
+  * romaneio sem talhão entra como `Talhão Geral` da fazenda;
+  * para `Talhão Geral`, a área usada é a área plantada da fazenda; se ela não existir, usa a soma dos talhões cadastrados daquela fazenda;
+  * talhão informado no romaneio só entra no ranking depois que tiver área cadastrada.
+* `src/components/ChartSection.tsx` ganhou o ranking horizontal:
+  * mostra nome do talhão e fazenda quando aplicável;
+  * exibe o valor de `sc/ha` em cada barra;
+  * preserva as cores existentes de cada fazenda;
+  * selecionar uma fazenda filtra o ranking;
+  * selecionar um talhão seleciona a fazenda associada e atualiza os indicadores/fazendas;
+  * o gráfico de armazéns continua dinâmico com fazendas, sem ganhar dependência adicional do talhão.
+
+Passo operacional obrigatório antes do cadastro real:
+
+1. Executar `docs/supabase_talhoes.sql` no Supabase SQL Editor.
+2. Acessar `/milho26/talhoes` e cadastrar as áreas de cada talhão da safra.
+3. Abrir `/milho26` para conferir o ranking de produtividade em sacas brutas por hectare.

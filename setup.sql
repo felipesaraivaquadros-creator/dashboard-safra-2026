@@ -16,6 +16,18 @@ CREATE TABLE IF NOT EXISTS public.areas_plantadas (
   UNIQUE (safra_id, fazenda_id)
 );
 
+-- 1.2 Talhoes por fazenda e safra
+CREATE TABLE IF NOT EXISTS public.talhoes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  safra_id TEXT NOT NULL,
+  fazenda_id UUID NOT NULL REFERENCES public.fazendas(id) ON DELETE CASCADE,
+  nome TEXT NOT NULL,
+  area_ha NUMERIC NOT NULL CHECK (area_ha > 0),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE (safra_id, fazenda_id, nome)
+);
+
 -- 2. Tabela de Armazéns
 CREATE TABLE IF NOT EXISTS public.armazens (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -66,6 +78,7 @@ CREATE TABLE IF NOT EXISTS public.romaneios (
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE public.fazendas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.areas_plantadas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.talhoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.armazens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contratos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.romaneios ENABLE ROW LEVEL SECURITY;
@@ -73,6 +86,7 @@ ALTER TABLE public.romaneios ENABLE ROW LEVEL SECURITY;
 -- Criar Políticas de Acesso (Permitir tudo para usuários autenticados)
 CREATE POLICY "Acesso total para usuários autenticados em fazendas" ON public.fazendas FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Acesso total para usuários autenticados em areas plantadas" ON public.areas_plantadas FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Acesso total para usuários autenticados em talhoes" ON public.talhoes FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Acesso total para usuários autenticados em armazens" ON public.armazens FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Acesso total para usuários autenticados em contratos" ON public.contratos FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Acesso total para usuários autenticados em romaneios" ON public.romaneios FOR ALL TO authenticated USING (true) WITH CHECK (true);

@@ -92,13 +92,27 @@ export interface ChartData {
   sacas: number;
 }
 
+export interface TalhaoProdutividade {
+  id: string;
+  name: string;
+  label: string;
+  fazenda: string;
+  areaHa: number;
+  sacasBruto: number;
+  pesoBrutoKg: number;
+  produtividade: number;
+  isTalhaoGeral: boolean;
+}
+
 export interface DataContextType {
   safraId: string;
   loading: boolean;
   fazendaFiltro: string | null;
   armazemFiltro: string | null;
+  talhaoFiltro: string | null;
   setFazendaFiltro: (fazenda: string | null) => void;
   setArmazemFiltro: (armazem: string | null) => void;
+  setTalhaoFiltro: (talhao: string | null) => void;
   stats: KpiStats;
   discountStats: DiscountStats;
   volumeStats: VolumeStats;
@@ -109,6 +123,7 @@ export interface DataContextType {
   };
   chartFazendas: ChartData[];
   chartArmazens: ChartData[];
+  chartTalhoes: TalhaoProdutividade[];
   getCorFazenda: (name: string) => string;
   getCorArmazem: (name: string) => string;
   listaSaldos: any[];

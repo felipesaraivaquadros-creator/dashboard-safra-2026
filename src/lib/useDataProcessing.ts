@@ -1,19 +1,39 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType, DiscountStats, VolumeStats } from '../data/types';
+import { Romaneio, KpiStats, ProcessedContract, ChartData, DataContextType, DiscountStats, VolumeStats, TalhaoProdutividade } from '../data/types';
 import { getSafraConfig } from '../data/safraConfig';
 import { CORES_FAZENDAS, CORES_ARMAZENS } from '../data/sharedConfig';
 import { supabase } from '../integrations/supabase/client';
+
+const TALHAO_GERAL = 'Talhão Geral';
+const TALHAO_FILTER_SEPARATOR = '::';
+
+const normalizeLookupKey = (value: string | null | undefined) => String(value || '')
+  .trim()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/\s+/g, ' ')
+  .toUpperCase();
+
+const getTalhaoName = (talhao: string | null | undefined) => String(talhao || '').trim() || TALHAO_GERAL;
+
+const buildTalhaoKey = (fazenda: string | null | undefined, talhao: string | null | undefined) => [
+  normalizeLookupKey(fazenda),
+  normalizeLookupKey(getTalhaoName(talhao)),
+].join(TALHAO_FILTER_SEPARATOR);
 
 export const useDataProcessing = (safraId: string): DataContextType => {
   const [rawDados, setRawDados] = useState<Romaneio[]>([]);
   const [dbContratos, setDbContratos] = useState<any[]>([]);
   const [dbSaldos, setDbSaldos] = useState<any[]>([]);
   const [areasPlantadasPorFazenda, setAreasPlantadasPorFazenda] = useState<Record<string, number>>({});
+  const [areasTalhoesPorChave, setAreasTalhoesPorChave] = useState<Record<string, number>>({});
+  const [areasTalhoesPorFazenda, setAreasTalhoesPorFazenda] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
+  const [talhaoFiltro, setTalhaoFiltro] = useState<string | null>(null);
   const [customBalances, setCustomBalances] = useState<any[]>([]);
   const [refreshTick, setRefreshTick] = useState(0);
 
@@ -34,12 +54,13 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [romaneiosRes, saldosRes, contratosRes, customRes, areasRes] = await Promise.all([
+        const [romaneiosRes, saldosRes, contratosRes, customRes, areasRes, talhoesRes] = await Promise.all([
           supabase.from('romaneios').select(`*, fazendas(nome), armazens(id, nome, grupo), contratos(numero)`).eq('safra_id', safraId),
           supabase.from('saldos').select('*').eq('safra_id', safraId),
           supabase.from('contratos').select('*').eq('safra_id', safraId),
           supabase.from('saldos_custom').select('*').eq('safra_id', safraId),
-          supabase.from('areas_plantadas').select('area_ha, fazendas(nome)').eq('safra_id', safraId)
+          supabase.from('areas_plantadas').select('area_ha, fazendas(nome)').eq('safra_id', safraId),
+          supabase.from('talhoes').select('nome, area_ha, fazendas(nome)').eq('safra_id', safraId)
         ]);
 
         if (!isMounted) return;
@@ -55,6 +76,25 @@ export const useDataProcessing = (safraId: string): DataContextType => {
               .filter((item: any) => item.fazendas?.nome)
               .map((item: any) => [item.fazendas.nome, Number(item.area_ha) || 0])
           ));
+        }
+        if (talhoesRes.error) {
+          setAreasTalhoesPorChave({});
+          setAreasTalhoesPorFazenda({});
+        } else {
+          const areasPorChave: Record<string, number> = {};
+          const totaisPorFazenda: Record<string, number> = {};
+          (talhoesRes.data || []).forEach((item: any) => {
+            const fazenda = item.fazendas?.nome;
+            const areaHa = Number(item.area_ha) || 0;
+            if (!fazenda || areaHa <= 0) return;
+
+            const chaveTalhao = buildTalhaoKey(fazenda, item.nome);
+            const chaveFazenda = normalizeLookupKey(fazenda);
+            areasPorChave[chaveTalhao] = areaHa;
+            totaisPorFazenda[chaveFazenda] = (totaisPorFazenda[chaveFazenda] || 0) + areaHa;
+          });
+          setAreasTalhoesPorChave(areasPorChave);
+          setAreasTalhoesPorFazenda(totaisPorFazenda);
         }
 
         if (romaneiosRes.data) {
@@ -104,13 +144,30 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   const getCorFazenda = useCallback((nome: string): string => CORES_FAZENDAS[nome] || CORES_FAZENDAS["Outros"], []);
   const getCorArmazem = useCallback((nome: string): string => CORES_ARMAZENS[nome] || CORES_ARMAZENS["Outros"], []);
 
+  const areasPlantadasNormalizadas = useMemo(() => Object.fromEntries(
+    Object.entries(areasPlantadasPorFazenda).map(([fazenda, area]) => [normalizeLookupKey(fazenda), area])
+  ), [areasPlantadasPorFazenda]);
+
+  const areaTalhaoSelecionado = useMemo(() => {
+    if (!talhaoFiltro) return 0;
+
+    const areaCadastrada = areasTalhoesPorChave[talhaoFiltro] || 0;
+    if (areaCadastrada > 0) return areaCadastrada;
+
+    const [fazendaKey, talhaoKey] = talhaoFiltro.split(TALHAO_FILTER_SEPARATOR);
+    if (talhaoKey !== normalizeLookupKey(TALHAO_GERAL)) return 0;
+
+    return areasPlantadasNormalizadas[fazendaKey] || areasTalhoesPorFazenda[fazendaKey] || 0;
+  }, [talhaoFiltro, areasTalhoesPorChave, areasPlantadasNormalizadas, areasTalhoesPorFazenda]);
+
   const dadosFiltrados = useMemo(() => {
     return rawDados.filter(d => {
       const matchFazenda = !fazendaFiltro || d.fazenda === fazendaFiltro;
       const matchArmazem = !armazemFiltro || d.armazem === armazemFiltro;
-      return matchFazenda && matchArmazem;
+      const matchTalhao = !talhaoFiltro || buildTalhaoKey(d.fazenda, d.talhao) === talhaoFiltro;
+      return matchFazenda && matchArmazem && matchTalhao;
     });
-  }, [rawDados, fazendaFiltro, armazemFiltro]);
+  }, [rawDados, fazendaFiltro, armazemFiltro, talhaoFiltro]);
 
   const { stats, discountStats, volumeStats } = useMemo(() => {
     const liq = dadosFiltrados.reduce((acc, d) => acc + (Number(d.sacasLiquida) || 0), 0);
@@ -129,7 +186,9 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const percDesconto = bruta > 0 ? ((totalDescontosKg / 60 / bruta) * 100).toFixed(2) : '0.00';
     
     const possuiAreasPlantadas = Object.keys(areasPlantadasPorFazenda).length > 0;
-    const area = fazendaFiltro
+    const area = talhaoFiltro
+      ? areaTalhaoSelecionado
+      : fazendaFiltro
       ? (possuiAreasPlantadas
         ? areasPlantadasPorFazenda[fazendaFiltro] || 0
         : config.AREAS_FAZENDAS[fazendaFiltro] || 0)
@@ -187,7 +246,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
         metaPercentual: "0"
       }
     };
-  }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS, areasPlantadasPorFazenda]);
+  }, [dadosFiltrados, fazendaFiltro, talhaoFiltro, areaTalhaoSelecionado, config.AREAS_FAZENDAS, areasPlantadasPorFazenda]);
 
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};
@@ -250,12 +309,12 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   const chartFazendas: ChartData[] = useMemo(() => {
     const totals: Record<string, number> = {};
     rawDados.forEach(d => {
-      if (d.fazenda && (!armazemFiltro || d.armazem === armazemFiltro)) {
+      if (d.fazenda && (!armazemFiltro || d.armazem === armazemFiltro) && (!talhaoFiltro || buildTalhaoKey(d.fazenda, d.talhao) === talhaoFiltro)) {
         totals[d.fazenda] = (totals[d.fazenda] || 0) + (Number(d.sacasLiquida) || 0);
       }
     });
     return Object.keys(totals).map(name => ({ name, sacas: totals[name] })).sort((a,b) => b.sacas - a.sacas);
-  }, [rawDados, armazemFiltro]);
+  }, [rawDados, armazemFiltro, talhaoFiltro]);
 
   const chartArmazens: ChartData[] = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -267,10 +326,49 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     return Object.keys(totals).map(name => ({ name, sacas: totals[name] })).sort((a,b) => b.sacas - a.sacas);
   }, [rawDados, fazendaFiltro]);
 
+  const chartTalhoes: TalhaoProdutividade[] = useMemo(() => {
+    const totals: Record<string, Omit<TalhaoProdutividade, 'areaHa' | 'produtividade'>> = {};
+
+    rawDados.forEach((d) => {
+      if (!d.fazenda || (fazendaFiltro && d.fazenda !== fazendaFiltro)) return;
+
+      const name = getTalhaoName(d.talhao);
+      const id = buildTalhaoKey(d.fazenda, name);
+      const sacasBruto = Number(d.sacasBruto) || ((Number(d.pesoBrutoKg) || 0) / 60);
+      if (!totals[id]) {
+        totals[id] = {
+          id,
+          name,
+          label: fazendaFiltro ? name : `${name} · ${d.fazenda}`,
+          fazenda: d.fazenda,
+          sacasBruto: 0,
+          pesoBrutoKg: 0,
+          isTalhaoGeral: normalizeLookupKey(name) === normalizeLookupKey(TALHAO_GERAL),
+        };
+      }
+      totals[id].sacasBruto += sacasBruto;
+      totals[id].pesoBrutoKg += Number(d.pesoBrutoKg) || 0;
+    });
+
+    return Object.values(totals)
+      .map((item) => {
+        const areaCadastrada = areasTalhoesPorChave[item.id] || 0;
+        const areaHa = areaCadastrada > 0
+          ? areaCadastrada
+          : item.isTalhaoGeral
+            ? areasPlantadasNormalizadas[normalizeLookupKey(item.fazenda)] || areasTalhoesPorFazenda[normalizeLookupKey(item.fazenda)] || 0
+            : 0;
+        const produtividade = areaHa > 0 ? item.sacasBruto / areaHa : 0;
+        return { ...item, areaHa, produtividade };
+      })
+      .filter((item) => item.areaHa > 0 && item.sacasBruto > 0)
+      .sort((a, b) => b.produtividade - a.produtividade);
+  }, [rawDados, fazendaFiltro, areasTalhoesPorChave, areasPlantadasNormalizadas, areasTalhoesPorFazenda]);
+
   return {
-    safraId, loading, fazendaFiltro, armazemFiltro, setFazendaFiltro, setArmazemFiltro,
+    safraId, loading, fazendaFiltro, armazemFiltro, talhaoFiltro, setFazendaFiltro, setArmazemFiltro, setTalhaoFiltro,
     stats, discountStats, volumeStats, romaneiosCount: dadosFiltrados.length,
-    contratosProcessados, chartFazendas, chartArmazens, getCorFazenda, getCorArmazem,
+    contratosProcessados, chartFazendas, chartArmazens, chartTalhoes, getCorFazenda, getCorArmazem,
     listaSaldos, totalEstoque, totalContratos, saldoGeral: totalEstoque - totalContratos,
     refresh
   };

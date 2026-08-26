@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Wallet, Truck, ArrowLeft, FileText, Settings, Scissors, Map } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Wallet, Truck, ArrowLeft, FileText, Settings, Scissors, Map, Grid3X3 } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 
 export default function NavigationMenu() {
@@ -62,6 +62,12 @@ export default function NavigationMenu() {
       href: `/${safraId}/areas`,
       icon: Map,
       active: pathname.includes('/areas')
+    },
+    {
+      label: 'Talhões',
+      href: `/${safraId}/talhoes`,
+      icon: Grid3X3,
+      active: pathname.includes('/talhoes')
     },
   ];
 

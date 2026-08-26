@@ -13,7 +13,7 @@ import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../src/data/safraConfig';
 import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
-import { FileUp, Loader2, Map } from 'lucide-react';
+import { FileUp, Grid3X3, Loader2, Map } from 'lucide-react';
 
 export default function Dashboard() {
   const params = useParams();
@@ -24,8 +24,10 @@ export default function Dashboard() {
     loading,
     fazendaFiltro,
     armazemFiltro,
+    talhaoFiltro,
     setFazendaFiltro,
     setArmazemFiltro,
+    setTalhaoFiltro,
     stats,
     discountStats,
     volumeStats,
@@ -33,6 +35,7 @@ export default function Dashboard() {
     contratosProcessados,
     chartFazendas,
     chartArmazens,
+    chartTalhoes,
     getCorFazenda,
     getCorArmazem,
   } = useDataProcessing(safraId);
@@ -47,6 +50,23 @@ export default function Dashboard() {
   const handleClearFilters = () => {
     setFazendaFiltro(null);
     setArmazemFiltro(null);
+    setTalhaoFiltro(null);
+  };
+
+  const talhaoSelecionado = chartTalhoes.find((talhao) => talhao.id === talhaoFiltro);
+
+  const handleFiltroFazenda = (fazenda: string | null) => {
+    setFazendaFiltro(fazenda);
+    setTalhaoFiltro(null);
+  };
+
+  const handleFiltroTalhao = (talhao: typeof chartTalhoes[number]) => {
+    if (talhaoFiltro === talhao.id) {
+      setTalhaoFiltro(null);
+      return;
+    }
+    setTalhaoFiltro(talhao.id);
+    setFazendaFiltro(talhao.fazenda);
   };
 
   if (loading) {
@@ -72,6 +92,7 @@ export default function Dashboard() {
               <div className="flex flex-wrap gap-1 mt-0.5">
                 {fazendaFiltro && <span style={{backgroundColor: getCorFazenda(fazendaFiltro)}} className="text-[8px] md:text-[10px] text-white px-1.5 py-0.5 rounded font-bold uppercase">{fazendaFiltro}</span>}
                 {armazemFiltro && <span style={{backgroundColor: getCorArmazem(armazemFiltro)}} className="text-[8px] md:text-[10px] text-white px-1.5 py-0.5 rounded font-bold uppercase">{armazemFiltro}</span>}
+                {talhaoSelecionado && <span style={{backgroundColor: getCorFazenda(talhaoSelecionado.fazenda)}} className="text-[8px] md:text-[10px] text-white px-1.5 py-0.5 rounded font-bold uppercase">{talhaoSelecionado.name}</span>}
               </div>
             </div>
           </div>
@@ -109,6 +130,14 @@ export default function Dashboard() {
               <Map size={14} />
               Áreas
             </Link>
+            <Link
+              href={`/${safraId}/talhoes`}
+              title="Cadastrar talhões"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-md"
+            >
+              <Grid3X3 size={14} />
+              Talhões
+            </Link>
           </div>
           
           <div className="flex items-center gap-3">
@@ -139,10 +168,13 @@ export default function Dashboard() {
           <ChartSection
             chartFazendas={chartFazendas}
             chartArmazens={chartArmazens}
+            chartTalhoes={chartTalhoes}
             fazendaFiltro={fazendaFiltro}
             armazemFiltro={armazemFiltro}
-            handleFiltroFazenda={setFazendaFiltro}
+            talhaoFiltro={talhaoFiltro}
+            handleFiltroFazenda={handleFiltroFazenda}
             handleFiltroArmazem={setArmazemFiltro}
+            handleFiltroTalhao={handleFiltroTalhao}
             getCorFazenda={getCorFazenda}
             getCorArmazem={getCorArmazem}
           />
