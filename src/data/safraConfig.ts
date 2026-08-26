@@ -147,10 +147,28 @@ export const SAFRAS_MAP: Record<string, SafraConfig> = SAFRAS_DISPONIVEIS.reduce
   return acc;
 }, {} as Record<string, SafraConfig>);
 
+export function createSafraFallback(safraId: string): SafraConfig {
+  const normalizedId = safraId.toLowerCase();
+  const tipo = normalizedId.startsWith('milho') ? 'Milho' : 'Soja';
+  const years = normalizedId.replace(/\D/g, '').match(/(\d{2})(\d{2})/);
+  const periodo = years ? `${years[1]}/${years[2]}` : safraId;
+
+  return {
+    id: safraId,
+    nome: `${tipo} ${periodo}`,
+    tipo,
+    status: 'Atual',
+    dataPath: '',
+    AREAS_FAZENDAS: {},
+    VOLUMES_CONTRATADOS: {},
+    TABELA_FRETES: [],
+  };
+}
+
 export function getSafraConfig(safraId: string): SafraConfig {
   const config = SAFRAS_MAP[safraId];
   if (!config) {
-    return SOJA2526_CONFIG; 
+    return createSafraFallback(safraId);
   }
   return config;
 }

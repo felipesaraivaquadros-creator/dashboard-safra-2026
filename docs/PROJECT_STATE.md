@@ -646,3 +646,25 @@ Passo operacional obrigatório antes do cadastro real:
 1. Executar `docs/supabase_talhoes.sql` no Supabase SQL Editor.
 2. Acessar `/milho26/talhoes` e cadastrar as áreas de cada talhão da safra.
 3. Abrir `/milho26` para conferir o ranking de produtividade em sacas brutas por hectare.
+
+## Correção - acesso à safra 26/27 - 2026-08-26
+
+Problema identificado:
+
+* A página inicial já lê as safras cadastradas na tabela `safras` do Supabase.
+* As páginas internas ainda dependiam de `src/data/safraConfig.ts`, que só conhecia as safras históricas.
+* Quando uma safra nova, como `soja2627` ou `milho2627`, era aberta, `getSafraConfig` retornava indevidamente a configuração de `Soja 25/26`.
+
+Correção aplicada:
+
+* `getSafraConfig` deixou de usar `Soja 25/26` como fallback.
+* Para qualquer ID de safra ainda não presente na lista estática, o app cria uma configuração neutra com o próprio ID, cultura e período inferidos. Exemplos validados:
+  * `soja2627` → `Soja 26/27`;
+  * `milho2627` → `Milho 26/27`.
+* `src/components/SafraSelector.tsx` agora busca a lista de safras cadastradas no Supabase após a autenticação. Assim o seletor interno também apresenta a safra nova com o nome, cultura e status gravados no banco.
+* A troca de safra preserva qualquer sub-rota atual, por exemplo `/fretes`, `/saldos`, `/importar`, `/areas` e `/talhoes`.
+
+Validação:
+
+* `npx tsc --noEmit --pretty false` passou.
+* Teste isolado confirmou os IDs e nomes de fallback para `soja2627` e `milho2627`.
