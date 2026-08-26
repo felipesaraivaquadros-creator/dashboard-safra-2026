@@ -30,7 +30,7 @@ export function ColumnMappingStep({
 
   const mappedTargets = Object.values(columnMapping);
   const canProceed = parsedData.length > 0 &&
-    ['data', 'nfe', 'numero_romaneio'].some(field => mappedTargets.includes(field));
+    ['data', 'nfe', 'numero_romaneio'].every(field => mappedTargets.includes(field));
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -38,7 +38,7 @@ export function ColumnMappingStep({
         <h3 className="text-lg font-black uppercase italic tracking-tighter mb-2">Mapeamento de Colunas</h3>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Associe cada coluna do arquivo ao campo correspondente no banco de dados.
-          Colunas não mapeadas serão ignoradas.
+          Data, NFe e Nº do romaneio são obrigatórios; as demais colunas podem ficar sem mapeamento.
         </p>
       </div>
 

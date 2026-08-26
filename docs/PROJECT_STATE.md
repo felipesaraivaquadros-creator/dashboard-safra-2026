@@ -504,3 +504,103 @@ Status desta atualizacao:
 * Edicoes feitas.
 * `git diff --check` executado sem erros finais.
 * `npm run build` executado com sucesso.
+
+## Atualização e Configuração de Variáveis de Ambiente - 2026-07-10
+
+Esta sessão deu continuidade ao projeto validando o status e adicionando melhorias recomendadas na segurança das credenciais do Supabase.
+
+Alterações aplicadas:
+
+* `src/integrations/supabase/client.ts`
+  * Modificada a inicialização do cliente Supabase para buscar as variáveis de ambiente `process.env.NEXT_PUBLIC_SUPABASE_URL` e `process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+  * Mantido fallback seguro para as strings de conexão antigas, garantindo compatibilidade direta e sem quebras de execução local.
+
+* `.env.example`
+  * Novo arquivo criado no diretório raiz do projeto documentando os nomes e os valores padrão das variáveis de ambiente necessárias para o deploy (Supabase URL e Anon Key).
+
+Validações executadas:
+
+* Testada a conectividade com o banco Supabase em script de teste isolado (`test-db.js`), confirmando:
+  * Conexão ativa e integrada.
+  * Presença da coluna `motorista` na tabela `precos_frete` (confirmando a aplicação correta da migração SQL `docs/supabase_precos_frete_motorista.sql`).
+  * Presença de dados importados em múltiplas safras na tabela `romaneios` (196 romaneios para `milho26`, 169 para `soja2526` e 158 para `soja2425`).
+* Executado `npm run build` com sucesso.
+
+Status desta atualização:
+
+* Edições feitas.
+* `.env.example` criado.
+* `npm run build` executado com sucesso.
+
+## Atualização - áreas plantadas e importação flexível - 2026-08-26
+
+Contexto confirmado pelo usuário:
+
+* Os romaneios de todas as safras devem ter o Supabase como fonte oficial.
+* A entrada de novos romaneios deve ocorrer pela tela `/[safraId]/importar`, por planilha e mapeamento de colunas.
+* A área plantada não é mais fixa por fazenda: ela pode mudar a cada safra.
+* O importador precisa aceitar tanto a planilha-base antiga quanto o relatório atual do MS Gestor, inclusive datas brasileiras `dd/mm/aaaa`.
+
+### Áreas plantadas por safra
+
+Alterações aplicadas:
+
+* Criada a rota `/[safraId]/areas`, acessível pelo menu lateral e pelo atalho `Áreas` no painel da safra.
+* Criado `src/components/areas/AreasPlantadasManager.tsx`:
+  * lista as fazendas existentes;
+  * permite cadastrar/editar/remover a área plantada somente para a safra atual;
+  * permite cadastrar uma nova fazenda já com sua área da safra;
+  * aceita números com vírgula ou ponto, como `675,5`.
+* Criado `docs/supabase_areas_plantadas.sql` com a tabela `areas_plantadas`, chave única por `safra_id + fazenda_id`, índices e política RLS para usuários autenticados.
+* `src/lib/useDataProcessing.ts` agora usa as áreas cadastradas no banco para calcular área e produtividade no painel. Enquanto uma safra ainda não possuir áreas cadastradas, mantém o valor estático antigo como compatibilidade temporária.
+* `setup.sql` também passou a incluir a estrutura de `areas_plantadas` para instalações novas.
+
+Passo operacional obrigatório antes de usar a tela de áreas em produção:
+
+1. Abrir o Supabase SQL Editor.
+2. Executar o conteúdo de `docs/supabase_areas_plantadas.sql`.
+3. Abrir `/milho26/areas` e cadastrar as áreas efetivamente plantadas nesta safra.
+
+### Importação de planilhas
+
+Alterações aplicadas:
+
+* Criado `src/lib/spreadsheetImport.ts`, centralizando a detecção de cabeçalho e a normalização de dados.
+* O importador procura o cabeçalho nas primeiras 50 linhas da aba. Isso aceita relatórios do MS Gestor que trazem título e linhas vazias antes das colunas.
+* Auto-mapeamento compatível com os dois modelos:
+  * planilha-base: `Tipo NF`, `Nº`, `Peso Bruto`, `Peso Liquido`, `Sacas Liquido` e demais campos usuais;
+  * MS Gestor: `Tp`, `Nº`, `NFe`, `Produto`, `Placa`, `Arm`, `Safra`, `Talhão`, `Pesol`, `Umid`, `Impu`, `Ardi`, `Avari`, `Verdes`, `Quebr`, `Seca`, `Class`, `Entrada` e `Saída`.
+* Campos ausentes no relatório MS Gestor, como fazenda, motorista, cidade, contrato e peso bruto, continuam opcionais e podem receber valores padrão na tela de mapeamento.
+* A data privilegia `dd/mm/aaaa`; mantém compatibilidade com células antigas exibidas como `mm/dd/aa` apenas quando o segundo número não pode ser mês, por exemplo `6/18/25`.
+* O parser numérico cobre formatos como `48,880`, `50.414`, `52.580.00`, `52.580,00` e `6,65`.
+* Ao importar, os três identificadores obrigatórios são `Data`, `NFe` e `Nº do romaneio`; os demais campos seguem opcionais.
+* As linhas válidas passam a vir selecionadas automaticamente para gravação.
+* Ajustado o retorno do mapeamento para a escolha de aba, preservando a planilha selecionada.
+* A tela passou a se chamar `Importar Romaneios`/`Importar Planilha de Romaneios`, pois não é exclusiva do MS Gestor.
+
+Arquivos reais validados nesta sessão:
+
+* `C:\Users\USER\Downloads\RELATORIO90090181787685661.xls`
+  * aba `Sheet1`;
+  * cabeçalho detectado na linha 3;
+  * primeira data `28/07/2025` convertida para `2025-07-28`;
+  * `Pesol = 52.580.00` convertido para `52580` kg.
+* `C:\Users\USER\OneDrive\Documents\PRODUÇÃO\PLANEJAMENTO 2025.xlsx`
+  * aba `ROMANEIO MILHO`;
+  * primeira data exibida como `6/18/25` convertida para `2025-06-18`;
+  * peso bruto `48,880` convertido para `48880` kg.
+
+Validações executadas:
+
+* Adicionado o comando `npm run test:import-parser -- <arquivo-ms-gestor.xls> <planilha-base.xlsx>`.
+* O comando foi executado com os dois arquivos reais acima e passou.
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou.
+* Servidor local iniciado em `http://localhost:3001`; as rotas `/milho26/areas` e `/milho26/importar` responderam HTTP 200.
+
+Próximos passos recomendados:
+
+1. Executar `docs/supabase_areas_plantadas.sql` no Supabase.
+2. Cadastrar as áreas plantadas da safra `milho26` em `/milho26/areas` e conferir os indicadores de produtividade do painel.
+3. Importar primeiro uma planilha pequena de teste em cada modelo e confirmar o salvamento real no Supabase antes de reimportar arquivos completos.
+4. Depois da validação operacional, publicar as alterações do repositório no GitHub/Vercel.

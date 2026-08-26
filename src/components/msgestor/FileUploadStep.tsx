@@ -19,14 +19,14 @@ export function FileUploadStep({ loading, onFileChange, onDownloadTemplate, colu
       <div className="w-20 h-20 mx-auto mb-6 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center">
         <FileUp size={40} className="text-blue-600" />
       </div>
-      <h2 className="text-2xl font-black uppercase italic tracking-tighter mb-2">Importar do MS Gestor</h2>
+      <h2 className="text-2xl font-black uppercase italic tracking-tighter mb-2">Importar Planilha de Romaneios</h2>
       <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
-        Faça upload do relatório exportado do MS Gestor (.xls ou .xlsx). 
-        O sistema lerá os dados e permitirá configurar o mapeamento das colunas.
+        Envie a planilha-base ou o relatório exportado do MS Gestor (.xls ou .xlsx).
+        O sistema identificará o cabeçalho e permitirá revisar o mapeamento das colunas.
       </p>
       
       <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl text-left">
-        <p className="text-xs font-black uppercase text-slate-400 mb-2">Colunas esperadas do MS Gestor:</p>
+        <p className="text-xs font-black uppercase text-slate-400 mb-2">Campos disponíveis para mapeamento:</p>
         <div className="grid grid-cols-3 gap-1 text-sm text-slate-600 dark:text-slate-300">
           {Object.keys(columns).map(col => (
             <span key={col} className="px-2 py-1 bg-white dark:bg-slate-800 rounded">{col}</span>
@@ -48,7 +48,7 @@ export function FileUploadStep({ loading, onFileChange, onDownloadTemplate, colu
         className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase rounded-2xl transition-all shadow-lg disabled:opacity-50"
       >
         {loading ? <Loader2 size={20} className="animate-spin" /> : <FileUp size={20} />}
-        Selecionar Arquivo do MS Gestor
+        Selecionar Planilha
       </button>
 
       <div className="mt-6 flex gap-4 justify-center">

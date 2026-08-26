@@ -20,7 +20,7 @@ export default function ImportarPage() {
           <div className="flex items-center gap-4 min-w-0">
             <NavigationMenu />
             <h1 className="text-xl md:text-3xl font-black text-slate-800 dark:text-white uppercase italic tracking-tighter truncate">
-              Importar do MS Gestor
+              Importar Romaneios
             </h1>
           </div>
           <SafraSelector currentSafra={safraConfig} />

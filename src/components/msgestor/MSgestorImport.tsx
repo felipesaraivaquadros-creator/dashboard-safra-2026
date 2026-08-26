@@ -66,7 +66,7 @@ export default function MSgestorImport() {
             sheetNames={sheetNames}
             selectedSheet={selectedSheet}
             onSheetChange={setSelectedSheet}
-            onBack={() => setStage('upload')}
+            onBack={() => setStage('sheet')}
             onNext={processSelectedSheet}
           />
         );
@@ -131,7 +131,7 @@ export default function MSgestorImport() {
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-black uppercase italic tracking-tighter">
-              Importação MS Gestor → <span className="text-purple-600">{safraId}</span>
+              Importação de Romaneios → <span className="text-purple-600">{safraId}</span>
             </h2>
             <div className="flex items-center gap-4">
               {['upload', 'sheet', 'mapping', 'review', 'saving', 'done'].map((step, idx) => (

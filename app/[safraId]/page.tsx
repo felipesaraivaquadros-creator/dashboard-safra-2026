@@ -13,7 +13,7 @@ import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../src/data/safraConfig';
 import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
-import { FileUp, Loader2 } from 'lucide-react';
+import { FileUp, Loader2, Map } from 'lucide-react';
 
 export default function Dashboard() {
   const params = useParams();
@@ -100,6 +100,14 @@ export default function Dashboard() {
               className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md"
             >
               Saldos
+            </Link>
+            <Link
+              href={`/${safraId}/areas`}
+              title="Cadastrar áreas plantadas"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md"
+            >
+              <Map size={14} />
+              Áreas
             </Link>
           </div>
           

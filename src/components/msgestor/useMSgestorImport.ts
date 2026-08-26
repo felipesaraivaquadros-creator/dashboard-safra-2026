@@ -4,96 +4,17 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../../integrations/supabase/client';
 import { showSuccess, showError, showLoading, dismissToast } from '../../utils/toast';
-import { ParsedRow, ColumnMapping, DefaultValues, FilterState, SaveResults, MS_GESTOR_COLUMNS, TARGET_FIELDS } from './types';
+import { AUTO_MAPPING_BY_HEADER, extractSpreadsheetRows, normalizeColumnKey, normalizeImportText, normalizeMappedValues } from '../../lib/spreadsheetImport';
+import { ParsedRow, ColumnMapping, DefaultValues, FilterState, SaveResults, MS_GESTOR_COLUMNS } from './types';
 
-const normalizeText = (value: any) => String(value || '').trim();
+const normalizeText = (value: any) => normalizeImportText(value);
 const normalizeMapKey = (value: any) => normalizeText(value).toUpperCase();
-const normalizeColumnKey = (value: any) =>
-  normalizeText(value)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[º°ª]/g, '')
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .toLowerCase();
-
-const MS_GESTOR_NORMALIZED_COLUMNS: Record<string, string> = {
-  data: 'data',
-  tp: 'tipoNF',
-  tiponf: 'tipoNF',
-  n: 'numero_romaneio',
-  nromaneio: 'numero_romaneio',
-  numero: 'numero_romaneio',
-  numeroromaneio: 'numero_romaneio',
-  nfe: 'nfe',
-  emitente: 'emitente',
-  placa: 'placa',
-  motorista: 'motorista',
-  cidadedeentrega: 'cidade_entrega',
-  cidadeentrega: 'cidade_entrega',
-  armazem: 'armazem',
-  arm: 'armazem',
-  contrato: 'contrato',
-  ncontrato: 'ncontrato',
-  numerocontrato: 'ncontrato',
-  safra: 'safra',
-  fazenda: 'fazenda',
-  talhao: 'talhao',
-  pesol: 'peso_liquid_kg',
-  pesobruto: 'peso_bruto_kg',
-  pesobrutokg: 'peso_bruto_kg',
-  pesoliquido: 'peso_liquid_kg',
-  pesoliquidokg: 'peso_liquid_kg',
-  sacasbruto: 'sacas_bruto',
-  sacasbrutas: 'sacas_bruto',
-  sacasliquido: 'sacas_liquida',
-  sacasliquidos: 'sacas_liquida',
-  sacasliquida: 'sacas_liquida',
-  sacasliquidas: 'sacas_liquida',
-  umid: 'umidade',
-  umidade: 'umidade',
-  impu: 'impureza',
-  impureza: 'impureza',
-  ardi: 'ardido',
-  ardido: 'ardido',
-  avari: 'avariados',
-  avariados: 'avariados',
-  contaminantes: 'contaminantes',
-  quebr: 'quebrados',
-  quebrados: 'quebrados',
-  precofrete: 'preco_frete',
-  preçofrete: 'preco_frete',
-  precofretesc: 'preco_frete',
-  produto: 'produto',
-  verdes: 'verdes',
-  seca: 'seca',
-  class: 'classificacao',
-  classificacao: 'classificacao',
-  entrada: 'entrada',
-  saida: 'saida',
-};
 
 const SHEET_BY_SAFRA: Record<string, string> = {
   milho26: 'ROMANEIOS_MILHO',
   soja2526: 'ROMANEIOS_SOJA',
   milho25: 'ROMANEIO MILHO',
   soja2425: 'ROMANEIO SOJA',
-};
-
-const parseNumber = (value: any) => {
-  if (value === null || value === undefined || value === '') return null;
-  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
-
-  const text = String(value).trim().replace(/\s/g, '');
-  if (!text) return null;
-
-  const normalized = text.includes(',')
-    ? text.replace(/\./g, '').replace(',', '.')
-    : text.includes('.') && /^\d{1,3}(\.\d{3})+$/.test(text)
-      ? text.replace(/\./g, '')
-      : text.replace(/,/g, '');
-
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : null;
 };
 
 const findWorksheet = (workbook: XLSX.WorkBook, safraId: string) => {
@@ -217,7 +138,8 @@ export function useMSgestorImport(safraId: string) {
         return;
       }
 
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: null, raw: false });
+      const matrix = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: null, raw: false }) as unknown[][];
+      const { rows: jsonData, headers: detectedColumns, headerRowIndex } = extractSpreadsheetRows(matrix);
 
       if (jsonData.length === 0) {
         dismissToast(toastId);
@@ -226,21 +148,21 @@ export function useMSgestorImport(safraId: string) {
       }
 
       // Auto-mapeamento inicial
-      const firstRow = jsonData[0] as Record<string, any>;
-      const detectedColumns = Object.keys(firstRow);
       const autoMapping: ColumnMapping = {};
       
       detectedColumns.forEach(col => {
-        const normalized = col.trim();
         const normalizedKey = normalizeColumnKey(col);
-        if (MS_GESTOR_NORMALIZED_COLUMNS[normalizedKey]) {
-          autoMapping[col] = MS_GESTOR_NORMALIZED_COLUMNS[normalizedKey];
-        } else if (MS_GESTOR_COLUMNS[normalized as keyof typeof MS_GESTOR_COLUMNS]) {
-          autoMapping[col] = MS_GESTOR_COLUMNS[normalized as keyof typeof MS_GESTOR_COLUMNS];
+        if (AUTO_MAPPING_BY_HEADER[normalizedKey]) {
+          autoMapping[col] = AUTO_MAPPING_BY_HEADER[normalizedKey];
+        } else if (MS_GESTOR_COLUMNS[col as keyof typeof MS_GESTOR_COLUMNS]) {
+          autoMapping[col] = MS_GESTOR_COLUMNS[col as keyof typeof MS_GESTOR_COLUMNS];
         }
       });
 
-      const effectiveMapping = { ...columnMapping, ...autoMapping };
+      const savedMappingForCurrentSheet = Object.fromEntries(
+        Object.entries(columnMapping).filter(([source]) => detectedColumns.includes(source))
+      );
+      const effectiveMapping = { ...autoMapping, ...savedMappingForCurrentSheet };
       setColumnMapping(effectiveMapping);
       localStorage.setItem(`msgestor_mapping_${safraId}`, JSON.stringify(effectiveMapping));
 
@@ -261,40 +183,14 @@ export function useMSgestorImport(safraId: string) {
           }
         });
 
-        // Normalizações
-        if (mapped.data && typeof mapped.data === 'string') {
-          const dateStr = mapped.data;
-          if (dateStr.includes('T')) {
-            mapped.data = dateStr.split('T')[0];
-          } else if (dateStr.includes('/')) {
-            const parts = dateStr.split('/');
-            if (parts.length === 3) {
-              mapped.data = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-            }
-          }
-        }
+        const normalizedMapped = normalizeMappedValues(mapped as Record<string, unknown>);
 
-        const numericFields = ['peso_bruto_kg', 'peso_liquid_kg', 'sacas_bruto', 'sacas_liquida', 'umidade', 'impureza', 'ardido', 'avariados', 'verdes', 'quebrados', 'seca', 'nfe', 'numero_romaneio', 'preco_frete'];
-        numericFields.forEach(f => {
-          if (mapped[f as keyof typeof mapped]) {
-            const num = parseNumber(mapped[f as keyof typeof mapped]);
-            if (num !== null) (mapped as any)[f] = num;
-          }
-        });
-
-        if (mapped.peso_liquid_kg && !mapped.sacas_liquida) {
-          mapped.sacas_liquida = Math.round((mapped.peso_liquid_kg / 60) * 100) / 100;
-        }
-        if (mapped.peso_bruto_kg && !mapped.sacas_bruto) {
-          mapped.sacas_bruto = Math.round((mapped.peso_bruto_kg / 60) * 100) / 100;
-        }
-
-        const uniqueKey = buildImportKey({ ...mapped, safra_id: safraId });
+        const uniqueKey = buildImportKey({ ...normalizedMapped, safra_id: safraId });
 
         return {
           raw: row,
           mapped: {
-            ...mapped,
+            ...normalizedMapped,
             safra_id: safraId,
             _uniqueKey: uniqueKey,
             _status: 'new' as const,
@@ -328,9 +224,12 @@ export function useMSgestorImport(safraId: string) {
       });
 
       setParsedData(processed);
+      setSelectedRows(new Set(
+        processed.flatMap((row, index) => row.mapped._status === 'error' || row.mapped._status === 'duplicate' ? [] : [index])
+      ));
       setStage('mapping');
       dismissToast(toastId);
-      showSuccess(`${processed.length} linhas lidas da aba "${selectedSheet}". Configure o mapeamento de colunas.`);
+      showSuccess(`${processed.length} linhas lidas da aba "${selectedSheet}" (cabeçalho na linha ${headerRowIndex + 1}). Configure o mapeamento de colunas.`);
       
     } catch (err: any) {
       dismissToast(toastId);
@@ -408,34 +307,14 @@ export function useMSgestorImport(safraId: string) {
           }
         });
 
-        const numericFields = ['peso_bruto_kg', 'peso_liquid_kg', 'sacas_bruto', 'sacas_liquida', 'umidade', 'impureza', 'ardido', 'avariados', 'verdes', 'quebrados', 'seca', 'nfe', 'numero_romaneio', 'preco_frete'];
-        numericFields.forEach(f => {
-          if (mapped[f as keyof typeof mapped]) {
-            const num = parseNumber(mapped[f as keyof typeof mapped]);
-            if (num !== null) (mapped as any)[f] = num;
-          }
-        });
+        const normalizedMapped = normalizeMappedValues(mapped as Record<string, unknown>);
 
-        if (mapped.data && typeof mapped.data === 'string' && mapped.data.includes('/')) {
-          const parts = mapped.data.split('/');
-          if (parts.length === 3) {
-            mapped.data = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-          }
-        }
-
-        if ((mapped as any).peso_liquid_kg && !mapped.sacas_liquida) {
-          mapped.sacas_liquida = Math.round(((mapped as any).peso_liquid_kg / 60) * 100) / 100;
-        }
-        if (mapped.peso_bruto_kg && !mapped.sacas_bruto) {
-          mapped.sacas_bruto = Math.round((mapped.peso_bruto_kg / 60) * 100) / 100;
-        }
-
-        const uniqueKey = buildImportKey({ ...mapped, safra_id: safraId });
+        const uniqueKey = buildImportKey({ ...normalizedMapped, safra_id: safraId });
 
         return {
           ...row,
           mapped: {
-            ...mapped,
+            ...normalizedMapped,
             _uniqueKey: uniqueKey,
             _rowIndex: row.mapped._rowIndex,
             safra_id: safraId,
@@ -462,7 +341,8 @@ export function useMSgestorImport(safraId: string) {
           (mapped as any)[field] = value;
         }
       });
-      return { ...row, mapped: { ...row.mapped, ...mapped } };
+      const normalizedMapped = normalizeMappedValues(mapped as Record<string, unknown>);
+      return { ...row, mapped: { ...row.mapped, ...normalizedMapped } };
     }));
   }, [columnMapping, defaultValues]);
 

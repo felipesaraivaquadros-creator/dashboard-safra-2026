@@ -10,6 +10,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
   const [rawDados, setRawDados] = useState<Romaneio[]>([]);
   const [dbContratos, setDbContratos] = useState<any[]>([]);
   const [dbSaldos, setDbSaldos] = useState<any[]>([]);
+  const [areasPlantadasPorFazenda, setAreasPlantadasPorFazenda] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [fazendaFiltro, setFazendaFiltro] = useState<string | null>(null);
   const [armazemFiltro, setArmazemFiltro] = useState<string | null>(null);
@@ -33,11 +34,12 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [romaneiosRes, saldosRes, contratosRes, customRes] = await Promise.all([
+        const [romaneiosRes, saldosRes, contratosRes, customRes, areasRes] = await Promise.all([
           supabase.from('romaneios').select(`*, fazendas(nome), armazens(id, nome, grupo), contratos(numero)`).eq('safra_id', safraId),
           supabase.from('saldos').select('*').eq('safra_id', safraId),
           supabase.from('contratos').select('*').eq('safra_id', safraId),
-          supabase.from('saldos_custom').select('*').eq('safra_id', safraId)
+          supabase.from('saldos_custom').select('*').eq('safra_id', safraId),
+          supabase.from('areas_plantadas').select('area_ha, fazendas(nome)').eq('safra_id', safraId)
         ]);
 
         if (!isMounted) return;
@@ -45,6 +47,15 @@ export const useDataProcessing = (safraId: string): DataContextType => {
         setDbSaldos(saldosRes.data || []);
         setCustomBalances(customRes.data || []);
         setDbContratos(contratosRes.data || []);
+        if (areasRes.error) {
+          setAreasPlantadasPorFazenda({});
+        } else {
+          setAreasPlantadasPorFazenda(Object.fromEntries(
+            (areasRes.data || [])
+              .filter((item: any) => item.fazendas?.nome)
+              .map((item: any) => [item.fazendas.nome, Number(item.area_ha) || 0])
+          ));
+        }
 
         if (romaneiosRes.data) {
           const mapped: Romaneio[] = romaneiosRes.data.map(d => ({
@@ -117,8 +128,14 @@ export const useDataProcessing = (safraId: string): DataContextType => {
     const totalDescontosKg = umidKg + impuKg + ardiKg + avariKg + contamKg + quebrKg;
     const percDesconto = bruta > 0 ? ((totalDescontosKg / 60 / bruta) * 100).toFixed(2) : '0.00';
     
-    const area = fazendaFiltro ? config.AREAS_FAZENDAS[fazendaFiltro] || 0 : 
-      Object.values(config.AREAS_FAZENDAS).reduce((sum, a) => sum + a, 0);
+    const possuiAreasPlantadas = Object.keys(areasPlantadasPorFazenda).length > 0;
+    const area = fazendaFiltro
+      ? (possuiAreasPlantadas
+        ? areasPlantadasPorFazenda[fazendaFiltro] || 0
+        : config.AREAS_FAZENDAS[fazendaFiltro] || 0)
+      : (possuiAreasPlantadas
+        ? Object.values(areasPlantadasPorFazenda).reduce((sum, value) => sum + value, 0)
+        : Object.values(config.AREAS_FAZENDAS).reduce((sum, value) => sum + value, 0));
 
     const romaneiosCount = dadosFiltrados.length;
     const uniqueDays = new Set(dadosFiltrados.map(d => d.data)).size;
@@ -170,7 +187,7 @@ export const useDataProcessing = (safraId: string): DataContextType => {
         metaPercentual: "0"
       }
     };
-  }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS]);
+  }, [dadosFiltrados, fazendaFiltro, config.AREAS_FAZENDAS, areasPlantadasPorFazenda]);
 
   const contratosProcessados = useMemo(() => {
     const entregasMap: Record<string, number> = {};

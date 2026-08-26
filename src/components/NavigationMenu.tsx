@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Wallet, Truck, ChevronRight, ArrowLeft, FileText, Settings, Scissors } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Wallet, Truck, ArrowLeft, FileText, Settings, Scissors, Map } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 
 export default function NavigationMenu() {
@@ -56,6 +56,12 @@ export default function NavigationMenu() {
       href: `/${safraId}/recibos`, 
       icon: FileText,
       active: pathname.includes('/recibos')
+    },
+    {
+      label: 'Áreas Plantadas',
+      href: `/${safraId}/areas`,
+      icon: Map,
+      active: pathname.includes('/areas')
     },
   ];
 
