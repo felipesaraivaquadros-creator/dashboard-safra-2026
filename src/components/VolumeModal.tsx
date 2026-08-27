@@ -139,11 +139,11 @@ export default function VolumeModal({ show, onClose, stats, volumeStats, discoun
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
+          background: #c4d1c7;
           border-radius: 10px;
         }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #475569;
+          background: #4a574e;
         }
       `}</style>
     </div>

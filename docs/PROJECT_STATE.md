@@ -695,3 +695,26 @@ Decisão visual pendente:
 * Foi gerada uma proposta visual de dashboard profissional voltado ao agro, com fundo branco, verdes fortes, cinzas neutros e amarelo de colheita como destaque.
 * A nova paleta e o redesenho completo ainda não foram aplicados ao código. A implementação deve começar somente após a aprovação da imagem pelo usuário.
 * Paleta proposta: verde floresta `#14532D`, verde operacional `#15803D`, verde folha `#22C55E`, amarelo colheita `#EAB308`, texto `#1F2937`, fundo suave `#F7FAF7`, borda `#DDE7DF` e branco `#FFFFFF`.
+
+## Atualização - paleta agro aprovada - 2026-08-27
+
+Direção aprovada e aplicada:
+
+* A proposta visual foi aprovada para aplicação exclusiva das novas cores.
+* Layouts, componentes, tipos de gráficos, filtros, interações e fluxos foram preservados.
+* A alternância dinâmica entre tema claro e escuro foi mantida com `darkMode: class`.
+* As antigas cores primárias roxas, azuis, índigo e violeta foram remapeadas no tema global para os verdes da nova identidade, evitando alterações repetitivas em cada componente.
+* Verde floresta `#14532D`, verde operacional `#15803D` e verde folha `#22C55E` passaram a formar a hierarquia principal de ações e indicadores.
+* Amarelo colheita `#EAB308` passou a ser o destaque complementar em gráficos, alertas e informações ligadas ao milho/colheita.
+* Os neutros receberam leve tonalidade agro: fundo claro `#F7FAF7`, borda `#DDE7DF`, texto principal `#1F2937` e fundo escuro `#172019`.
+* Metadados do navegador, autenticação, tooltips, grades dos gráficos e barras de rolagem também foram alinhados à paleta.
+* As paletas de fazendas e armazéns foram atualizadas para verdes coordenados, amarelo de destaque e neutros, mantendo cada série identificável.
+
+Validação executada:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou com todas as rotas geradas.
+* O CSS de produção contém as novas cores e não contém os antigos roxo `#7C3AED` e azul `#2563EB` como cores utilitárias.
+* O painel `/milho26` foi aberto com dados reais no navegador local.
+* Temas claro e escuro foram alternados e inspecionados visualmente com sucesso.
+* Os gráficos de fazendas, armazéns, produtividade por talhão e participação global mantiveram seus formatos originais.

@@ -117,7 +117,7 @@ Fone: `;
           .print\\:hidden { display: none !important; }
         }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c4d1c7; border-radius: 10px; }
       `}</style>
     </main>
   );

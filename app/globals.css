@@ -3,10 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 15, 23, 42; /* slate-900 */
+  --foreground-rgb: 31, 41, 55;
+  --agro-forest: #14532d;
+  --agro-operational: #15803d;
+  --agro-leaf: #22c55e;
+  --agro-harvest: #eab308;
+  --agro-background: #f7faf7;
+  --agro-border: #dde7df;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: #f8fafc;
+  background: var(--agro-background);
+}
+
+.dark body {
+  --foreground-rgb: 238, 244, 239;
+  --agro-background: #172019;
+  --agro-border: #35413a;
 }

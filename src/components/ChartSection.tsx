@@ -32,7 +32,7 @@ export default function ChartSection({
   getCorArmazem,
 }: ChartSectionProps) {
 
-  const defaultColor = '#e2e8f0'; // slate-200
+  const defaultColor = '#dde7df';
   const rankingHeight = Math.max(250, chartTalhoes.length * 48 + 68);
 
   // Função auxiliar para lidar com o clique na barra e alternar o filtro
@@ -61,7 +61,7 @@ export default function ChartSection({
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartFazendas}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-700" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef4ef" className="dark:stroke-slate-700" />
               <XAxis 
                 dataKey="name" 
                 fontSize={9} 
@@ -98,7 +98,7 @@ export default function ChartSection({
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartArmazens} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" className="dark:stroke-slate-700" />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eef4ef" className="dark:stroke-slate-700" />
               <XAxis type="number" hide />
               <YAxis dataKey="name" type="category" fontSize={10} width={80} axisLine={false} tickLine={false} className="dark:text-slate-300" />
               <Tooltip 
@@ -134,7 +134,7 @@ export default function ChartSection({
           <div style={{ height: rankingHeight }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartTalhoes} layout="vertical" margin={{ left: 16, right: 28 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" className="dark:stroke-slate-700" />
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eef4ef" className="dark:stroke-slate-700" />
                 <XAxis
                   type="number"
                   fontSize={10}
@@ -229,20 +229,20 @@ export default function ChartSection({
       </div>
       <style jsx global>{`
         .dark .recharts-wrapper {
-          --bg-tooltip: #1e293b; /* slate-800 */
-          --border-tooltip: #475569; /* slate-600 */
-          --text-color: #f1f5f9; /* slate-100 */
+          --bg-tooltip: #1f2937;
+          --border-tooltip: #4a574e;
+          --text-color: #eef4ef;
         }
         .recharts-wrapper {
           --bg-tooltip: #fff;
-          --border-tooltip: #e2e8f0;
-          --text-color: #0f172a; /* slate-900 */
+          --border-tooltip: #dde7df;
+          --text-color: #1f2937;
         }
         .dark .recharts-text {
-          fill: #e2e8f0 !important; 
+          fill: #dde7df !important;
         }
         .dark .recharts-tooltip-item {
-          color: #f1f5f9 !important;
+          color: #eef4ef !important;
         }
       `}</style>
     </div>
