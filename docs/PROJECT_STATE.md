@@ -668,3 +668,30 @@ Validação:
 
 * `npx tsc --noEmit --pretty false` passou.
 * Teste isolado confirmou os IDs e nomes de fallback para `soja2627` e `milho2627`.
+
+## Atualização - navegação e central de configurações - 2026-08-27
+
+Reorganização implementada:
+
+* A faixa verde global de última atualização foi removida do topo do app.
+* O cabeçalho do painel deixou de exibir os atalhos separados `Áreas` e `Talhões` e ganhou o botão `Configurações`.
+* A página `/configuracoes` passou a funcionar como central de cadastros, com navegação horizontal entre:
+  * `Safras`;
+  * `Áreas`;
+  * `Talhões`.
+* Nas abas `Áreas` e `Talhões`, a safra pode ser escolhida no próprio cabeçalho da central de configurações.
+* O topo da página de fretes ganhou os atalhos `Descontos` e `Recibo`.
+* O menu lateral foi simplificado para manter `Painel`, `Saldos`, `Fretes`, `Importar planilha` e `Configurações`, além das ações já existentes de retorno e saída.
+* `Descontos`, `Recibos`, `Áreas plantadas` e `Talhões` deixaram de ocupar itens independentes no menu lateral, mas suas rotas e recursos continuam disponíveis pelos novos atalhos.
+
+Validação executada:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* As rotas `/milho26`, `/milho26/fretes`, `/configuracoes?safraId=milho26` e `/milho26/importar` responderam HTTP 200 no servidor local.
+* A inspeção visual autenticada não foi executada porque a sessão de teste local abriu na tela de login; nenhuma credencial foi manipulada.
+
+Decisão visual pendente:
+
+* Foi gerada uma proposta visual de dashboard profissional voltado ao agro, com fundo branco, verdes fortes, cinzas neutros e amarelo de colheita como destaque.
+* A nova paleta e o redesenho completo ainda não foram aplicados ao código. A implementação deve começar somente após a aprovação da imagem pelo usuário.
+* Paleta proposta: verde floresta `#14532D`, verde operacional `#15803D`, verde folha `#22C55E`, amarelo colheita `#EAB308`, texto `#1F2937`, fundo suave `#F7FAF7`, borda `#DDE7DF` e branco `#FFFFFF`.

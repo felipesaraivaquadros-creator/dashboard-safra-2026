@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Layers, Warehouse } from 'lucide-react';
+import { FileText, Layers, Scissors, Warehouse } from 'lucide-react';
 import { useFretesData } from '../../../src/lib/useFretesData';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
 import SafraSelector from '../../../src/components/SafraSelector';
@@ -79,6 +79,18 @@ export default function FretesPage() {
         </div>
         
         <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
+          <Link
+            href={`/${safraId}/descontos`}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-md"
+          >
+            <Scissors size={14} /> Descontos
+          </Link>
+          <Link
+            href={`/${safraId}/recibos`}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md"
+          >
+            <FileText size={14} /> Recibo
+          </Link>
           <Link 
             href={`/${safraId}/saldos`} 
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors shadow-md"

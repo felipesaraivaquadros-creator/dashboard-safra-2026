@@ -3,7 +3,6 @@ import React, { Suspense } from 'react'
 import ToastProvider from '../src/components/ToastProvider'
 import { ThemeWrapper } from '../src/components/ThemeWrapper'
 import { Metadata, Viewport } from 'next'
-import LastUpdateBar from '../src/components/LastUpdateBar'
 import { AuthProvider } from '../src/components/AuthProvider'
 import { Loader2 } from 'lucide-react'
 
@@ -36,7 +35,6 @@ export default function RootLayout({
       <body className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900">
         <ThemeWrapper attribute="class" defaultTheme="light">
           <AuthProvider>
-            <LastUpdateBar />
             <ToastProvider />
             <main className="flex-1">
               <Suspense fallback={<LoadingFallback />}>

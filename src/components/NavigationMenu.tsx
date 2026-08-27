@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Wallet, Truck, ArrowLeft, FileText, Settings, Scissors, Map, Grid3X3 } from 'lucide-react';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
+import { Menu, X, LayoutDashboard, Wallet, Truck, ArrowLeft, FileUp, Settings } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 
 export default function NavigationMenu() {
@@ -11,7 +11,8 @@ export default function NavigationMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
   const params = useParams();
   const pathname = usePathname();
-  const safraId = params.safraId as string;
+  const searchParams = useSearchParams();
+  const safraId = (params.safraId as string) || searchParams.get('safraId') || '';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -26,7 +27,7 @@ export default function NavigationMenu() {
     };
   }, [pathname]);
 
-  const menuItems = [
+  const menuItems = safraId ? [
     { 
       label: 'Painel', 
       href: `/${safraId}`, 
@@ -45,31 +46,13 @@ export default function NavigationMenu() {
       icon: Truck,
       active: pathname.includes('/fretes')
     },
-    { 
-      label: 'Descontos', 
-      href: `/${safraId}/descontos`, 
-      icon: Scissors,
-      active: pathname.includes('/descontos')
-    },
-    { 
-      label: 'Recibos', 
-      href: `/${safraId}/recibos`, 
-      icon: FileText,
-      active: pathname.includes('/recibos')
-    },
     {
-      label: 'Áreas Plantadas',
-      href: `/${safraId}/areas`,
-      icon: Map,
-      active: pathname.includes('/areas')
+      label: 'Importar Planilha',
+      href: `/${safraId}/importar`,
+      icon: FileUp,
+      active: pathname.includes('/importar')
     },
-    {
-      label: 'Talhões',
-      href: `/${safraId}/talhoes`,
-      icon: Grid3X3,
-      active: pathname.includes('/talhoes')
-    },
-  ];
+  ] : [];
 
   return (
     <div className="relative" ref={menuRef}>
@@ -108,7 +91,7 @@ export default function NavigationMenu() {
             })}
             
             <Link
-              href="/configuracoes"
+              href={safraId ? `/configuracoes?safraId=${safraId}` : '/configuracoes'}
               className={`
                 flex items-center justify-between p-3 rounded-xl transition-all group
                 ${pathname === '/configuracoes' 

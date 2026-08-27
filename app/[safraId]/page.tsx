@@ -13,7 +13,7 @@ import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../src/data/safraConfig';
 import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
-import { FileUp, Grid3X3, Loader2, Map } from 'lucide-react';
+import { FileUp, Loader2, Settings } from 'lucide-react';
 
 export default function Dashboard() {
   const params = useParams();
@@ -123,20 +123,12 @@ export default function Dashboard() {
               Saldos
             </Link>
             <Link
-              href={`/${safraId}/areas`}
-              title="Cadastrar áreas plantadas"
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-md"
+              href={`/configuracoes?safraId=${safraId}`}
+              title="Configurações da safra"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-slate-700 text-white hover:bg-slate-800 transition-colors shadow-md"
             >
-              <Map size={14} />
-              Áreas
-            </Link>
-            <Link
-              href={`/${safraId}/talhoes`}
-              title="Cadastrar talhões"
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-md"
-            >
-              <Grid3X3 size={14} />
-              Talhões
+              <Settings size={14} />
+              Configurações
             </Link>
           </div>
           
