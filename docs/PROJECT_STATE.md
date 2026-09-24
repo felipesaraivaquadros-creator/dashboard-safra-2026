@@ -740,12 +740,12 @@ Segurança:
 Variáveis recomendadas na Vercel:
 
 1. `CRON_SECRET`: texto aleatório com pelo menos 16 caracteres.
-2. `SUPABASE_SECRET_KEY`: chave secreta atual do projeto Supabase. A antiga `SUPABASE_SERVICE_ROLE_KEY` também é aceita.
+2. `SUPABASE_SECRET_KEY`: opcional; a chave secreta atual do projeto Supabase. A antiga `SUPABASE_SERVICE_ROLE_KEY` também é aceita.
 
 Observações operacionais:
 
 * Se nenhuma chave secreta do Supabase estiver configurada, a rota usa `NEXT_PUBLIC_SUPABASE_ANON_KEY` e executa somente leituras limitadas por RLS.
-* A chave secreta é recomendada para garantir que as três consultas funcionem mesmo quando as tabelas permitem leitura apenas a usuários autenticados.
+* A produção atual respondeu com sucesso usando a chave pública; a chave secreta só será necessária se as políticas RLS deixarem de permitir essas leituras mínimas.
 * Após o deploy, conferir em `Vercel > Project > Settings > Cron Jobs` se `/api/keep-alive` está ativo e usar `View Logs` para confirmar uma resposta HTTP 200.
 
 Validação executada:
@@ -754,3 +754,6 @@ Validação executada:
 * `npx tsc --noEmit --pretty false` passou sem erros.
 * `npm run build` passou e registrou `/api/keep-alive` como rota dinâmica.
 * O teste local de produção com variáveis temporárias foi impedido pela política do ambiente antes de iniciar o servidor; a consulta real deverá ser confirmada nos logs do primeiro deploy da Vercel.
+* O deploy de produção foi confirmado em `https://painel-safra.vercel.app/api/keep-alive`.
+* Uma chamada comum recebeu HTTP `401`, confirmando a proteção do endpoint.
+* Uma chamada simulando o agente oficial `vercel-cron/1.0` recebeu HTTP `200` com `checks: 3`, confirmando as leituras reais nas três tabelas em produção.
