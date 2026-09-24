@@ -757,3 +757,76 @@ Validação executada:
 * O deploy de produção foi confirmado em `https://painel-safra.vercel.app/api/keep-alive`.
 * Uma chamada comum recebeu HTTP `401`, confirmando a proteção do endpoint.
 * Uma chamada simulando o agente oficial `vercel-cron/1.0` recebeu HTTP `200` com `checks: 3`, confirmando as leituras reais nas três tabelas em produção.
+
+## Atualização - módulo financeiro de contratos - 2026-09-24
+
+Escopo aprovado e implementado:
+
+* Os dados financeiros foram adicionados como uma camada opcional vinculada aos contratos existentes.
+* Nenhum contrato antigo foi alterado, preenchido automaticamente ou passou a exigir preço, tributos ou competência.
+* Cada informação permanece isolada por safra porque o financeiro é carregado somente para os contratos da `safra_id` em aberto.
+* Contratos antigos podem receber ou atualizar as informações financeiras pelo mesmo formulário usado em `Saldos`.
+
+Banco de dados:
+
+* Criado `docs/supabase_contratos_financeiros.sql`, que deve ser executado manualmente no SQL Editor do Supabase antes de usar o módulo em produção.
+* Criada a tabela `contratos_financeiros`, com relação única e opcional para `contratos`.
+* Criada a tabela `contratos_descontos`, permitindo múltiplos descontos/tributos por contrato.
+* Tipos disponíveis: `SENAR`, `FETHAB`, `FUNRURAL`, `IAGRO`, `COOP` e `OUTRO`.
+* Métodos disponíveis: percentual sobre o bruto, valor por saca e valor fixo.
+* O preço pode ficar `a_fixar` ou ser marcado como `fixado`.
+* A função transacional `salvar_contrato_financeiro` grava o cabeçalho e substitui os descontos na mesma transação. Se uma parte falhar, os descontos anteriores não são apagados isoladamente.
+* As duas tabelas usam RLS e permitem CRUD somente para usuários autenticados.
+* `setup.sql` recebeu as mesmas estruturas para instalações novas, além das colunas `grupo` já usadas pelo app em armazéns e contratos.
+
+Interface e fluxo:
+
+* `src/components/saldos/ContratoForm.tsx` agora possui uma seção financeira opcional.
+* O formulário permite informar preço por saca, data do contrato, competência, tributos/descontos, revisão tributária, volume excedente e observações.
+* A prévia exibe valor bruto, descontos e valor líquido antes de salvar.
+* Caso o SQL ainda não tenha sido executado, contratos continuam sendo criados e editados normalmente; apenas a seção financeira informa que o banco ainda precisa ser preparado.
+* A tela de Saldos exibe o status financeiro de cada contrato e um aviso com a quantidade de contratos incompletos.
+* Criada a rota `/[safraId]/financeiro`, também disponível no menu lateral.
+* A nova tela contém KPIs de bruto contratado, bruto realizado, descontos previstos, líquido a receber e contratos incompletos.
+* A tela também mostra os descontos por tipo, gráfico mensal, busca, filtros por status/competência e listagem responsiva para desktop e celular.
+* O filtro `Todos os pendentes` reúne contratos não configurados, preço pendente, tributos pendentes, competência pendente e inconsistências.
+* Busca e filtros atualizam os KPIs, a lista e o gráfico financeiro.
+* O Dashboard recebeu apenas um resumo macro com bruto, descontos, líquido realizado e gráfico dos seis meses mais recentes.
+
+Regras de cálculo:
+
+* Bruto contratado = `volume_total do contrato x preço por saca`.
+* Volume entregue = soma de `romaneios.sacas_liquida` vinculados por `contrato_id` dentro da safra.
+* Por padrão, o realizado é limitado ao volume contratado; a opção `Aceitar volume excedente` permite considerar entregas acima do contrato.
+* Desconto percentual usa o valor bruto; desconto por saca usa o volume; desconto fixo é rateado proporcionalmente no realizado mensal.
+* Líquido = bruto menos descontos.
+* O valor exibido nesta fase é `líquido a receber`/`líquido realizado por entregas`, e não comprovação de pagamento recebido.
+
+Status financeiro:
+
+* `Não configurado`: contrato antigo ou novo ainda sem camada financeira.
+* `Preço pendente`: preço a fixar ou preço inválido.
+* `Tributos pendentes`: revisão tributária ainda não confirmada, inclusive quando não há descontos.
+* `Competência pendente`: mês financeiro ainda não informado.
+* `Inconsistente`: descontos superiores ao valor bruto.
+* `Completo`: preço, competência e revisão tributária preenchidos sem inconsistência.
+
+Validação executada:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou a rota dinâmica `/[safraId]/financeiro`.
+* Teste isolado confirmou preço, percentual, valor por saca, desconto fixo rateado, teto de volume e distribuição mensal.
+* Cenário validado: 1.000 sc a R$ 100,00, com 1,5%, R$ 2,00/sc e R$ 300,00 fixos, resultou em bruto de R$ 100.000,00, descontos de R$ 3.800,00 e líquido de R$ 96.200,00.
+* O navegador local abriu em `http://localhost:3000`, mas a inspeção visual autenticada ficou limitada pela tela de login; nenhuma credencial foi manipulada.
+
+Passos operacionais obrigatórios:
+
+1. Executar `docs/supabase_contratos_financeiros.sql` no SQL Editor do Supabase.
+2. Abrir um contrato antigo em `Saldos`, adicionar informações financeiras e salvar.
+3. Conferir os valores e o status em `/milho26/financeiro` (ou na safra escolhida).
+4. Validar um desconto percentual, um valor por saca e um valor fixo antes de cadastrar todos os contratos.
+5. Somente depois desses testes, usar o módulo para os demais contratos e safras.
+
+Melhoria futura já separada do escopo atual:
+
+* Criar uma segunda fase de recebimentos reais, com parcelas, datas previstas, datas de pagamento, valor efetivamente recebido, status em aberto/parcial/pago/vencido e conciliação. Não chamar o líquido previsto de `recebido` enquanto essa baixa financeira não existir.

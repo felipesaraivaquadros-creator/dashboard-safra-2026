@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
-import { Menu, X, LayoutDashboard, Wallet, Truck, ArrowLeft, FileUp, Settings } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Wallet, Truck, ArrowLeft, FileUp, Settings, CircleDollarSign } from 'lucide-react';
 import LogoutButton from './LogoutButton';
 
 export default function NavigationMenu() {
@@ -39,6 +39,12 @@ export default function NavigationMenu() {
       href: `/${safraId}/saldos`, 
       icon: Wallet,
       active: pathname.includes('/saldos')
+    },
+    {
+      label: 'Financeiro',
+      href: `/${safraId}/financeiro`,
+      icon: CircleDollarSign,
+      active: pathname.includes('/financeiro')
     },
     { 
       label: 'Fretes', 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Package, FileText, Scale, LayoutGrid, List, Plus, Edit2, Trash2, Loader2, Layers } from 'lucide-react';
+import { Package, FileText, Scale, LayoutGrid, List, Plus, Edit2, Trash2, Loader2, Layers, CircleDollarSign, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { ThemeToggle } from '../../../src/components/ThemeToggle';
@@ -12,6 +12,8 @@ import NavigationMenu from '../../../src/components/NavigationMenu';
 import { supabase } from '../../../src/integrations/supabase/client';
 import { showSuccess, showError } from '../../../src/utils/toast';
 import { useDataProcessing } from '../../../src/lib/useDataProcessing';
+import { useFinanceiroData } from '../../../src/lib/useFinanceiroData';
+import FinanceiroStatusBadge from '../../../src/components/financeiro/FinanceiroStatusBadge';
 
 // Importação dos componentes de abas e formulários
 import SaldosTab from '../../../src/components/saldos/SaldosTab';
@@ -58,6 +60,18 @@ export default function SaldoPage() {
     refresh
   } = useDataProcessing(safraId);
 
+  const {
+    schemaReady: financeSchemaReady,
+    summaries: financeSummaries,
+    totals: financeTotals,
+    refresh: refreshFinance,
+  } = useFinanceiroData(safraId);
+
+  const financeByContract = useMemo(
+    () => new Map(financeSummaries.map((summary) => [summary.contratoId, summary])),
+    [financeSummaries],
+  );
+
   const [dbContratos, setDbContratos] = useState<any[]>([]);
 
   const fetchContratos = useCallback(async () => {
@@ -82,6 +96,7 @@ export default function SaldoPage() {
       showSuccess("Contrato excluído!");
       refresh();
       fetchContratos();
+      refreshFinance();
     }
   };
 
@@ -129,6 +144,12 @@ export default function SaldoPage() {
         </div>
         
         <div className="flex items-center gap-3 w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100 dark:border-slate-700">
+          <Link
+            href={`/${safraId}/financeiro`}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-300"
+          >
+            <CircleDollarSign size={16} /> Financeiro
+          </Link>
           <button 
             onClick={() => setShowGrupoForm(true)}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-black uppercase rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-md"
@@ -152,6 +173,15 @@ export default function SaldoPage() {
       </header>
 
       <div className="max-w-[1200px] mx-auto">
+        {financeSchemaReady && financeTotals.incompletos > 0 && (
+          <Link
+            href={`/${safraId}/financeiro`}
+            className="mb-6 flex items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300 dark:hover:bg-amber-900/30"
+          >
+            <span className="flex items-center gap-2 text-xs font-black uppercase"><AlertTriangle size={17} /> {financeTotals.incompletos} contrato(s) com informações financeiras pendentes</span>
+            <span className="shrink-0 text-[9px] font-black uppercase underline">Revisar</span>
+          </Link>
+        )}
         
         <div className="flex justify-center mb-8">
           <div className="bg-white dark:bg-slate-800 p-1 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex gap-1">
@@ -222,6 +252,9 @@ export default function SaldoPage() {
                                 {c.grupo && <span className="text-[8px] font-black bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded uppercase">{c.grupo}</span>}
                               </div>
                               <p className="text-[9px] font-bold text-slate-400">{c.volume_total.toLocaleString('pt-BR')} sc {c.armazens ? `| ${c.armazens.nome}` : ''}</p>
+                              {financeSchemaReady && financeByContract.get(c.id) && (
+                                <div className="mt-2"><FinanceiroStatusBadge status={financeByContract.get(c.id)!.status} compact /></div>
+                              )}
                             </div>
                             <div className="flex gap-2">
                               <button 
@@ -271,7 +304,7 @@ export default function SaldoPage() {
         <ContratoForm 
           safraId={safraId} 
           onClose={() => { setShowForm(false); setEditingContrato(null); }} 
-          onSuccess={() => { refresh(); fetchContratos(); }}
+          onSuccess={() => { refresh(); fetchContratos(); refreshFinance(); }}
           editData={editingContrato}
         />
       )}

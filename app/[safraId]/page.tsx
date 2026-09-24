@@ -13,6 +13,7 @@ import { useParams } from 'next/navigation';
 import { getSafraConfig } from '../../src/data/safraConfig';
 import SafraSelector from '../../src/components/SafraSelector';
 import NavigationMenu from '../../src/components/NavigationMenu';
+import FinanceiroResumoDashboard from '../../src/components/financeiro/FinanceiroResumoDashboard';
 import { FileUp, Loader2, Settings } from 'lucide-react';
 
 export default function Dashboard() {
@@ -156,6 +157,8 @@ export default function Dashboard() {
             setShowModalUmid={setShowModalUmid}
             setShowModalVolume={setShowModalVolume}
           />
+
+          <FinanceiroResumoDashboard safraId={safraId} />
 
           <ChartSection
             chartFazendas={chartFazendas}
