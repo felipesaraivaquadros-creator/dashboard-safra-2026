@@ -718,3 +718,39 @@ Validação executada:
 * O painel `/milho26` foi aberto com dados reais no navegador local.
 * Temas claro e escuro foram alternados e inspecionados visualmente com sucesso.
 * Os gráficos de fazendas, armazéns, produtividade por talhão e participação global mantiveram seus formatos originais.
+
+## Atualização - keep-alive automático do Supabase - 2026-09-24
+
+Objetivo implementado:
+
+* Evitar que o projeto gratuito do Supabase seja considerado inativo por falta de consultas ao banco.
+* Criada a rota dinâmica `GET /api/keep-alive` em `app/api/keep-alive/route.ts`.
+* A rota realiza três leituras mínimas e sem alteração de dados nas tabelas `romaneios`, `safras` e `fazendas`.
+* As respostas usam `Cache-Control: no-store`, garantindo que a execução chegue ao banco em vez de ser atendida por cache.
+* Criado `vercel.json` com agendamento diário às `10:00 UTC` (`06:00` no horário de Cuiabá).
+* O agendamento diário é compatível com o limite atual do plano Vercel Hobby.
+* O cron funciona somente em deployments de produção da Vercel.
+
+Segurança:
+
+* Quando `CRON_SECRET` estiver configurado na Vercel, a rota exige `Authorization: Bearer <CRON_SECRET>`; a Vercel envia esse cabeçalho automaticamente nas execuções agendadas.
+* Sem `CRON_SECRET`, a produção aceita apenas chamadas identificadas pela Vercel como `vercel-cron/1.0`.
+* Em desenvolvimento local, a rota pode ser chamada sem autenticação para diagnóstico.
+
+Variáveis recomendadas na Vercel:
+
+1. `CRON_SECRET`: texto aleatório com pelo menos 16 caracteres.
+2. `SUPABASE_SECRET_KEY`: chave secreta atual do projeto Supabase. A antiga `SUPABASE_SERVICE_ROLE_KEY` também é aceita.
+
+Observações operacionais:
+
+* Se nenhuma chave secreta do Supabase estiver configurada, a rota usa `NEXT_PUBLIC_SUPABASE_ANON_KEY` e executa somente leituras limitadas por RLS.
+* A chave secreta é recomendada para garantir que as três consultas funcionem mesmo quando as tabelas permitem leitura apenas a usuários autenticados.
+* Após o deploy, conferir em `Vercel > Project > Settings > Cron Jobs` se `/api/keep-alive` está ativo e usar `View Logs` para confirmar uma resposta HTTP 200.
+
+Validação executada:
+
+* `vercel.json` foi validado como JSON e contém a expressão `0 10 * * *`.
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e registrou `/api/keep-alive` como rota dinâmica.
+* O teste local de produção com variáveis temporárias foi impedido pela política do ambiente antes de iniciar o servidor; a consulta real deverá ser confirmada nos logs do primeiro deploy da Vercel.
