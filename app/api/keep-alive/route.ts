@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 const KEEP_ALIVE_TABLES = ['romaneios', 'safras', 'fazendas'] as const;
+const FALLBACK_SUPABASE_URL = 'https://pohcuxyzdfctfpppnvxa.supabase.co';
+const FALLBACK_SUPABASE_PUBLIC_KEY = 'sb_publishable_Ri-BgZC1slzklWIYddhvkw_hQVXNxOB';
 
 function isAuthorized(request: Request) {
   if (process.env.NODE_ENV === 'development') return true;
@@ -24,18 +26,12 @@ export async function GET(request: Request) {
     return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || FALLBACK_SUPABASE_URL;
   const supabaseKey =
     process.env.SUPABASE_SECRET_KEY ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    return Response.json(
-      { ok: false, error: 'Supabase environment variables are not configured' },
-      { status: 500 },
-    );
-  }
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    FALLBACK_SUPABASE_PUBLIC_KEY;
 
   const supabase = createClient(supabaseUrl, supabaseKey, {
     auth: {
