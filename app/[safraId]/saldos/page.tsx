@@ -14,7 +14,12 @@ import { showSuccess, showError } from '../../../src/utils/toast';
 import { useDataProcessing } from '../../../src/lib/useDataProcessing';
 import { useFinanceiroData } from '../../../src/lib/useFinanceiroData';
 import FinanceiroStatusBadge from '../../../src/components/financeiro/FinanceiroStatusBadge';
-import { TipoContrato, TIPO_CONTRATO_LABELS } from '../../../src/data/financeiroTypes';
+import {
+  ContratoFinanceiroResumo,
+  STATUS_ENTREGA_BARTER_LABELS,
+  TipoContrato,
+  TIPO_CONTRATO_LABELS,
+} from '../../../src/data/financeiroTypes';
 
 // Importação dos componentes de abas e formulários
 import SaldosTab from '../../../src/components/saldos/SaldosTab';
@@ -39,6 +44,25 @@ const SaldosPorArmazem = dynamic(
 
 type TabType = 'saldos' | 'contratos' | 'disponivel';
 type ScenarioType = 'geral' | 'armazem';
+
+const barterStatusClasses = {
+  nao_iniciada: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+  parcial: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  entregue: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  vencida: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+};
+
+function ContractControlStatus({ summary }: { summary: ContratoFinanceiroResumo }) {
+  if (summary.tipoContrato === 'barter') {
+    return (
+      <span className={`rounded px-2 py-1 text-[8px] font-black uppercase ${barterStatusClasses[summary.barterStatusEntrega]}`}>
+        Entrega: {STATUS_ENTREGA_BARTER_LABELS[summary.barterStatusEntrega]}
+      </span>
+    );
+  }
+
+  return <FinanceiroStatusBadge status={summary.status} compact />;
+}
 
 export default function SaldoPage() {
   const params = useParams();
@@ -263,7 +287,7 @@ export default function SaldoPage() {
                               </div>
                               <p className="text-[9px] font-bold text-slate-400">{c.volume_total.toLocaleString('pt-BR')} sc {c.armazens ? `| ${c.armazens.nome}` : ''}</p>
                               {financeSchemaReady && financeByContract.get(c.id) && (
-                                <div className="mt-2"><FinanceiroStatusBadge status={financeByContract.get(c.id)!.status} compact /></div>
+                                <div className="mt-2"><ContractControlStatus summary={financeByContract.get(c.id)!} /></div>
                               )}
                             </div>
                             <div className="flex gap-2">

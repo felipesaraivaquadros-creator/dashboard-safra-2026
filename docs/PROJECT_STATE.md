@@ -977,3 +977,10 @@ Passos operacionais obrigatórios:
 3. Em uma troca de teste, informar valor dos insumos e confirmar se o volume contratado já corresponde à obrigação em sacas.
 4. Vincular/confirmar romaneios no mesmo contrato e conferir entregue, saldo e status na aba `Trocas / Barter`.
 5. Validar um contrato misto para confirmar que aparece simultaneamente em Vendas e Barter, sempre dentro da mesma safra.
+
+### Correção visual dos status de barter - 2026-09-28
+
+* Um contrato classificado como barter puro não exibe mais `Financeiro não configurado` na gestão de contratos em Saldos.
+* Para barter puro, o cartão mostra somente o status da obrigação física: `Não iniciada`, `Parcial`, `Entregue` ou `Vencida`.
+* O status físico não é escolhido manualmente. Ele é calculado pelo volume contratado, pelos romaneios vinculados e pela data final de entrega cadastrada no barter.
+* Contratos mistos continuam mostrando o status financeiro na visão de vendas e o status físico na visão de barter, pois participam dos dois controles.
