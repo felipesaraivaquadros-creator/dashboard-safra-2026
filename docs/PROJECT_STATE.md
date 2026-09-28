@@ -984,3 +984,11 @@ Passos operacionais obrigatórios:
 * Para barter puro, o cartão mostra somente o status da obrigação física: `Não iniciada`, `Parcial`, `Entregue` ou `Vencida`.
 * O status físico não é escolhido manualmente. Ele é calculado pelo volume contratado, pelos romaneios vinculados e pela data final de entrega cadastrada no barter.
 * Contratos mistos continuam mostrando o status financeiro na visão de vendas e o status físico na visão de barter, pois participam dos dois controles.
+
+### Vinculação de romaneios aos contratos - 2026-09-28
+
+* O vínculo é realizado durante a importação pela igualdade entre a coluna `ncontrato` da planilha e o campo `Nº Contrato / ID` do contrato cadastrado, sempre dentro da mesma safra.
+* Reimportar a mesma planilha não cria uma nova entrega quando a chave do romaneio já existe; o registro existente é atualizado e recebe o `contrato_id` correspondente.
+* O importador foi protegido para nunca zerar volume, nome, classificação, financeiro ou barter de um contrato existente ao reencontrar seu número na planilha.
+* Contratos ausentes ainda podem ser criados automaticamente com volume zero, mas contratos já cadastrados são ignorados nessa etapa e preservados integralmente.
+* Para entregas históricas sem vínculo: cadastrar/revisar primeiro o contrato, garantir que seu número seja igual ao `ncontrato` da planilha e então reimportar a planilha da mesma safra.

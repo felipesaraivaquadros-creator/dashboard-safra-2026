@@ -465,7 +465,7 @@ export function useMSgestorImport(safraId: string) {
       if (contratosUnicos.length > 0) {
         const { error } = await supabase
           .from('contratos')
-          .upsert(contratosUnicos, { onConflict: 'safra_id,numero' });
+          .upsert(contratosUnicos, { onConflict: 'safra_id,numero', ignoreDuplicates: true });
         if (error) throw error;
       }
 
