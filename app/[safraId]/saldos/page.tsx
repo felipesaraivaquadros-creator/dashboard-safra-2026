@@ -14,6 +14,7 @@ import { showSuccess, showError } from '../../../src/utils/toast';
 import { useDataProcessing } from '../../../src/lib/useDataProcessing';
 import { useFinanceiroData } from '../../../src/lib/useFinanceiroData';
 import FinanceiroStatusBadge from '../../../src/components/financeiro/FinanceiroStatusBadge';
+import { TipoContrato, TIPO_CONTRATO_LABELS } from '../../../src/data/financeiroTypes';
 
 // Importação dos componentes de abas e formulários
 import SaldosTab from '../../../src/components/saldos/SaldosTab';
@@ -62,6 +63,7 @@ export default function SaldoPage() {
 
   const {
     schemaReady: financeSchemaReady,
+    classificationReady,
     summaries: financeSummaries,
     totals: financeTotals,
     refresh: refreshFinance,
@@ -107,7 +109,10 @@ export default function SaldoPage() {
       numero: contrato.id || contrato.numero,
       volume_total: contrato.total || contrato.volume_total,
       armazem_id: contrato.armazem_id,
-      grupo: contrato.grupo
+      grupo: contrato.grupo,
+      tipo_contrato: contrato.tipo_contrato,
+      forma_liquidacao: contrato.forma_liquidacao,
+      tipo_outro_descricao: contrato.tipo_outro_descricao,
     });
     setShowForm(true);
   };
@@ -250,6 +255,11 @@ export default function SaldoPage() {
                               <div className="flex items-center gap-2">
                                 <p className="text-xs font-black uppercase text-slate-700 dark:text-slate-200">{c.nome}</p>
                                 {c.grupo && <span className="text-[8px] font-black bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded uppercase">{c.grupo}</span>}
+                                {classificationReady && (
+                                  <span className="rounded bg-green-100 px-1.5 py-0.5 text-[8px] font-black uppercase text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                    {TIPO_CONTRATO_LABELS[(c.tipo_contrato || 'nao_classificado') as TipoContrato]}
+                                  </span>
+                                )}
                               </div>
                               <p className="text-[9px] font-bold text-slate-400">{c.volume_total.toLocaleString('pt-BR')} sc {c.armazens ? `| ${c.armazens.nome}` : ''}</p>
                               {financeSchemaReady && financeByContract.get(c.id) && (

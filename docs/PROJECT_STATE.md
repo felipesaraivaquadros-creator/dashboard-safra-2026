@@ -901,3 +901,79 @@ Passos operacionais:
 3. Abrir `/milho26/financeiro`, escolher um contrato com financeiro configurado e programar uma parcela de teste.
 4. Registrar uma baixa parcial e conferir status, KPIs, gráfico e saldo.
 5. Registrar a baixa restante e confirmar que a parcela muda para `Pago`.
+
+## Atualização - tipos de contrato e módulo Trocas/Barter - 2026-09-28
+
+Escopo aprovado e implementado:
+
+* Os contratos agora podem ser classificados como `Venda`, `Troca / Barter`, `Misto`, `Outro` ou `Não classificado`.
+* A forma de liquidação é independente e pode ser `Financeira`, `Física`, `Mista` ou `Não definida`.
+* Todos os contratos existentes permanecem como `Não classificado` até revisão manual. Nenhum registro antigo é convertido, apagado ou obrigado a receber os novos dados.
+* Contratos novos exigem a escolha de um tipo depois que a migration estiver instalada.
+* Todo dado de barter fica ligado ao `contrato_id`. A safra é herdada do contrato e todas as consultas partem apenas dos contratos da `safra_id` aberta.
+
+Banco de dados:
+
+* Criado `docs/supabase_tipos_contratos_barter.sql`, que deve ser executado manualmente no SQL Editor do Supabase.
+* A migration adiciona em `contratos`: `tipo_contrato`, `forma_liquidacao` e `tipo_outro_descricao`.
+* Criada `contratos_barter`, com um único cadastro de troca por contrato.
+* Criada `contratos_barter_itens`, com composição opcional de sementes, defensivos, fertilizantes, serviços e outros insumos.
+* O cabeçalho da troca aceita fornecedor, recebedor dos grãos, valor dos insumos, janela e local de entrega, responsável pelo frete, qualidade exigida, CPR, preços de referência/mercado, conciliação e observações.
+* A função `salvar_contrato_barter` grava cabeçalho e substitui os itens na mesma transação.
+* RLS, permissões, índices, validação de datas e gatilho de `updated_at` foram incluídos.
+* `setup.sql` contém a mesma estrutura para instalações novas.
+
+Integração com os dados existentes:
+
+* O volume contratado continua sendo `contratos.volume_total`; não foi criada uma segunda quantidade física concorrente.
+* O volume entregue continua sendo a soma de `romaneios.sacas_liquida` vinculados pelo `contrato_id` dentro da safra.
+* Saldo físico do barter = volume contratado menos volume entregue, limitado a zero.
+* Status físico: `Não iniciada`, `Parcial`, `Entregue` ou `Vencida`, considerando a data final da janela.
+* Valor equivalente entregue = valor dos insumos proporcional ao percentual físico cumprido, limitado a 100%.
+* Preço implícito = valor dos insumos dividido pelas sacas contratadas.
+* Valor de mercado = sacas contratadas multiplicadas pelo preço de mercado informado.
+* Variação de mercado = valor de mercado menos valor dos insumos.
+* O detalhamento dos itens mostra divergência em relação ao valor total de insumos sem sobrescrever automaticamente o cabeçalho.
+
+Separação contábil:
+
+* `Venda`: fluxo financeiro, tributos, recebíveis e baixas.
+* `Troca / Barter`: obrigação física e valor econômico da troca; não entra nos KPIs de caixa.
+* `Misto`: participa tanto do fluxo financeiro quanto do controle físico da troca.
+* `Outro` e `Não classificado`: continuam no fluxo financeiro anterior para preservar compatibilidade.
+* Se um contrato que já possuía financeiro for reclassificado como barter puro, os dados antigos são preservados, mas deixam de somar nos KPIs de caixa.
+* Alterar o tipo não exclui financeiro, recebimentos, barter ou itens já gravados.
+
+Interface:
+
+* O formulário de contratos em `Saldos` ganhou seleção visual de tipo e forma de liquidação.
+* Para barter/misto, o mesmo formulário exibe dados da troca, CPR, preços, conciliação, itens e prévia econômica.
+* Para barter puro, a edição de venda financeira fica oculta, com aviso de que dados anteriores são preservados.
+* A lista de contratos em Saldos exibe o tipo de cada registro.
+* A tela `/[safraId]/financeiro` foi dividida em navegação horizontal: `Consolidado`, `Vendas`, `Trocas / Barter` e `Recebimentos`.
+* A aba de barter exibe contratado, entregue, saldo físico, valor dos insumos, equivalente entregue, conciliações pendentes e tabela detalhada responsiva.
+* O botão `Ver contratos` continua limpando filtros, abre a visão consolidada e desliza até a lista geral, mantendo contratos concluídos/revisados visíveis.
+* KPIs continuam globais dentro da visão; busca, status e competência afetam apenas lista e gráfico.
+* O resumo macro do Dashboard passou a mostrar saldo de barter quando existirem trocas cadastradas.
+
+Compatibilidade de implantação:
+
+* As consultas de classificação e barter são feitas separadamente das consultas essenciais de contratos.
+* O app pode ser publicado antes da migration: Saldos, contratos, financeiro e recebimentos continuam funcionando e a interface mostra o nome do SQL pendente.
+* Não adicionar as novas colunas à consulta base obrigatória de `useFinanceiroData`; a sondagem separada evita quebra durante deploy gradual.
+
+Validação executada:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou normalmente as rotas `/[safraId]/financeiro` e `/[safraId]/saldos`.
+* As duas rotas responderam HTTP 200 no servidor local em `http://localhost:3000`.
+* O navegador local foi aberto em `/milho26/financeiro`, mas redirecionou para o login; nenhuma credencial preenchida foi submetida.
+* `git diff --check` passou sem erros de whitespace antes da entrega.
+
+Passos operacionais obrigatórios:
+
+1. Executar `docs/supabase_tipos_contratos_barter.sql` no SQL Editor do Supabase.
+2. Abrir um contrato antigo em `Saldos` e classificá-lo manualmente como `Venda`, `Troca / Barter`, `Misto` ou `Outro`.
+3. Em uma troca de teste, informar valor dos insumos e confirmar se o volume contratado já corresponde à obrigação em sacas.
+4. Vincular/confirmar romaneios no mesmo contrato e conferir entregue, saldo e status na aba `Trocas / Barter`.
+5. Validar um contrato misto para confirmar que aparece simultaneamente em Vendas e Barter, sempre dentro da mesma safra.

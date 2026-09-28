@@ -1,18 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ContratoFinanceiro, ContratoFinanceiroResumo, ContratoRecebivel, TipoDesconto, TIPOS_DESCONTO } from '../data/financeiroTypes';
+import { ContratoBarter, ContratoFinanceiro, ContratoFinanceiroResumo, ContratoRecebivel, TipoDesconto, TIPOS_DESCONTO } from '../data/financeiroTypes';
 import { supabase } from '../integrations/supabase/client';
 import { buildFinancialSummary, buildMonthlyFinancials, buildMonthlyReceipts, roundMoney } from './financeiroCalculations';
 
 export const useFinanceiroData = (safraId: string) => {
   const [contracts, setContracts] = useState<any[]>([]);
   const [finances, setFinances] = useState<ContratoFinanceiro[]>([]);
+  const [barters, setBarters] = useState<ContratoBarter[]>([]);
   const [receivables, setReceivables] = useState<ContratoRecebivel[]>([]);
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [schemaReady, setSchemaReady] = useState(true);
   const [receiptsReady, setReceiptsReady] = useState(true);
+  const [classificationReady, setClassificationReady] = useState(true);
+  const [barterReady, setBarterReady] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
 
   const refresh = useCallback(() => setRefreshTick((current) => current + 1), []);
@@ -39,8 +42,22 @@ export const useFinanceiroData = (safraId: string) => {
       if (!mounted) return;
       const loadedContracts = contractsResult.data || [];
       const loadedDeliveries = deliveriesResult.data || [];
-      setContracts(loadedContracts);
       setDeliveries(loadedDeliveries);
+
+      const contractIds = loadedContracts.map((contract) => contract.id);
+      const classificationQuery = contractIds.length > 0
+        ? supabase
+          .from('contratos')
+          .select('id, tipo_contrato, forma_liquidacao, tipo_outro_descricao')
+          .in('id', contractIds)
+        : supabase.from('contratos').select('id, tipo_contrato, forma_liquidacao, tipo_outro_descricao').limit(1);
+
+      const barterQuery = contractIds.length > 0
+        ? supabase
+          .from('contratos_barter')
+          .select('*, contratos_barter_itens(*)')
+          .in('contrato_id', contractIds)
+        : supabase.from('contratos_barter').select('*, contratos_barter_itens(*)').limit(1);
 
       const financeQuery = loadedContracts.length > 0
         ? supabase
@@ -49,8 +66,43 @@ export const useFinanceiroData = (safraId: string) => {
           .in('contrato_id', loadedContracts.map((contract) => contract.id))
         : supabase.from('contratos_financeiros').select('*, contratos_descontos(*)').limit(1);
 
-      const financeResult = await financeQuery;
+      const [financeResult, classificationResult, barterResult] = await Promise.all([
+        financeQuery,
+        classificationQuery,
+        barterQuery,
+      ]);
       if (!mounted) return;
+
+      if (classificationResult.error) {
+        setClassificationReady(false);
+        setContracts(loadedContracts);
+      } else {
+        const classificationById = new Map((classificationResult.data || []).map((item: any) => [item.id, item]));
+        setClassificationReady(true);
+        setContracts(loadedContracts.map((contract) => ({
+          ...contract,
+          ...(classificationById.get(contract.id) || {}),
+        })));
+      }
+
+      if (barterResult.error) {
+        setBarterReady(false);
+        setBarters([]);
+      } else {
+        setBarterReady(true);
+        setBarters((barterResult.data || []).map((barter: any) => ({
+          ...barter,
+          valor_insumos: Number(barter.valor_insumos) || 0,
+          preco_referencia_saca: barter.preco_referencia_saca === null ? null : Number(barter.preco_referencia_saca),
+          preco_mercado_saca: barter.preco_mercado_saca === null ? null : Number(barter.preco_mercado_saca),
+          contratos_barter_itens: (barter.contratos_barter_itens || []).map((item: any) => ({
+            ...item,
+            quantidade: item.quantidade === null ? null : Number(item.quantidade),
+            valor_unitario: item.valor_unitario === null ? null : Number(item.valor_unitario),
+            valor_total: Number(item.valor_total) || 0,
+          })),
+        })));
+      }
 
       if (financeResult.error) {
         setSchemaReady(false);
@@ -96,6 +148,7 @@ export const useFinanceiroData = (safraId: string) => {
 
   const summaries = useMemo<ContratoFinanceiroResumo[]>(() => {
     const financeByContract = new Map(finances.map((finance) => [finance.contrato_id, finance]));
+    const barterByContract = new Map(barters.map((barter) => [barter.contrato_id, barter]));
     const receivablesByFinance = new Map<string, ContratoRecebivel[]>();
     receivables.forEach((receivable) => {
       const current = receivablesByFinance.get(receivable.contrato_financeiro_id) || [];
@@ -116,38 +169,66 @@ export const useFinanceiroData = (safraId: string) => {
       return buildFinancialSummary({
         contract,
         finance,
+        barter: barterByContract.get(contract.id) || null,
         deliveredVolume: deliveredByContract.get(contract.id) || 0,
         receivables: finance?.id ? receivablesByFinance.get(finance.id) || [] : [],
       });
     });
-  }, [contracts, finances, deliveries, receivables]);
+  }, [contracts, finances, barters, deliveries, receivables]);
 
-  const monthly = useMemo(() => buildMonthlyFinancials(summaries, deliveries), [summaries, deliveries]);
-  const receiptsMonthly = useMemo(() => buildMonthlyReceipts(summaries), [summaries]);
+  const monthly = useMemo(() => buildMonthlyFinancials(
+    summaries.filter((item) => item.tipoContrato !== 'barter'),
+    deliveries,
+  ), [summaries, deliveries]);
+  const receiptsMonthly = useMemo(() => buildMonthlyReceipts(
+    summaries.filter((item) => item.tipoContrato !== 'barter'),
+  ), [summaries]);
 
   const totals = useMemo(() => {
+    const financialSummaries = summaries.filter((item) => item.tipoContrato !== 'barter');
     const discountsByType = Object.fromEntries(TIPOS_DESCONTO.map((type) => [type, 0])) as Record<TipoDesconto, number>;
-    summaries.forEach((summary) => {
+    financialSummaries.forEach((summary) => {
       TIPOS_DESCONTO.forEach((type) => {
         discountsByType[type] = roundMoney(discountsByType[type] + summary.descontosPorTipo[type]);
       });
     });
 
     return {
-      brutoContratado: roundMoney(summaries.reduce((total, item) => total + item.brutoContratado, 0)),
-      brutoRealizado: roundMoney(summaries.reduce((total, item) => total + item.brutoRealizado, 0)),
-      descontosContratados: roundMoney(summaries.reduce((total, item) => total + item.descontosContratados, 0)),
-      descontosRealizados: roundMoney(summaries.reduce((total, item) => total + item.descontosRealizados, 0)),
-      liquidoContratado: roundMoney(summaries.reduce((total, item) => total + item.liquidoContratado, 0)),
-      liquidoRealizado: roundMoney(summaries.reduce((total, item) => total + item.liquidoRealizado, 0)),
-      incompletos: summaries.filter((item) => item.status !== 'completo').length,
+      brutoContratado: roundMoney(financialSummaries.reduce((total, item) => total + item.brutoContratado, 0)),
+      brutoRealizado: roundMoney(financialSummaries.reduce((total, item) => total + item.brutoRealizado, 0)),
+      descontosContratados: roundMoney(financialSummaries.reduce((total, item) => total + item.descontosContratados, 0)),
+      descontosRealizados: roundMoney(financialSummaries.reduce((total, item) => total + item.descontosRealizados, 0)),
+      liquidoContratado: roundMoney(financialSummaries.reduce((total, item) => total + item.liquidoContratado, 0)),
+      liquidoRealizado: roundMoney(financialSummaries.reduce((total, item) => total + item.liquidoRealizado, 0)),
+      incompletos: financialSummaries.filter((item) => item.status !== 'completo').length,
       descontosPorTipo: discountsByType,
-      recebimentosProgramados: roundMoney(summaries.reduce((total, item) => total + item.recebimentosProgramados, 0)),
-      recebimentosRecebidos: roundMoney(summaries.reduce((total, item) => total + item.recebimentosRecebidos, 0)),
-      recebimentosEmAberto: roundMoney(summaries.reduce((total, item) => total + item.recebimentosEmAberto, 0)),
-      recebimentosVencidos: roundMoney(summaries.reduce((total, item) => total + item.recebimentosVencidos, 0)),
-      recebimentosAProgramar: roundMoney(summaries.reduce((total, item) => total + item.recebimentosAProgramar, 0)),
-      recebimentosExcedentes: roundMoney(summaries.reduce((total, item) => total + item.recebimentosExcedentes, 0)),
+      recebimentosProgramados: roundMoney(financialSummaries.reduce((total, item) => total + item.recebimentosProgramados, 0)),
+      recebimentosRecebidos: roundMoney(financialSummaries.reduce((total, item) => total + item.recebimentosRecebidos, 0)),
+      recebimentosEmAberto: roundMoney(financialSummaries.reduce((total, item) => total + item.recebimentosEmAberto, 0)),
+      recebimentosVencidos: roundMoney(financialSummaries.reduce((total, item) => total + item.recebimentosVencidos, 0)),
+      recebimentosAProgramar: roundMoney(financialSummaries.reduce((total, item) => total + item.recebimentosAProgramar, 0)),
+      recebimentosExcedentes: roundMoney(financialSummaries.reduce((total, item) => total + item.recebimentosExcedentes, 0)),
+      contratosVenda: summaries.filter((item) => item.tipoContrato === 'venda').length,
+      contratosBarter: summaries.filter((item) => item.tipoContrato === 'barter').length,
+      contratosMistos: summaries.filter((item) => item.tipoContrato === 'misto').length,
+      contratosNaoClassificados: summaries.filter((item) => item.tipoContrato === 'nao_classificado').length,
+      barterVolumeContratado: roundMoney(summaries
+        .filter((item) => item.tipoContrato === 'barter' || item.tipoContrato === 'misto')
+        .reduce((total, item) => total + item.volumeContratado, 0)),
+      barterVolumeEntregue: roundMoney(summaries
+        .filter((item) => item.tipoContrato === 'barter' || item.tipoContrato === 'misto')
+        .reduce((total, item) => total + item.volumeEntregue, 0)),
+      barterSaldoSacas: roundMoney(summaries
+        .filter((item) => item.tipoContrato === 'barter' || item.tipoContrato === 'misto')
+        .reduce((total, item) => total + item.barterSaldoSacas, 0)),
+      barterValorInsumos: roundMoney(summaries.reduce((total, item) => total + item.barterValorInsumos, 0)),
+      barterValorEntregue: roundMoney(summaries.reduce((total, item) => total + item.barterValorEntregue, 0)),
+      barterValorMercado: roundMoney(summaries.reduce((total, item) => total + item.barterValorMercado, 0)),
+      barterVariacaoMercado: roundMoney(summaries.reduce((total, item) => total + item.barterVariacaoMercado, 0)),
+      barterPendentes: summaries.filter((item) => (
+        (item.tipoContrato === 'barter' || item.tipoContrato === 'misto')
+        && (!item.barter || item.barter.status_conciliacao !== 'conciliado')
+      )).length,
     };
   }, [summaries]);
 
@@ -155,7 +236,10 @@ export const useFinanceiroData = (safraId: string) => {
     loading,
     schemaReady,
     receiptsReady,
+    classificationReady,
+    barterReady,
     contracts,
+    barters,
     deliveries,
     summaries,
     monthly,

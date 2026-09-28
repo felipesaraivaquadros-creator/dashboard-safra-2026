@@ -14,7 +14,19 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { ContratoDesconto, MetodoDesconto, StatusPreco, TipoDesconto, TIPOS_DESCONTO } from '../../data/financeiroTypes';
+import BarterFormSection, { BarterDraft } from '../financeiro/BarterFormSection';
+import {
+  ContratoBarterItem,
+  ContratoDesconto,
+  FormaLiquidacao,
+  FORMA_LIQUIDACAO_LABELS,
+  MetodoDesconto,
+  StatusPreco,
+  TipoContrato,
+  TIPO_CONTRATO_LABELS,
+  TipoDesconto,
+  TIPOS_DESCONTO,
+} from '../../data/financeiroTypes';
 import { calculateDiscountsTotal, roundMoney } from '../../lib/financeiroCalculations';
 import { supabase } from '../../integrations/supabase/client';
 import { showError, showSuccess } from '../../utils/toast';
@@ -49,15 +61,42 @@ const methodLabels: Record<MetodoDesconto, string> = {
   valor_fixo: 'Valor fixo',
 };
 
+const initialBarter: BarterDraft = {
+  fornecedor: '',
+  recebedor_graos: '',
+  valor_insumos: null,
+  data_inicio_entrega: '',
+  data_fim_entrega: '',
+  local_entrega: '',
+  responsavel_frete: 'produtor',
+  qualidade_exigida: '',
+  numero_cpr: '',
+  modalidade_cpr: 'nao_aplicavel',
+  registro_cpr: '',
+  preco_referencia_saca: null,
+  preco_mercado_saca: null,
+  data_preco_mercado: '',
+  status_conciliacao: 'pendente',
+  observacoes: '',
+};
+
 export default function ContratoForm({ safraId, onClose, onSuccess, editData }: ContratoFormProps) {
   const [loading, setLoading] = useState(false);
   const [loadingFinance, setLoadingFinance] = useState(true);
+  const [loadingClassification, setLoadingClassification] = useState(true);
   const [financeAvailable, setFinanceAvailable] = useState(true);
+  const [classificationAvailable, setClassificationAvailable] = useState(true);
+  const [barterAvailable, setBarterAvailable] = useState(true);
   const [financeEnabled, setFinanceEnabled] = useState(false);
   const [financeExpanded, setFinanceExpanded] = useState(false);
   const [financeId, setFinanceId] = useState<string | null>(null);
   const [armazens, setArmazens] = useState<any[]>([]);
   const [discounts, setDiscounts] = useState<ContratoDesconto[]>([]);
+  const [tipoContrato, setTipoContrato] = useState<TipoContrato>(editData?.tipo_contrato || editData?.tipoContrato || 'nao_classificado');
+  const [formaLiquidacao, setFormaLiquidacao] = useState<FormaLiquidacao>(editData?.forma_liquidacao || editData?.formaLiquidacao || 'nao_definida');
+  const [tipoOutroDescricao, setTipoOutroDescricao] = useState(editData?.tipo_outro_descricao || editData?.tipoOutroDescricao || '');
+  const [barter, setBarter] = useState<BarterDraft>(initialBarter);
+  const [barterItems, setBarterItems] = useState<ContratoBarterItem[]>([]);
   const [finance, setFinance] = useState<FinanceDraft>({
     status_preco: 'a_fixar',
     preco_saca: null,
@@ -144,6 +183,79 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
     return () => { mounted = false; };
   }, [editData?.id]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const loadClassificationAndBarter = async () => {
+      setLoadingClassification(true);
+      const classificationQuery = editData?.id
+        ? supabase
+          .from('contratos')
+          .select('tipo_contrato, forma_liquidacao, tipo_outro_descricao')
+          .eq('id', editData.id)
+          .maybeSingle()
+        : supabase.from('contratos').select('tipo_contrato, forma_liquidacao, tipo_outro_descricao').limit(1);
+      const barterQuery = editData?.id
+        ? supabase
+          .from('contratos_barter')
+          .select('*, contratos_barter_itens(*)')
+          .eq('contrato_id', editData.id)
+          .maybeSingle()
+        : supabase.from('contratos_barter').select('id').limit(1);
+      const [classificationResult, barterResult] = await Promise.all([classificationQuery, barterQuery]);
+      if (!mounted) return;
+
+      if (classificationResult.error) {
+        setClassificationAvailable(false);
+      } else {
+        setClassificationAvailable(true);
+        const loaded: any = classificationResult.data;
+        if (editData?.id && loaded && !Array.isArray(loaded)) {
+          setTipoContrato(loaded.tipo_contrato || 'nao_classificado');
+          setFormaLiquidacao(loaded.forma_liquidacao || 'nao_definida');
+          setTipoOutroDescricao(loaded.tipo_outro_descricao || '');
+        }
+      }
+
+      if (barterResult.error) {
+        setBarterAvailable(false);
+      } else {
+        setBarterAvailable(true);
+        const loaded: any = barterResult.data;
+        if (editData?.id && loaded && !Array.isArray(loaded)) {
+          setBarter({
+            fornecedor: loaded.fornecedor || '',
+            recebedor_graos: loaded.recebedor_graos || '',
+            valor_insumos: loaded.valor_insumos === null ? null : Number(loaded.valor_insumos),
+            data_inicio_entrega: loaded.data_inicio_entrega || '',
+            data_fim_entrega: loaded.data_fim_entrega || '',
+            local_entrega: loaded.local_entrega || '',
+            responsavel_frete: loaded.responsavel_frete || 'produtor',
+            qualidade_exigida: loaded.qualidade_exigida || '',
+            numero_cpr: loaded.numero_cpr || '',
+            modalidade_cpr: loaded.modalidade_cpr || 'nao_aplicavel',
+            registro_cpr: loaded.registro_cpr || '',
+            preco_referencia_saca: loaded.preco_referencia_saca === null ? null : Number(loaded.preco_referencia_saca),
+            preco_mercado_saca: loaded.preco_mercado_saca === null ? null : Number(loaded.preco_mercado_saca),
+            data_preco_mercado: loaded.data_preco_mercado || '',
+            status_conciliacao: loaded.status_conciliacao || 'pendente',
+            observacoes: loaded.observacoes || '',
+          });
+          setBarterItems((loaded.contratos_barter_itens || []).map((item: any) => ({
+            ...item,
+            quantidade: item.quantidade === null ? null : Number(item.quantidade),
+            valor_unitario: item.valor_unitario === null ? null : Number(item.valor_unitario),
+            valor_total: Number(item.valor_total) || 0,
+          })));
+        }
+      }
+      setLoadingClassification(false);
+    };
+
+    loadClassificationAndBarter();
+    return () => { mounted = false; };
+  }, [editData?.id]);
+
   const preview = useMemo(() => {
     const price = finance.status_preco === 'fixado' ? Number(finance.preco_saca) || 0 : 0;
     const gross = roundMoney((Number(formData.volume_total) || 0) * price);
@@ -187,16 +299,82 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
     if (savedFinanceId) setFinanceId(String(savedFinanceId));
   };
 
+  const saveBarter = async (contractId: string) => {
+    if (barter.data_inicio_entrega && barter.data_fim_entrega && barter.data_fim_entrega < barter.data_inicio_entrega) {
+      throw new Error('A data final de entrega não pode ser anterior à data inicial.');
+    }
+
+    const itemsToSave = barterItems
+      .filter((item) => item.descricao.trim() || Number(item.valor_total) > 0)
+      .map((item) => ({
+        categoria: item.categoria.trim() || 'Insumo',
+        descricao: item.descricao.trim(),
+        quantidade: item.quantidade,
+        unidade: item.unidade.trim() || null,
+        valor_unitario: item.valor_unitario,
+        valor_total: Number(item.valor_total) || 0,
+      }));
+
+    const { error } = await supabase.rpc('salvar_contrato_barter', {
+      p_contrato_id: contractId,
+      p_fornecedor: barter.fornecedor.trim() || null,
+      p_recebedor_graos: barter.recebedor_graos.trim() || null,
+      p_valor_insumos: Number(barter.valor_insumos) || 0,
+      p_data_inicio_entrega: barter.data_inicio_entrega || null,
+      p_data_fim_entrega: barter.data_fim_entrega || null,
+      p_local_entrega: barter.local_entrega.trim() || null,
+      p_responsavel_frete: barter.responsavel_frete,
+      p_qualidade_exigida: barter.qualidade_exigida.trim() || null,
+      p_numero_cpr: barter.numero_cpr.trim() || null,
+      p_modalidade_cpr: barter.modalidade_cpr,
+      p_registro_cpr: barter.registro_cpr.trim() || null,
+      p_preco_referencia_saca: barter.preco_referencia_saca,
+      p_preco_mercado_saca: barter.preco_mercado_saca,
+      p_data_preco_mercado: barter.data_preco_mercado || null,
+      p_status_conciliacao: barter.status_conciliacao,
+      p_observacoes: barter.observacoes.trim() || null,
+      p_itens: itemsToSave,
+    });
+    if (error) throw error;
+  };
+
+  const changeTipoContrato = (nextType: TipoContrato) => {
+    setTipoContrato(nextType);
+    const suggested: Record<TipoContrato, FormaLiquidacao> = {
+      nao_classificado: 'nao_definida',
+      venda: 'financeira',
+      barter: 'fisica',
+      misto: 'mista',
+      outro: 'nao_definida',
+    };
+    setFormaLiquidacao(suggested[nextType]);
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
 
     try {
-      const payload = {
+      if (classificationAvailable && !editData?.id && tipoContrato === 'nao_classificado') {
+        throw new Error('Escolha o tipo do novo contrato.');
+      }
+      if (classificationAvailable && tipoContrato === 'outro' && !tipoOutroDescricao.trim()) {
+        throw new Error('Descreva o tipo do contrato marcado como Outro.');
+      }
+      if (classificationAvailable && (tipoContrato === 'barter' || tipoContrato === 'misto') && !barterAvailable) {
+        throw new Error('Execute docs/supabase_tipos_contratos_barter.sql antes de salvar uma troca.');
+      }
+
+      const payload: any = {
         ...formData,
         safra_id: safraId,
         grupo: formData.grupo || armazens.find((item) => item.id === formData.armazem_id)?.grupo || null,
       };
+      if (classificationAvailable) {
+        payload.tipo_contrato = tipoContrato;
+        payload.forma_liquidacao = formaLiquidacao;
+        payload.tipo_outro_descricao = tipoContrato === 'outro' ? tipoOutroDescricao.trim() : null;
+      }
 
       let contractId = editData?.id as string | undefined;
       if (contractId) {
@@ -209,7 +387,8 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
       }
 
       let financeSaved = false;
-      if (financeEnabled && financeAvailable && contractId) {
+      const financialContract = !classificationAvailable || tipoContrato !== 'barter';
+      if (financeEnabled && financeAvailable && financialContract && contractId) {
         try {
           await saveFinance(contractId);
           financeSaved = true;
@@ -221,9 +400,22 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
         }
       }
 
+      let barterSaved = false;
+      if (classificationAvailable && barterAvailable && contractId && (tipoContrato === 'barter' || tipoContrato === 'misto')) {
+        try {
+          await saveBarter(contractId);
+          barterSaved = true;
+        } catch (barterError: any) {
+          showError(`Contrato salvo, mas a troca precisa ser revisada: ${barterError.message}`);
+          onSuccess();
+          onClose();
+          return;
+        }
+      }
+
       showSuccess(editData
-        ? `Contrato atualizado${financeSaved ? ' com financeiro' : ''}!`
-        : `Contrato cadastrado${financeSaved ? ' com financeiro' : ''}!`);
+        ? `Contrato atualizado${financeSaved ? ' com financeiro' : ''}${barterSaved ? ' com barter' : ''}!`
+        : `Contrato cadastrado${financeSaved ? ' com financeiro' : ''}${barterSaved ? ' com barter' : ''}!`);
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -240,7 +432,7 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-      <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-800">
+      <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-800">
         <div className="flex shrink-0 items-center justify-between bg-purple-600 p-5 text-white md:p-6">
           <div>
             <h2 className="text-xl font-black uppercase italic tracking-tighter">
@@ -287,8 +479,50 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
               </div>
             </section>
 
+            <section className="space-y-4 border-t border-slate-200 pt-5 dark:border-slate-700">
+              {loadingClassification ? (
+                <div className="flex items-center gap-2 py-3 text-xs font-bold text-slate-400"><Loader2 size={16} className="animate-spin" /> Verificando tipos de contrato...</div>
+              ) : !classificationAvailable ? (
+                <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                  <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+                  <p className="text-xs font-bold">Execute `docs/supabase_tipos_contratos_barter.sql` para habilitar vendas, trocas e contratos mistos. O contrato atual continua sendo salvo normalmente.</p>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-200">Tipo de contrato</h3>
+                    <p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Contratos existentes permanecem não classificados até a revisão manual.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                    {(Object.entries(TIPO_CONTRATO_LABELS) as Array<[TipoContrato, string]>).map(([value, label]) => (
+                      <button key={value} type="button" onClick={() => changeTipoContrato(value)} className={`min-h-11 rounded-lg border px-3 py-2 text-[10px] font-black uppercase transition-colors ${tipoContrato === value ? 'border-green-600 bg-green-600 text-white' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-green-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'}`}>{label}</button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <label className="space-y-1.5">
+                      <span className="ml-1 block text-[9px] font-black uppercase text-slate-400">Forma de liquidação</span>
+                      <select value={formaLiquidacao} onChange={(event) => setFormaLiquidacao(event.target.value as FormaLiquidacao)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900">
+                        {(Object.entries(FORMA_LIQUIDACAO_LABELS) as Array<[FormaLiquidacao, string]>).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                      </select>
+                    </label>
+                    {tipoContrato === 'outro' && (
+                      <label className="space-y-1.5">
+                        <span className="ml-1 block text-[9px] font-black uppercase text-slate-400">Descrição do tipo</span>
+                        <input value={tipoOutroDescricao} onChange={(event) => setTipoOutroDescricao(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900" placeholder="Descreva a operação" />
+                      </label>
+                    )}
+                  </div>
+                </>
+              )}
+            </section>
+
             <section className="border-t border-slate-200 pt-5 dark:border-slate-700">
-              {loadingFinance ? (
+              {classificationAvailable && tipoContrato === 'barter' ? (
+                <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                  <CircleDollarSign size={18} className="mt-0.5 shrink-0" />
+                  <p className="text-xs font-bold">Contrato com liquidação física. O financeiro de venda fica separado; qualquer configuração anterior é preservada no banco.</p>
+                </div>
+              ) : loadingFinance ? (
                 <div className="flex items-center gap-2 py-3 text-xs font-bold text-slate-400"><Loader2 size={16} className="animate-spin" /> Verificando módulo financeiro...</div>
               ) : !financeAvailable ? (
                 <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
@@ -387,6 +621,23 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
                 </div>
               )}
             </section>
+
+            {classificationAvailable && (tipoContrato === 'barter' || tipoContrato === 'misto') && (
+              barterAvailable ? (
+                <BarterFormSection
+                  draft={barter}
+                  items={barterItems}
+                  volumeSacas={Number(formData.volume_total) || 0}
+                  onChange={setBarter}
+                  onItemsChange={setBarterItems}
+                />
+              ) : (
+                <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                  <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+                  <p className="text-xs font-bold">A estrutura de barter ainda não existe no banco. Execute `docs/supabase_tipos_contratos_barter.sql`.</p>
+                </div>
+              )
+            )}
 
             <div className="border-t border-slate-200 pt-5 dark:border-slate-700">
               <button disabled={loading} type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 py-4 text-xs font-black uppercase text-white shadow-md transition-colors hover:bg-purple-700 disabled:opacity-50">

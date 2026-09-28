@@ -1,5 +1,6 @@
 import {
   ContratoDesconto,
+  ContratoBarter,
   ContratoFinanceiro,
   ContratoFinanceiroResumo,
   ContratoRecebivel,
@@ -114,11 +115,12 @@ export const getFinancialStatus = (
 interface BuildSummaryInput {
   contract: any;
   finance: ContratoFinanceiro | null;
+  barter?: ContratoBarter | null;
   deliveredVolume: number;
   receivables?: ContratoRecebivel[];
 }
 
-export const buildFinancialSummary = ({ contract, finance, deliveredVolume, receivables = [] }: BuildSummaryInput): ContratoFinanceiroResumo => {
+export const buildFinancialSummary = ({ contract, finance, barter = null, deliveredVolume, receivables = [] }: BuildSummaryInput): ContratoFinanceiroResumo => {
   const contractedVolume = Number(contract.volume_total) || 0;
   const price = finance?.status_preco === 'fixado' ? Number(finance.preco_saca) || 0 : 0;
   const realizedVolume = finance?.aceita_excedente
@@ -140,6 +142,26 @@ export const buildFinancialSummary = ({ contract, finance, deliveredVolume, rece
   const overdue = roundMoney(normalizedReceivables
     .filter((item) => item.status === 'vencido')
     .reduce((total, item) => total + item.saldoAberto, 0));
+  const barterBalance = roundMoney(Math.max(contractedVolume - deliveredVolume, 0));
+  const barterPercent = contractedVolume > 0
+    ? Math.min(Math.max((deliveredVolume / contractedVolume) * 100, 0), 100)
+    : 0;
+  const today = getLocalDateKey();
+  const barterDeliveryStatus = barterBalance <= 0.009 && contractedVolume > 0
+    ? 'entregue'
+    : barter?.data_fim_entrega && barter.data_fim_entrega < today
+      ? 'vencida'
+      : deliveredVolume > 0
+        ? 'parcial'
+        : 'nao_iniciada';
+  const barterInputValue = roundMoney(Number(barter?.valor_insumos) || 0);
+  const barterDeliveredValue = roundMoney(barterInputValue * Math.min(contractedVolume > 0 ? deliveredVolume / contractedVolume : 0, 1));
+  const barterImplicitPrice = roundMoney(contractedVolume > 0 ? barterInputValue / contractedVolume : 0);
+  const barterMarketValue = roundMoney(contractedVolume * (Number(barter?.preco_mercado_saca) || 0));
+  const barterItemsTotal = roundMoney((barter?.contratos_barter_itens || []).reduce(
+    (total, item) => total + (Number(item.valor_total) || 0),
+    0,
+  ));
 
   const discountsByType = Object.fromEntries(TIPOS_DESCONTO.map((type) => [type, 0])) as Record<TipoDesconto, number>;
   discounts.forEach((discount) => {
@@ -156,6 +178,9 @@ export const buildFinancialSummary = ({ contract, finance, deliveredVolume, rece
     armazem: contract.armazens?.nome || null,
     armazemId: contract.armazem_id || null,
     grupo: contract.grupo || null,
+    tipoContrato: contract.tipo_contrato || 'nao_classificado',
+    formaLiquidacao: contract.forma_liquidacao || 'nao_definida',
+    tipoOutroDescricao: contract.tipo_outro_descricao || null,
     volumeContratado: contractedVolume,
     volumeEntregue: roundMoney(deliveredVolume),
     volumeFinanceiroRealizado: roundMoney(realizedVolume),
@@ -178,6 +203,17 @@ export const buildFinancialSummary = ({ contract, finance, deliveredVolume, rece
     recebimentosVencidos: overdue,
     recebimentosAProgramar: roundMoney(Math.max(netContracted - scheduledReceipts, 0)),
     recebimentosExcedentes: roundMoney(Math.max(scheduledReceipts - netContracted, 0)),
+    barter,
+    barterSaldoSacas: barterBalance,
+    barterPercentualEntregue: roundMoney(barterPercent),
+    barterStatusEntrega: barterDeliveryStatus,
+    barterValorInsumos: barterInputValue,
+    barterValorEntregue: barterDeliveredValue,
+    barterPrecoImplicitoSaca: barterImplicitPrice,
+    barterValorMercado: barterMarketValue,
+    barterVariacaoMercado: roundMoney(barterMarketValue - barterInputValue),
+    barterTotalItens: barterItemsTotal,
+    barterDivergenciaItens: roundMoney(barterItemsTotal - barterInputValue),
   };
 };
 
