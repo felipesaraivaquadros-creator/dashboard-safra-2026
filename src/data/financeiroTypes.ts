@@ -7,7 +7,7 @@ export type FormaLiquidacao = 'nao_definida' | 'financeira' | 'fisica' | 'mista'
 export type ResponsavelFrete = 'produtor' | 'comprador' | 'compartilhado' | 'outro';
 export type ModalidadeCpr = 'nao_aplicavel' | 'fisica' | 'financeira';
 export type StatusConciliacaoBarter = 'pendente' | 'divergente' | 'conciliado';
-export type StatusEntregaBarter = 'nao_iniciada' | 'parcial' | 'entregue' | 'vencida';
+export type StatusEntregaBarter = 'nao_iniciada' | 'parcial' | 'entregue' | 'cumprido' | 'vencida';
 export type StatusFinanceiro =
   | 'nao_configurado'
   | 'preco_pendente'
@@ -71,6 +71,17 @@ export interface ContratoBarter {
   contratos_barter_itens: ContratoBarterItem[];
 }
 
+export interface ContratoCumprimento {
+  id?: string;
+  contrato_id: string;
+  origem: 'alocacao_saldo';
+  grupo: string | null;
+  volume_sacas: number;
+  ativo: boolean;
+  confirmado_em: string;
+  cancelado_em: string | null;
+}
+
 export interface ContratoBaixa {
   id?: string;
   recebivel_id?: string;
@@ -108,6 +119,10 @@ export interface ContratoFinanceiroResumo {
   tipoOutroDescricao: string | null;
   volumeContratado: number;
   volumeEntregue: number;
+  volumeEntregueRomaneios: number;
+  volumeCumpridoAlocacao: number;
+  cumpridoPorAlocacao: boolean;
+  cumprimento: ContratoCumprimento | null;
   volumeFinanceiroRealizado: number;
   precoSaca: number | null;
   competencia: string | null;
@@ -174,8 +189,9 @@ export const FORMA_LIQUIDACAO_LABELS: Record<FormaLiquidacao, string> = {
 };
 
 export const STATUS_ENTREGA_BARTER_LABELS: Record<StatusEntregaBarter, string> = {
-  nao_iniciada: 'Não iniciada',
+  nao_iniciada: 'Pendente',
   parcial: 'Parcial',
   entregue: 'Entregue',
+  cumprido: 'Cumprido',
   vencida: 'Vencida',
 };

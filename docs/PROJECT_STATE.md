@@ -992,3 +992,66 @@ Passos operacionais obrigatórios:
 * O importador foi protegido para nunca zerar volume, nome, classificação, financeiro ou barter de um contrato existente ao reencontrar seu número na planilha.
 * Contratos ausentes ainda podem ser criados automaticamente com volume zero, mas contratos já cadastrados são ignorados nessa etapa e preservados integralmente.
 * Para entregas históricas sem vínculo: cadastrar/revisar primeiro o contrato, garantir que seu número seja igual ao `ncontrato` da planilha e então reimportar a planilha da mesma safra.
+
+## Atualização - cumprimento de contratos pela alocação em Saldos - 2026-09-28
+
+Decisão de negócio aprovada e implementada:
+
+* Em `Saldos > Saldos por Armazém`, gravar um contrato dentro de um slot confirma que a obrigação física daquele contrato foi cumprida.
+* A regra vale para contratos de venda, barter e mistos, sempre isolados pela safra aberta.
+* Contratos alocados recebem o status operacional `Cumprido` no controle de barter.
+* Ao arrastar um contrato do slot de volta para o Banco de Itens, o app pede confirmação explícita.
+* Confirmada a retirada e gravadas as alterações, a comprovação por alocação é cancelada e o status operacional volta para `Pendente`.
+* A retirada não apaga contrato, barter, financeiro, parcelas, baixas ou romaneios.
+
+Banco de dados:
+
+* Criado `docs/supabase_cumprimento_por_alocacao.sql`, que deve ser executado manualmente no SQL Editor do Supabase.
+* Criada `contratos_cumprimentos`, com um único estado por contrato, origem, slot/grupo, volume confirmado, situação ativa, data da confirmação e data do cancelamento.
+* O vínculo com a safra continua sendo herdado de `contratos`; a função rejeita qualquer contrato que não pertença à `safra_id` enviada.
+* Criada a RPC transacional `salvar_alocacoes_contratos`, que grava o `grupo` do contrato e seu cumprimento na mesma transação.
+* A migration reconhece como cumpridos, na primeira execução, os contratos que já possuem `grupo`/slot. Reexecutar o script não reativa registros que tenham sido cancelados depois.
+* Exclusão de contrato remove seu cumprimento por cascata. RLS e permissões foram incluídas para usuários autenticados.
+* `setup.sql` contém a mesma estrutura para instalações novas.
+
+Regras de cálculo:
+
+* Volume comprovado por romaneios continua sendo calculado normalmente.
+* Volume confirmado pela alocação corresponde ao volume total atual do contrato.
+* Volume efetivo cumprido usa o maior valor entre romaneios e alocação; os dois valores nunca são somados, evitando dupla contagem.
+* Alocação ativa tem prioridade de status e exibe `Cumprido`.
+* Um registro de alocação cancelado tem prioridade de status e exibe `Pendente`, conforme decisão do usuário.
+* Sem histórico de alocação, permanece a regra anterior por romaneios: `Pendente`, `Parcial`, `Entregue` ou `Vencida`.
+* Para contratos de venda, a alocação também alimenta o volume realizado e os KPIs financeiros. O gráfico mensal continua baseado nas datas reais dos romaneios, pois a alocação não representa uma competência de faturamento.
+
+Compatibilidade de implantação:
+
+* `useFinanceiroData` consulta `contratos_cumprimentos` separadamente das consultas essenciais.
+* O app pode ser publicado antes da migration. Nesse intervalo, os slots continuam salvando a organização antiga e as telas exibem um aviso com o SQL pendente.
+* Após executar a migration, recarregar o app é suficiente para habilitar a RPC e os novos status.
+* A tela Financeiro informa visualmente quando o cumprimento veio de `Alocação em <slot>`.
+
+Arquivos principais alterados:
+
+* `docs/supabase_cumprimento_por_alocacao.sql`
+* `setup.sql`
+* `src/data/financeiroTypes.ts`
+* `src/lib/financeiroCalculations.ts`
+* `src/lib/useFinanceiroData.ts`
+* `src/components/saldos/SaldosPorArmazem.tsx`
+* `app/[safraId]/saldos/page.tsx`
+* `app/[safraId]/financeiro/page.tsx`
+
+Validação executada:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou normalmente as rotas `/[safraId]/saldos` e `/[safraId]/financeiro`.
+* O servidor local foi reiniciado em `http://localhost:3000` e `/milho26/financeiro` respondeu HTTP 200.
+
+Passos operacionais obrigatórios:
+
+1. Executar `docs/supabase_cumprimento_por_alocacao.sql` no SQL Editor do Supabase.
+2. Recarregar o app e confirmar que o aviso de migration pendente desapareceu.
+3. Conferir um barter que já está em um slot: deve aparecer como `Cumprido` no Financeiro.
+4. Mover um contrato de teste para o Banco de Itens, confirmar a mensagem e clicar em `Gravar alterações`: deve voltar para `Pendente`.
+5. Recolocar o contrato no slot e gravar: deve retornar para `Cumprido` sem duplicar volume.

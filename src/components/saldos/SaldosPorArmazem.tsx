@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { DndContext, DragOverlay, closestCorners, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
-import { Scale, Plus, Layers, Save, Loader2 } from 'lucide-react';
+import { AlertTriangle, Scale, Plus, Layers, Save, Loader2 } from 'lucide-react';
 import DraggableItem from './DraggableItem';
 import DroppableSlot from './DroppableSlot';
 import { supabase } from '../../integrations/supabase/client';
@@ -16,9 +16,10 @@ interface SaldosPorArmazemProps {
   onEditContrato: (contrato: any) => void;
   onDeleteContrato: (id: string) => void;
   safraId: string;
+  fulfillmentReady: boolean;
 }
 
-export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefresh, onEditContrato, onDeleteContrato, safraId }: SaldosPorArmazemProps) {
+export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefresh, onEditContrato, onDeleteContrato, safraId, fulfillmentReady }: SaldosPorArmazemProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeData, setActiveData] = useState<any>(null);
   
@@ -76,6 +77,12 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
       if (itemData?.type === 'armazem') {
         setLocalSaldos(prev => prev.map(s => s.uiId === active.id ? { ...s, grupo: null } : s));
       } else {
+        const currentContract = localContratos.find(c => c.uiId === active.id);
+        if (!currentContract?.grupo) return;
+        const confirmed = window.confirm(
+          `Retirar o contrato ${currentContract.nome} do slot? Ao gravar, o cumprimento será cancelado e o status voltará para Pendente.`,
+        );
+        if (!confirmed) return;
         setLocalContratos(prev => prev.map(c => c.uiId === active.id ? { ...c, grupo: null } : c));
       }
       setIsDirty(true);
@@ -106,25 +113,35 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
     const toastId = showLoading("Gravando alterações no banco...");
 
     try {
-      // Executa as atualizações em paralelo
-      const updates = [
-        ...localSaldos.map(s => {
+      const balanceUpdates = localSaldos.map(s => {
           const table = s.isCustom ? 'saldos_custom' : 'saldos';
           return supabase.from(table).update({ grupo: s.grupo }).eq('id', s.databaseId);
-        }),
-        ...localContratos.map(c => 
-          supabase.from('contratos').update({ grupo: c.grupo }).eq('id', c.databaseId)
-        )
-      ];
+        });
+      const balanceResults = await Promise.all(balanceUpdates);
+      const balanceError = balanceResults.find(result => result.error)?.error;
+      if (balanceError) throw balanceError;
 
-      const results = await Promise.all(updates);
-      
-      // Verifica se houve erro em alguma das requisições
-      const firstError = results.find(r => r.error)?.error;
-      if (firstError) throw firstError;
+      if (fulfillmentReady) {
+        const { error } = await supabase.rpc('salvar_alocacoes_contratos', {
+          p_safra_id: safraId,
+          p_alocacoes: localContratos.map(contract => ({
+            contrato_id: contract.databaseId,
+            grupo: contract.grupo || null,
+          })),
+        });
+        if (error) throw error;
+      } else {
+        const contractResults = await Promise.all(localContratos.map(contract => (
+          supabase.from('contratos').update({ grupo: contract.grupo }).eq('id', contract.databaseId)
+        )));
+        const contractError = contractResults.find(result => result.error)?.error;
+        if (contractError) throw contractError;
+      }
 
       dismissToast(toastId);
-      showSuccess("Organização salva com sucesso!");
+      showSuccess(fulfillmentReady
+        ? "Organização e cumprimento dos contratos salvos!"
+        : "Organização salva. Execute o SQL de cumprimento para ativar os novos status.");
       setIsDirty(false);
       onRefresh(); // Atualiza os dados globais
     } catch (err: any) {
@@ -148,6 +165,15 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
   return (
     <DndContext collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="space-y-10 pb-32">
+        {!fulfillmentReady && (
+          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+            <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-black uppercase">Cumprimento por alocação aguardando configuração</p>
+              <p className="mt-1 text-[10px] font-bold">Execute docs/supabase_cumprimento_por_alocacao.sql no Supabase. Até lá, os slots continuam salvando apenas a organização.</p>
+            </div>
+          </div>
+        )}
         
         {/* Barra de Ações Flutuante */}
         {isDirty && (

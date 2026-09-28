@@ -1,6 +1,7 @@
 import {
   ContratoDesconto,
   ContratoBarter,
+  ContratoCumprimento,
   ContratoFinanceiro,
   ContratoFinanceiroResumo,
   ContratoRecebivel,
@@ -116,16 +117,28 @@ interface BuildSummaryInput {
   contract: any;
   finance: ContratoFinanceiro | null;
   barter?: ContratoBarter | null;
+  fulfillment?: ContratoCumprimento | null;
   deliveredVolume: number;
   receivables?: ContratoRecebivel[];
 }
 
-export const buildFinancialSummary = ({ contract, finance, barter = null, deliveredVolume, receivables = [] }: BuildSummaryInput): ContratoFinanceiroResumo => {
+export const buildFinancialSummary = ({
+  contract,
+  finance,
+  barter = null,
+  fulfillment = null,
+  deliveredVolume,
+  receivables = [],
+}: BuildSummaryInput): ContratoFinanceiroResumo => {
   const contractedVolume = Number(contract.volume_total) || 0;
+  const deliveredByWaybills = Math.max(Number(deliveredVolume) || 0, 0);
+  const fulfilledByAllocation = fulfillment?.ativo === true;
+  const allocationVolume = fulfilledByAllocation ? contractedVolume : 0;
+  const effectiveDeliveredVolume = Math.max(deliveredByWaybills, allocationVolume);
   const price = finance?.status_preco === 'fixado' ? Number(finance.preco_saca) || 0 : 0;
   const realizedVolume = finance?.aceita_excedente
-    ? deliveredVolume
-    : Math.min(deliveredVolume, contractedVolume);
+    ? effectiveDeliveredVolume
+    : Math.min(effectiveDeliveredVolume, contractedVolume);
   const grossContracted = roundMoney(contractedVolume * price);
   const grossRealized = roundMoney(realizedVolume * price);
   const discounts = finance?.contratos_descontos || [];
@@ -142,20 +155,24 @@ export const buildFinancialSummary = ({ contract, finance, barter = null, delive
   const overdue = roundMoney(normalizedReceivables
     .filter((item) => item.status === 'vencido')
     .reduce((total, item) => total + item.saldoAberto, 0));
-  const barterBalance = roundMoney(Math.max(contractedVolume - deliveredVolume, 0));
+  const barterBalance = roundMoney(Math.max(contractedVolume - effectiveDeliveredVolume, 0));
   const barterPercent = contractedVolume > 0
-    ? Math.min(Math.max((deliveredVolume / contractedVolume) * 100, 0), 100)
+    ? Math.min(Math.max((effectiveDeliveredVolume / contractedVolume) * 100, 0), 100)
     : 0;
   const today = getLocalDateKey();
-  const barterDeliveryStatus = barterBalance <= 0.009 && contractedVolume > 0
-    ? 'entregue'
-    : barter?.data_fim_entrega && barter.data_fim_entrega < today
-      ? 'vencida'
-      : deliveredVolume > 0
-        ? 'parcial'
-        : 'nao_iniciada';
+  const barterDeliveryStatus = fulfilledByAllocation
+    ? 'cumprido'
+    : fulfillment && !fulfillment.ativo
+      ? 'nao_iniciada'
+      : barterBalance <= 0.009 && contractedVolume > 0
+        ? 'entregue'
+        : barter?.data_fim_entrega && barter.data_fim_entrega < today
+          ? 'vencida'
+          : deliveredByWaybills > 0
+            ? 'parcial'
+            : 'nao_iniciada';
   const barterInputValue = roundMoney(Number(barter?.valor_insumos) || 0);
-  const barterDeliveredValue = roundMoney(barterInputValue * Math.min(contractedVolume > 0 ? deliveredVolume / contractedVolume : 0, 1));
+  const barterDeliveredValue = roundMoney(barterInputValue * Math.min(contractedVolume > 0 ? effectiveDeliveredVolume / contractedVolume : 0, 1));
   const barterImplicitPrice = roundMoney(contractedVolume > 0 ? barterInputValue / contractedVolume : 0);
   const barterMarketValue = roundMoney(contractedVolume * (Number(barter?.preco_mercado_saca) || 0));
   const barterItemsTotal = roundMoney((barter?.contratos_barter_itens || []).reduce(
@@ -182,7 +199,11 @@ export const buildFinancialSummary = ({ contract, finance, barter = null, delive
     formaLiquidacao: contract.forma_liquidacao || 'nao_definida',
     tipoOutroDescricao: contract.tipo_outro_descricao || null,
     volumeContratado: contractedVolume,
-    volumeEntregue: roundMoney(deliveredVolume),
+    volumeEntregue: roundMoney(effectiveDeliveredVolume),
+    volumeEntregueRomaneios: roundMoney(deliveredByWaybills),
+    volumeCumpridoAlocacao: roundMoney(allocationVolume),
+    cumpridoPorAlocacao: fulfilledByAllocation,
+    cumprimento: fulfillment,
     volumeFinanceiroRealizado: roundMoney(realizedVolume),
     precoSaca: finance?.preco_saca ?? null,
     competencia: finance?.competencia || null,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ContratoBarter, ContratoFinanceiro, ContratoFinanceiroResumo, ContratoRecebivel, TipoDesconto, TIPOS_DESCONTO } from '../data/financeiroTypes';
+import { ContratoBarter, ContratoCumprimento, ContratoFinanceiro, ContratoFinanceiroResumo, ContratoRecebivel, TipoDesconto, TIPOS_DESCONTO } from '../data/financeiroTypes';
 import { supabase } from '../integrations/supabase/client';
 import { buildFinancialSummary, buildMonthlyFinancials, buildMonthlyReceipts, roundMoney } from './financeiroCalculations';
 
@@ -9,6 +9,7 @@ export const useFinanceiroData = (safraId: string) => {
   const [contracts, setContracts] = useState<any[]>([]);
   const [finances, setFinances] = useState<ContratoFinanceiro[]>([]);
   const [barters, setBarters] = useState<ContratoBarter[]>([]);
+  const [fulfillments, setFulfillments] = useState<ContratoCumprimento[]>([]);
   const [receivables, setReceivables] = useState<ContratoRecebivel[]>([]);
   const [deliveries, setDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,6 +17,7 @@ export const useFinanceiroData = (safraId: string) => {
   const [receiptsReady, setReceiptsReady] = useState(true);
   const [classificationReady, setClassificationReady] = useState(true);
   const [barterReady, setBarterReady] = useState(true);
+  const [fulfillmentReady, setFulfillmentReady] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
 
   const refresh = useCallback(() => setRefreshTick((current) => current + 1), []);
@@ -66,10 +68,18 @@ export const useFinanceiroData = (safraId: string) => {
           .in('contrato_id', loadedContracts.map((contract) => contract.id))
         : supabase.from('contratos_financeiros').select('*, contratos_descontos(*)').limit(1);
 
-      const [financeResult, classificationResult, barterResult] = await Promise.all([
+      const fulfillmentQuery = contractIds.length > 0
+        ? supabase
+          .from('contratos_cumprimentos')
+          .select('*')
+          .in('contrato_id', contractIds)
+        : supabase.from('contratos_cumprimentos').select('*').limit(1);
+
+      const [financeResult, classificationResult, barterResult, fulfillmentResult] = await Promise.all([
         financeQuery,
         classificationQuery,
         barterQuery,
+        fulfillmentQuery,
       ]);
       if (!mounted) return;
 
@@ -102,6 +112,17 @@ export const useFinanceiroData = (safraId: string) => {
             valor_total: Number(item.valor_total) || 0,
           })),
         })));
+      }
+
+      if (fulfillmentResult.error) {
+        setFulfillmentReady(false);
+        setFulfillments([]);
+      } else {
+        setFulfillmentReady(true);
+        setFulfillments((fulfillmentResult.data || []).map((fulfillment: any) => ({
+          ...fulfillment,
+          volume_sacas: Number(fulfillment.volume_sacas) || 0,
+        })) as ContratoCumprimento[]);
       }
 
       if (financeResult.error) {
@@ -149,6 +170,7 @@ export const useFinanceiroData = (safraId: string) => {
   const summaries = useMemo<ContratoFinanceiroResumo[]>(() => {
     const financeByContract = new Map(finances.map((finance) => [finance.contrato_id, finance]));
     const barterByContract = new Map(barters.map((barter) => [barter.contrato_id, barter]));
+    const fulfillmentByContract = new Map(fulfillments.map((fulfillment) => [fulfillment.contrato_id, fulfillment]));
     const receivablesByFinance = new Map<string, ContratoRecebivel[]>();
     receivables.forEach((receivable) => {
       const current = receivablesByFinance.get(receivable.contrato_financeiro_id) || [];
@@ -170,11 +192,12 @@ export const useFinanceiroData = (safraId: string) => {
         contract,
         finance,
         barter: barterByContract.get(contract.id) || null,
+        fulfillment: fulfillmentByContract.get(contract.id) || null,
         deliveredVolume: deliveredByContract.get(contract.id) || 0,
         receivables: finance?.id ? receivablesByFinance.get(finance.id) || [] : [],
       });
     });
-  }, [contracts, finances, barters, deliveries, receivables]);
+  }, [contracts, finances, barters, fulfillments, deliveries, receivables]);
 
   const monthly = useMemo(() => buildMonthlyFinancials(
     summaries.filter((item) => item.tipoContrato !== 'barter'),
@@ -238,8 +261,10 @@ export const useFinanceiroData = (safraId: string) => {
     receiptsReady,
     classificationReady,
     barterReady,
+    fulfillmentReady,
     contracts,
     barters,
+    fulfillments,
     deliveries,
     summaries,
     monthly,
