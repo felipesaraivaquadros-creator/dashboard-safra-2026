@@ -75,6 +75,42 @@ CREATE TABLE IF NOT EXISTS public.contratos_descontos (
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+-- 3.3 Parcelas previstas para recebimento
+CREATE TABLE IF NOT EXISTS public.contratos_recebiveis (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  contrato_financeiro_id UUID NOT NULL REFERENCES public.contratos_financeiros(id) ON DELETE CASCADE,
+  numero_parcela INTEGER NOT NULL DEFAULT 1 CHECK (numero_parcela > 0),
+  descricao TEXT,
+  data_vencimento DATE NOT NULL,
+  valor_previsto NUMERIC(14,2) NOT NULL CHECK (valor_previsto > 0),
+  observacoes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE (contrato_financeiro_id, numero_parcela)
+);
+
+-- 3.4 Baixas reais, inclusive parciais, de cada parcela
+CREATE TABLE IF NOT EXISTS public.contratos_baixas (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  recebivel_id UUID NOT NULL REFERENCES public.contratos_recebiveis(id) ON DELETE CASCADE,
+  data_recebimento DATE NOT NULL,
+  valor_recebido NUMERIC(14,2) NOT NULL CHECK (valor_recebido > 0),
+  forma_recebimento TEXT,
+  referencia TEXT,
+  observacoes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS contratos_recebiveis_financeiro_id_idx
+  ON public.contratos_recebiveis (contrato_financeiro_id);
+CREATE INDEX IF NOT EXISTS contratos_recebiveis_vencimento_idx
+  ON public.contratos_recebiveis (data_vencimento);
+CREATE INDEX IF NOT EXISTS contratos_baixas_recebivel_id_idx
+  ON public.contratos_baixas (recebivel_id);
+CREATE INDEX IF NOT EXISTS contratos_baixas_data_idx
+  ON public.contratos_baixas (data_recebimento);
+
 CREATE OR REPLACE FUNCTION public.set_contratos_financeiros_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -90,6 +126,84 @@ DROP TRIGGER IF EXISTS contratos_financeiros_set_updated_at ON public.contratos_
 CREATE TRIGGER contratos_financeiros_set_updated_at
 BEFORE UPDATE ON public.contratos_financeiros
 FOR EACH ROW EXECUTE FUNCTION public.set_contratos_financeiros_updated_at();
+
+CREATE OR REPLACE FUNCTION public.set_contratos_recebimentos_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS contratos_recebiveis_set_updated_at ON public.contratos_recebiveis;
+CREATE TRIGGER contratos_recebiveis_set_updated_at
+BEFORE UPDATE ON public.contratos_recebiveis
+FOR EACH ROW EXECUTE FUNCTION public.set_contratos_recebimentos_updated_at();
+
+DROP TRIGGER IF EXISTS contratos_baixas_set_updated_at ON public.contratos_baixas;
+CREATE TRIGGER contratos_baixas_set_updated_at
+BEFORE UPDATE ON public.contratos_baixas
+FOR EACH ROW EXECUTE FUNCTION public.set_contratos_recebimentos_updated_at();
+
+CREATE OR REPLACE FUNCTION public.validar_total_baixas_recebivel()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+  v_valor_previsto NUMERIC(14,2);
+  v_total_outras_baixas NUMERIC(14,2);
+BEGIN
+  SELECT valor_previsto INTO v_valor_previsto
+  FROM public.contratos_recebiveis
+  WHERE id = NEW.recebivel_id
+  FOR UPDATE;
+
+  SELECT COALESCE(SUM(valor_recebido), 0) INTO v_total_outras_baixas
+  FROM public.contratos_baixas
+  WHERE recebivel_id = NEW.recebivel_id
+    AND id <> NEW.id;
+
+  IF v_total_outras_baixas + NEW.valor_recebido > v_valor_previsto THEN
+    RAISE EXCEPTION 'A baixa ultrapassa o saldo disponível da parcela.';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS contratos_baixas_validar_total ON public.contratos_baixas;
+CREATE TRIGGER contratos_baixas_validar_total
+BEFORE INSERT OR UPDATE ON public.contratos_baixas
+FOR EACH ROW EXECUTE FUNCTION public.validar_total_baixas_recebivel();
+
+CREATE OR REPLACE FUNCTION public.validar_valor_recebivel()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+  v_total_recebido NUMERIC(14,2);
+BEGIN
+  SELECT COALESCE(SUM(valor_recebido), 0) INTO v_total_recebido
+  FROM public.contratos_baixas
+  WHERE recebivel_id = OLD.id;
+
+  IF NEW.valor_previsto < v_total_recebido THEN
+    RAISE EXCEPTION 'O valor previsto não pode ser menor que o total já recebido.';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS contratos_recebiveis_validar_valor ON public.contratos_recebiveis;
+CREATE TRIGGER contratos_recebiveis_validar_valor
+BEFORE UPDATE OF valor_previsto ON public.contratos_recebiveis
+FOR EACH ROW EXECUTE FUNCTION public.validar_valor_recebivel();
 
 CREATE OR REPLACE FUNCTION public.salvar_contrato_financeiro(
   p_contrato_id UUID,
@@ -179,6 +293,8 @@ ALTER TABLE public.armazens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contratos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contratos_financeiros ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contratos_descontos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contratos_recebiveis ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contratos_baixas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.romaneios ENABLE ROW LEVEL SECURITY;
 
 -- Criar Políticas de Acesso (Permitir tudo para usuários autenticados)
@@ -189,8 +305,13 @@ CREATE POLICY "Acesso total para usuários autenticados em armazens" ON public.a
 CREATE POLICY "Acesso total para usuários autenticados em contratos" ON public.contratos FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Acesso total para usuários autenticados em contratos financeiros" ON public.contratos_financeiros FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Acesso total para usuários autenticados em descontos financeiros" ON public.contratos_descontos FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Acesso total para usuários autenticados em recebiveis" ON public.contratos_recebiveis FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Acesso total para usuários autenticados em baixas" ON public.contratos_baixas FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Acesso total para usuários autenticados em romaneios" ON public.romaneios FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 GRANT EXECUTE ON FUNCTION public.salvar_contrato_financeiro(
   UUID, TEXT, NUMERIC, DATE, DATE, BOOLEAN, BOOLEAN, TEXT, JSONB
 ) TO authenticated;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.contratos_recebiveis TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.contratos_baixas TO authenticated;

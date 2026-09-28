@@ -2,7 +2,9 @@ import {
   ContratoDesconto,
   ContratoFinanceiro,
   ContratoFinanceiroResumo,
+  ContratoRecebivel,
   FinanceiroMensal,
+  RecebimentosMensais,
   StatusFinanceiro,
   TipoDesconto,
   TIPOS_DESCONTO,
@@ -27,6 +29,41 @@ export const formatMonthLabel = (month: string) => {
   return new Intl.DateTimeFormat('pt-BR', { month: 'short', year: '2-digit' })
     .format(new Date(year, monthNumber - 1, 1))
     .replace('.', '');
+};
+
+export const getLocalDateKey = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+export const enrichReceivable = (
+  receivable: any,
+  today = getLocalDateKey(),
+): ContratoRecebivel => {
+  const payments = (receivable.contratos_baixas || [])
+    .map((payment: any) => ({
+      ...payment,
+      valor_recebido: Number(payment.valor_recebido) || 0,
+    }))
+    .sort((a: any, b: any) => String(b.data_recebimento).localeCompare(String(a.data_recebimento)));
+  const expected = Number(receivable.valor_previsto) || 0;
+  const received = roundMoney(payments.reduce((total: number, payment: any) => total + payment.valor_recebido, 0));
+  const balance = roundMoney(Math.max(expected - received, 0));
+  const isPaid = balance <= 0.009 && expected > 0;
+  const isOverdue = !isPaid && Boolean(receivable.data_vencimento) && receivable.data_vencimento < today;
+  const status = isPaid ? 'pago' : isOverdue ? 'vencido' : received > 0 ? 'parcial' : 'em_aberto';
+
+  return {
+    ...receivable,
+    numero_parcela: Number(receivable.numero_parcela) || 1,
+    valor_previsto: expected,
+    contratos_baixas: payments,
+    totalRecebido: received,
+    saldoAberto: balance,
+    status,
+  };
 };
 
 export const calculateDiscount = (
@@ -78,9 +115,10 @@ interface BuildSummaryInput {
   contract: any;
   finance: ContratoFinanceiro | null;
   deliveredVolume: number;
+  receivables?: ContratoRecebivel[];
 }
 
-export const buildFinancialSummary = ({ contract, finance, deliveredVolume }: BuildSummaryInput): ContratoFinanceiroResumo => {
+export const buildFinancialSummary = ({ contract, finance, deliveredVolume, receivables = [] }: BuildSummaryInput): ContratoFinanceiroResumo => {
   const contractedVolume = Number(contract.volume_total) || 0;
   const price = finance?.status_preco === 'fixado' ? Number(finance.preco_saca) || 0 : 0;
   const realizedVolume = finance?.aceita_excedente
@@ -95,6 +133,13 @@ export const buildFinancialSummary = ({ contract, finance, deliveredVolume }: Bu
   const netContracted = roundMoney(grossContracted - contractedDiscounts);
   const netRealized = roundMoney(grossRealized - realizedDiscounts);
   const { status, pendencias } = getFinancialStatus(finance, netContracted);
+  const normalizedReceivables = receivables.map((receivable) => enrichReceivable(receivable));
+  const scheduledReceipts = roundMoney(normalizedReceivables.reduce((total, item) => total + item.valor_previsto, 0));
+  const received = roundMoney(normalizedReceivables.reduce((total, item) => total + item.totalRecebido, 0));
+  const openBalance = roundMoney(normalizedReceivables.reduce((total, item) => total + item.saldoAberto, 0));
+  const overdue = roundMoney(normalizedReceivables
+    .filter((item) => item.status === 'vencido')
+    .reduce((total, item) => total + item.saldoAberto, 0));
 
   const discountsByType = Object.fromEntries(TIPOS_DESCONTO.map((type) => [type, 0])) as Record<TipoDesconto, number>;
   discounts.forEach((discount) => {
@@ -126,6 +171,13 @@ export const buildFinancialSummary = ({ contract, finance, deliveredVolume }: Bu
     liquidoContratado: netContracted,
     liquidoRealizado: netRealized,
     descontosPorTipo: discountsByType,
+    recebiveis: normalizedReceivables,
+    recebimentosProgramados: scheduledReceipts,
+    recebimentosRecebidos: received,
+    recebimentosEmAberto: openBalance,
+    recebimentosVencidos: overdue,
+    recebimentosAProgramar: roundMoney(Math.max(netContracted - scheduledReceipts, 0)),
+    recebimentosExcedentes: roundMoney(Math.max(scheduledReceipts - netContracted, 0)),
   };
 };
 
@@ -169,6 +221,32 @@ export const buildMonthlyFinancials = (
     current.liquido = roundMoney(current.liquido + gross - discounts);
     totals.set(month, current);
   });
+
+  return Array.from(totals.values()).sort((a, b) => a.mes.localeCompare(b.mes));
+};
+
+export const buildMonthlyReceipts = (summaries: ContratoFinanceiroResumo[]) => {
+  const totals = new Map<string, RecebimentosMensais>();
+  const ensureMonth = (month: string) => {
+    if (!totals.has(month)) {
+      totals.set(month, { mes: month, label: formatMonthLabel(month), previsto: 0, recebido: 0 });
+    }
+    return totals.get(month)!;
+  };
+
+  summaries.forEach((summary) => summary.recebiveis.forEach((receivable) => {
+    const dueMonth = getMonthKey(receivable.data_vencimento);
+    if (dueMonth) {
+      const current = ensureMonth(dueMonth);
+      current.previsto = roundMoney(current.previsto + receivable.valor_previsto);
+    }
+    receivable.contratos_baixas.forEach((payment) => {
+      const paymentMonth = getMonthKey(payment.data_recebimento);
+      if (!paymentMonth) return;
+      const current = ensureMonth(paymentMonth);
+      current.recebido = roundMoney(current.recebido + payment.valor_recebido);
+    });
+  }));
 
   return Array.from(totals.values()).sort((a, b) => a.mes.localeCompare(b.mes));
 };

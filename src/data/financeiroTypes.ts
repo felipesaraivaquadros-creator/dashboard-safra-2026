@@ -1,6 +1,7 @@
 export type StatusPreco = 'a_fixar' | 'fixado';
 export type TipoDesconto = 'SENAR' | 'FETHAB' | 'FUNRURAL' | 'IAGRO' | 'COOP' | 'OUTRO';
 export type MetodoDesconto = 'percentual' | 'por_saca' | 'valor_fixo';
+export type StatusRecebivel = 'em_aberto' | 'parcial' | 'pago' | 'vencido';
 export type StatusFinanceiro =
   | 'nao_configurado'
   | 'preco_pendente'
@@ -31,6 +32,30 @@ export interface ContratoFinanceiro {
   contratos_descontos: ContratoDesconto[];
 }
 
+export interface ContratoBaixa {
+  id?: string;
+  recebivel_id?: string;
+  data_recebimento: string;
+  valor_recebido: number;
+  forma_recebimento?: string | null;
+  referencia?: string | null;
+  observacoes?: string | null;
+}
+
+export interface ContratoRecebivel {
+  id?: string;
+  contrato_financeiro_id: string;
+  numero_parcela: number;
+  descricao?: string | null;
+  data_vencimento: string;
+  valor_previsto: number;
+  observacoes?: string | null;
+  contratos_baixas: ContratoBaixa[];
+  totalRecebido: number;
+  saldoAberto: number;
+  status: StatusRecebivel;
+}
+
 export interface ContratoFinanceiroResumo {
   contratoId: string;
   safraId: string;
@@ -54,6 +79,13 @@ export interface ContratoFinanceiroResumo {
   liquidoContratado: number;
   liquidoRealizado: number;
   descontosPorTipo: Record<TipoDesconto, number>;
+  recebiveis: ContratoRecebivel[];
+  recebimentosProgramados: number;
+  recebimentosRecebidos: number;
+  recebimentosEmAberto: number;
+  recebimentosVencidos: number;
+  recebimentosAProgramar: number;
+  recebimentosExcedentes: number;
 }
 
 export interface FinanceiroMensal {
@@ -62,6 +94,13 @@ export interface FinanceiroMensal {
   bruto: number;
   descontos: number;
   liquido: number;
+}
+
+export interface RecebimentosMensais {
+  mes: string;
+  label: string;
+  previsto: number;
+  recebido: number;
 }
 
 export const TIPOS_DESCONTO: TipoDesconto[] = ['SENAR', 'FETHAB', 'FUNRURAL', 'IAGRO', 'COOP', 'OUTRO'];

@@ -9,7 +9,7 @@ import FinanceiroChart from './FinanceiroChart';
 const currency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function FinanceiroResumoDashboard({ safraId }: { safraId: string }) {
-  const { loading, schemaReady, summaries, monthly, totals } = useFinanceiroData(safraId);
+  const { loading, schemaReady, receiptsReady, summaries, monthly, totals } = useFinanceiroData(safraId);
   if (loading) return <div className="h-56 animate-pulse rounded-2xl bg-white dark:bg-slate-800" />;
 
   const configured = summaries.some((summary) => summary.financeiro);
@@ -31,10 +31,11 @@ export default function FinanceiroResumoDashboard({ safraId }: { safraId: string
         <div><h2 className="flex items-center gap-2 text-xs font-black uppercase text-slate-700 dark:text-slate-200"><CircleDollarSign size={17} className="text-green-600" /> Financeiro da Safra</h2><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Valores realizados pelas entregas vinculadas</p></div>
         <Link href={`/${safraId}/financeiro`} className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-purple-600 hover:text-purple-700">Ver detalhes <ArrowRight size={13} /></Link>
       </div>
-      <div className="mb-3 grid grid-cols-3 gap-2">
+      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div><p className="text-[8px] font-black uppercase text-slate-400">Bruto realizado</p><p className="mt-1 truncate text-xs font-black text-slate-800 dark:text-white">{currency(totals.brutoRealizado)}</p></div>
         <div><p className="text-[8px] font-black uppercase text-amber-600">Descontos</p><p className="mt-1 truncate text-xs font-black text-amber-700 dark:text-amber-300">{currency(totals.descontosRealizados)}</p></div>
         <div><p className="text-[8px] font-black uppercase text-green-600">Líquido realizado</p><p className="mt-1 truncate text-xs font-black text-green-700 dark:text-green-300">{currency(totals.liquidoRealizado)}</p></div>
+        {receiptsReady && <div><p className="text-[8px] font-black uppercase text-green-600">Recebido</p><p className="mt-1 truncate text-xs font-black text-green-700 dark:text-green-300">{currency(totals.recebimentosRecebidos)}</p></div>}
       </div>
       <FinanceiroChart data={monthly.slice(-6)} compact />
     </section>

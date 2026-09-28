@@ -830,3 +830,74 @@ Passos operacionais obrigatórios:
 Melhoria futura já separada do escopo atual:
 
 * Criar uma segunda fase de recebimentos reais, com parcelas, datas previstas, datas de pagamento, valor efetivamente recebido, status em aberto/parcial/pago/vencido e conciliação. Não chamar o líquido previsto de `recebido` enquanto essa baixa financeira não existir.
+
+## Atualização - recebimentos e baixas financeiras - 2026-09-28
+
+Correções solicitadas na tela Financeiro:
+
+* O botão `Ver contratos` deixou de aplicar o filtro de contratos pendentes.
+* Ao clicar, busca, status e competência são restaurados para `Todos`, preservando na lista os contratos já revisados/concluídos.
+* A página desliza suavemente até a seção da lista geral de contratos.
+* Os KPIs de bruto, descontos, líquido, incompletos e descontos por tipo passaram a usar sempre os totais globais da safra.
+* Busca e filtros continuam afetando a lista e o gráfico de financeiro realizado, mas não zeram nem alteram os KPIs globais.
+
+Etapa 2 implementada:
+
+* Criado `docs/supabase_recebimentos_contratos.sql`, que deve ser executado após `docs/supabase_contratos_financeiros.sql`.
+* Criada a tabela `contratos_recebiveis` para parcelas previstas, com número, vencimento, valor, descrição e observações.
+* Criada a tabela `contratos_baixas` para recebimentos efetivos, permitindo várias baixas parciais na mesma parcela.
+* Cada baixa armazena data, valor recebido, forma de recebimento, referência/comprovante e observações.
+* Exclusão de uma parcela remove suas baixas vinculadas por cascata, sempre após confirmação na interface.
+* RLS e permissões CRUD foram configuradas para usuários autenticados.
+* `setup.sql` também recebeu as novas tabelas, índices, gatilhos, políticas e permissões para instalações novas.
+
+Proteções no banco:
+
+* Uma baixa não pode ultrapassar o saldo disponível da parcela.
+* Uma parcela não pode ser reduzida para um valor menor que o total já recebido.
+* A validação de saldo bloqueia a parcela durante a gravação, reduzindo risco de duas baixas simultâneas excederem o valor previsto.
+* Número da parcela é único dentro do financeiro de cada contrato.
+
+Status calculados automaticamente:
+
+* `Em aberto`: parcela ainda sem baixa e não vencida.
+* `Parcial`: parcela com alguma baixa, saldo restante e ainda não vencida.
+* `Pago`: soma das baixas atingiu o valor previsto.
+* `Vencido`: existe saldo e a data de vencimento já passou, inclusive quando houve pagamento parcial.
+
+Interface de recebimentos:
+
+* A tabela de contratos ganhou colunas de valor recebido e saldo em aberto.
+* Cada contrato com financeiro configurado ganhou o botão `Recebimentos e baixas`.
+* O modal permite criar, editar e excluir parcelas; registrar, editar e excluir baixas; e acompanhar previsto, recebido, saldo e status por parcela.
+* O modal mostra líquido previsto, total programado, recebido, em aberto e ainda a programar.
+* Programação acima do líquido previsto gera um alerta de excesso.
+* A página Financeiro ganhou KPIs globais de programado, recebido, em aberto, vencido, a programar e excesso programado.
+* Criado gráfico mensal comparando previsão por vencimento e recebimento real pela data da baixa.
+* O resumo macro do Dashboard passou a mostrar também o valor efetivamente recebido quando a etapa 2 estiver habilitada no banco.
+* A interface continua operacional quando o SQL da etapa 2 ainda não foi executado: o financeiro anterior permanece visível e um aviso informa qual script está pendente.
+
+Regras de consolidação:
+
+* `Programado` = soma dos valores previstos das parcelas.
+* `Recebido` = soma de todas as baixas efetivas.
+* `Em aberto` = soma dos saldos das parcelas já programadas.
+* `Vencido` = soma dos saldos das parcelas com vencimento anterior à data atual.
+* `A programar` = líquido previsto do contrato menos o total já programado, limitado a zero.
+* `Excesso programado` = total programado acima do líquido previsto.
+* Contratos, parcelas e baixas continuam isolados pela safra por meio do vínculo com `contratos_financeiros` e `contratos`.
+
+Validação executada:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou normalmente `/[safraId]/financeiro`.
+* Teste isolado confirmou parcela vencida com baixa parcial, parcela integralmente paga e agrupamento mensal por vencimento/data da baixa.
+* `git diff --check` passou sem erros de whitespace.
+
+Passos operacionais:
+
+1. Confirmar que `docs/supabase_contratos_financeiros.sql` já foi executado.
+2. Executar `docs/supabase_recebimentos_contratos.sql` no SQL Editor do Supabase.
+3. Abrir `/milho26/financeiro`, escolher um contrato com financeiro configurado e programar uma parcela de teste.
+4. Registrar uma baixa parcial e conferir status, KPIs, gráfico e saldo.
+5. Registrar a baixa restante e confirmar que a parcela muda para `Pago`.
