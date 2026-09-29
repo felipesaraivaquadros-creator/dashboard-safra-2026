@@ -208,17 +208,26 @@ export const useFinanceiroData = (safraId: string) => {
   ), [summaries]);
 
   const financialKpis = useMemo(() => {
-    const globalFinancialSummaries = summaries.filter((item) => item.tipoContrato !== 'barter');
-    const saleOnlySummaries = summaries.filter((item) => item.tipoContrato === 'venda');
-    const salesKpiSummaries = summaries.filter((item) => (
+    const saleAndMixedSummaries = summaries.filter((item) => (
       item.tipoContrato === 'venda' || item.tipoContrato === 'misto'
     ));
+    const barterAndMixedSummaries = summaries.filter((item) => (
+      item.tipoContrato === 'barter' || item.tipoContrato === 'misto'
+    ));
+    const saleOnlySummaries = summaries.filter((item) => item.tipoContrato === 'venda');
+    const salesKpiSummaries = saleAndMixedSummaries;
+
+    const salesGross = saleAndMixedSummaries.reduce(
+      (total, item) => total + item.brutoContratado,
+      0,
+    );
+    const barterEconomicValue = barterAndMixedSummaries.reduce(
+      (total, item) => total + item.barterValorInsumos,
+      0,
+    );
 
     return {
-      faturamentoGlobal: roundMoney(globalFinancialSummaries.reduce(
-        (total, item) => total + item.brutoContratado,
-        0,
-      )),
+      faturamentoGlobal: roundMoney(salesGross + barterEconomicValue),
       contratosVenda: roundMoney(saleOnlySummaries.reduce(
         (total, item) => total + item.brutoContratado,
         0,

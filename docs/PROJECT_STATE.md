@@ -1204,3 +1204,25 @@ Validação:
 * `npx tsc --noEmit --pretty false` passou sem erros.
 * `npm run build` passou e gerou normalmente as rotas `/[safraId]` e `/[safraId]/financeiro`.
 * As duas rotas responderam HTTP 200 no servidor local.
+
+## Atualização - faturamento global com barter - 2026-09-29
+
+Regra corrigida:
+
+* `Faturamento global` passa a representar a movimentação econômica total dos contratos classificados da safra.
+* Componente de venda: soma do valor bruto contratado de `Venda` e `Misto`.
+* Componente de troca: soma do `Valor dos insumos` de `Barter` e `Misto`.
+* Em contratos `Misto`, entram tanto o componente financeiro de venda quanto o componente econômico da troca, pois são operações distintas do mesmo contrato.
+* Contratos `Outro` e `Não classificado` não entram nesse KPI até serem classificados corretamente.
+* A fórmula continua usando os valores integrais contratados, independentemente de cumprimento ou baixa.
+* Como o cálculo permanece centralizado em `financialKpis`, a correção aparece simultaneamente no Dashboard e na tela Financeiro.
+
+Banco de dados:
+
+* Nenhuma migration ou alteração no Supabase é necessária.
+
+Validação:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou normalmente as rotas `/[safraId]` e `/[safraId]/financeiro`.
+* Dashboard e Financeiro responderam HTTP 200 no servidor local.
