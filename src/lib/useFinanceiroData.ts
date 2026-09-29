@@ -223,7 +223,7 @@ export const useFinanceiroData = (safraId: string) => {
       descontosRealizados: roundMoney(financialSummaries.reduce((total, item) => total + item.descontosRealizados, 0)),
       liquidoContratado: roundMoney(financialSummaries.reduce((total, item) => total + item.liquidoContratado, 0)),
       liquidoRealizado: roundMoney(financialSummaries.reduce((total, item) => total + item.liquidoRealizado, 0)),
-      incompletos: financialSummaries.filter((item) => item.status !== 'completo').length,
+      incompletos: financialSummaries.filter((item) => item.pendencias.length > 0).length,
       descontosPorTipo: discountsByType,
       recebimentosProgramados: roundMoney(financialSummaries.reduce((total, item) => total + item.recebimentosProgramados, 0)),
       recebimentosRecebidos: roundMoney(financialSummaries.reduce((total, item) => total + item.recebimentosRecebidos, 0)),

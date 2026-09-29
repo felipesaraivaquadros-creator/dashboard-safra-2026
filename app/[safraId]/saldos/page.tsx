@@ -46,11 +46,8 @@ type TabType = 'saldos' | 'contratos' | 'disponivel';
 type ScenarioType = 'geral' | 'armazem';
 
 const barterStatusClasses = {
-  nao_iniciada: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-  parcial: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  entregue: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  a_cumprir: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   cumprido: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-  vencida: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 };
 
 function ContractControlStatus({ summary }: { summary: ContratoFinanceiroResumo }) {

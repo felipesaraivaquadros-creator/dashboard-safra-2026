@@ -80,7 +80,7 @@ export default function SaldosPorArmazem({ listaSaldos, listaContratos, onRefres
         const currentContract = localContratos.find(c => c.uiId === active.id);
         if (!currentContract?.grupo) return;
         const confirmed = window.confirm(
-          `Retirar o contrato ${currentContract.nome} do slot? Ao gravar, o cumprimento será cancelado e o status voltará para Pendente.`,
+          `Retirar o contrato ${currentContract.nome} do slot? Ao gravar, o cumprimento será cancelado e o status voltará para A cumprir.`,
         );
         if (!confirmed) return;
         setLocalContratos(prev => prev.map(c => c.uiId === active.id ? { ...c, grupo: null } : c));

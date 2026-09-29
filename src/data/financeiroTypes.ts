@@ -7,14 +7,16 @@ export type FormaLiquidacao = 'nao_definida' | 'financeira' | 'fisica' | 'mista'
 export type ResponsavelFrete = 'produtor' | 'comprador' | 'compartilhado' | 'outro';
 export type ModalidadeCpr = 'nao_aplicavel' | 'fisica' | 'financeira';
 export type StatusConciliacaoBarter = 'pendente' | 'divergente' | 'conciliado';
-export type StatusEntregaBarter = 'nao_iniciada' | 'parcial' | 'entregue' | 'cumprido' | 'vencida';
+export type StatusEntregaBarter = 'a_cumprir' | 'cumprido';
 export type StatusFinanceiro =
   | 'nao_configurado'
   | 'preco_pendente'
   | 'tributos_pendentes'
   | 'competencia_pendente'
   | 'inconsistente'
-  | 'completo';
+  | 'completo'
+  | 'baixado'
+  | 'vencido';
 
 export interface ContratoDesconto {
   id?: string;
@@ -189,9 +191,6 @@ export const FORMA_LIQUIDACAO_LABELS: Record<FormaLiquidacao, string> = {
 };
 
 export const STATUS_ENTREGA_BARTER_LABELS: Record<StatusEntregaBarter, string> = {
-  nao_iniciada: 'Pendente',
-  parcial: 'Parcial',
-  entregue: 'Entregue',
+  a_cumprir: 'A cumprir',
   cumprido: 'Cumprido',
-  vencida: 'Vencida',
 };

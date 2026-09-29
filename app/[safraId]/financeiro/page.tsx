@@ -45,13 +45,15 @@ type BarterStatusFilter = StatusEntregaBarter | 'todos';
 
 const statusOptions: Array<{ value: StatusFilter; label: string }> = [
   { value: 'todos', label: 'Todos os status' },
-  { value: 'pendentes', label: 'Todos os pendentes' },
+  { value: 'pendentes', label: 'Pendências ou vencidas' },
   { value: 'nao_configurado', label: 'Não configurado' },
   { value: 'preco_pendente', label: 'Preço pendente' },
   { value: 'tributos_pendentes', label: 'Tributos pendentes' },
   { value: 'competencia_pendente', label: 'Competência pendente' },
   { value: 'inconsistente', label: 'Inconsistente' },
   { value: 'completo', label: 'Completo' },
+  { value: 'baixado', label: 'Baixado' },
+  { value: 'vencido', label: 'Vencida' },
 ];
 
 const viewOptions: Array<{ value: FinanceView; label: string; icon: typeof LayoutDashboard }> = [
@@ -62,11 +64,8 @@ const viewOptions: Array<{ value: FinanceView; label: string; icon: typeof Layou
 ];
 
 const barterStatusClasses: Record<StatusEntregaBarter, string> = {
-  nao_iniciada: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-  parcial: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  entregue: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  a_cumprir: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   cumprido: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-  vencida: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 };
 
 const sum = (items: ContratoFinanceiroResumo[], key: keyof ContratoFinanceiroResumo) => roundMoney(
@@ -126,7 +125,9 @@ export default function FinanceiroPage() {
     if (!matchesSearch) return false;
     if (view === 'barter') return barterStatus === 'todos' || item.barterStatusEntrega === barterStatus;
     const matchesStatus = status === 'todos'
-      || (status === 'pendentes' ? item.status !== 'completo' : item.status === status);
+      || (status === 'pendentes'
+        ? item.pendencias.length > 0 || item.status === 'vencido'
+        : item.status === status);
     const matchesMonth = month === 'todos' || getMonthKey(item.competencia) === month;
     return matchesStatus && matchesMonth;
   }), [activeSummaries, search, status, month, view, barterStatus]);
@@ -138,7 +139,7 @@ export default function FinanceiroPage() {
     brutoRealizado: sum(salesSummaries, 'brutoRealizado'),
     descontosContratados: sum(salesSummaries, 'descontosContratados'),
     liquidoContratado: sum(salesSummaries, 'liquidoContratado'),
-    incompletos: salesSummaries.filter((item) => item.status !== 'completo').length,
+    incompletos: salesSummaries.filter((item) => item.pendencias.length > 0).length,
   }), [salesSummaries]);
 
   const handleViewContracts = () => {
@@ -228,7 +229,7 @@ export default function FinanceiroPage() {
         <section ref={contractsSectionRef} className="scroll-mt-4 space-y-4">
           <div className={`grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800 ${view === 'barter' ? 'md:grid-cols-[minmax(0,1fr)_220px]' : 'md:grid-cols-[minmax(0,1fr)_220px_200px]'}`}>
             <label className="relative"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs font-bold dark:border-slate-700 dark:bg-slate-900" placeholder={view === 'barter' ? 'Buscar contrato, número ou fornecedor' : 'Buscar contrato ou número'} /></label>
-            {view === 'barter' ? <select value={barterStatus} onChange={(event) => setBarterStatus(event.target.value as BarterStatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todas as entregas</option>{Object.entries(STATUS_ENTREGA_BARTER_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : <><select value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900">{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><select value={month} onChange={(event) => setMonth(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todas as competências</option>{months.map((item) => <option key={item} value={item}>{item.split('-').reverse().join('/')}</option>)}</select></>}
+            {view === 'barter' ? <select value={barterStatus} onChange={(event) => setBarterStatus(event.target.value as BarterStatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todos os cumprimentos</option>{Object.entries(STATUS_ENTREGA_BARTER_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : <><select value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900">{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><select value={month} onChange={(event) => setMonth(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todas as competências</option>{months.map((item) => <option key={item} value={item}>{item.split('-').reverse().join('/')}</option>)}</select></>}
           </div>
 
           {view === 'barter' ? (

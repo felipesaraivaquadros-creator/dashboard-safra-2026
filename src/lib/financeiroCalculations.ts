@@ -147,7 +147,7 @@ export const buildFinancialSummary = ({
   const realizedDiscounts = calculateDiscountsTotal(discounts, grossRealized, realizedVolume, fixedProportion);
   const netContracted = roundMoney(grossContracted - contractedDiscounts);
   const netRealized = roundMoney(grossRealized - realizedDiscounts);
-  const { status, pendencias } = getFinancialStatus(finance, netContracted);
+  const configurationStatus = getFinancialStatus(finance, netContracted);
   const normalizedReceivables = receivables.map((receivable) => enrichReceivable(receivable));
   const scheduledReceipts = roundMoney(normalizedReceivables.reduce((total, item) => total + item.valor_previsto, 0));
   const received = roundMoney(normalizedReceivables.reduce((total, item) => total + item.totalRecebido, 0));
@@ -155,22 +155,23 @@ export const buildFinancialSummary = ({
   const overdue = roundMoney(normalizedReceivables
     .filter((item) => item.status === 'vencido')
     .reduce((total, item) => total + item.saldoAberto, 0));
+  const hasOverdueReceivable = normalizedReceivables.some((item) => item.status === 'vencido');
+  const hasFullySettledContract = netContracted > 0
+    && scheduledReceipts >= netContracted - 0.009
+    && openBalance <= 0.009
+    && normalizedReceivables.length > 0
+    && normalizedReceivables.every((item) => item.status === 'pago');
+  const status: StatusFinanceiro = hasFullySettledContract
+    ? 'baixado'
+    : hasOverdueReceivable
+      ? 'vencido'
+      : configurationStatus.status;
+  const pendencias = configurationStatus.pendencias;
   const barterBalance = roundMoney(Math.max(contractedVolume - effectiveDeliveredVolume, 0));
   const barterPercent = contractedVolume > 0
     ? Math.min(Math.max((effectiveDeliveredVolume / contractedVolume) * 100, 0), 100)
     : 0;
-  const today = getLocalDateKey();
-  const barterDeliveryStatus = fulfilledByAllocation
-    ? 'cumprido'
-    : fulfillment && !fulfillment.ativo
-      ? 'nao_iniciada'
-      : barterBalance <= 0.009 && contractedVolume > 0
-        ? 'entregue'
-        : barter?.data_fim_entrega && barter.data_fim_entrega < today
-          ? 'vencida'
-          : deliveredByWaybills > 0
-            ? 'parcial'
-            : 'nao_iniciada';
+  const barterDeliveryStatus = fulfilledByAllocation ? 'cumprido' : 'a_cumprir';
   const barterInputValue = roundMoney(Number(barter?.valor_insumos) || 0);
   const barterDeliveredValue = roundMoney(barterInputValue * Math.min(contractedVolume > 0 ? effectiveDeliveredVolume / contractedVolume : 0, 1));
   const barterImplicitPrice = roundMoney(contractedVolume > 0 ? barterInputValue / contractedVolume : 0);

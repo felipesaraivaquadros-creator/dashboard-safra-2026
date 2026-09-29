@@ -26,8 +26,8 @@ const formatDate = (value: string) => value ? value.slice(0, 10).split('-').reve
 const statusConfig: Record<StatusRecebivel, { label: string; className: string; icon: React.ElementType }> = {
   em_aberto: { label: 'Em aberto', className: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300', icon: Clock3 },
   parcial: { label: 'Parcial', className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300', icon: CircleDollarSign },
-  pago: { label: 'Pago', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', icon: CheckCircle2 },
-  vencido: { label: 'Vencido', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', icon: AlertTriangle },
+  pago: { label: 'Baixado', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', icon: CheckCircle2 },
+  vencido: { label: 'Vencida', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', icon: AlertTriangle },
 };
 
 interface ReceivableDraft {

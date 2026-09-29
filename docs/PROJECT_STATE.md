@@ -1055,3 +1055,40 @@ Passos operacionais obrigatórios:
 3. Conferir um barter que já está em um slot: deve aparecer como `Cumprido` no Financeiro.
 4. Mover um contrato de teste para o Banco de Itens, confirmar a mensagem e clicar em `Gravar alterações`: deve voltar para `Pendente`.
 5. Recolocar o contrato no slot e gravar: deve retornar para `Cumprido` sem duplicar volume.
+
+## Atualização - status financeiro e cumprimento - 2026-09-29
+
+Status consolidados implementados:
+
+* `Baixado`: o valor programado cobre o líquido previsto do contrato, todas as parcelas estão integralmente pagas e não existe saldo aberto.
+* Uma baixa parcial não transforma o contrato inteiro em `Baixado`.
+* `Vencida`: existe ao menos uma parcela com saldo aberto e data de vencimento ultrapassada. Também se aplica a parcelas parcialmente pagas que continuam com saldo vencido.
+* `Completo`: não existem pendências de preço, revisão de tributos, competência ou consistência, e o contrato ainda não se enquadra como `Baixado` ou `Vencida`.
+* As pendências detalhadas anteriores (`Não configurado`, `Preço pendente`, `Tributos pendentes`, `Competência pendente` e `Inconsistente`) foram preservadas para indicar exatamente qual informação falta.
+
+Precedência do status financeiro:
+
+1. `Baixado`, quando a obrigação financeira completa foi liquidada.
+2. `Vencida`, quando ainda existe saldo vencido.
+3. Status de pendência cadastral ou `Completo`.
+
+Status de barter:
+
+* `Cumprido`: contrato de barter/misto com cumprimento ativo gerado pela alocação em um slot de armazém.
+* `A cumprir`: contrato sem alocação ativa, inclusive quando foi retirado de um slot mediante confirmação.
+* O status de barter passou a ser definido estritamente pela alocação do contrato, conforme o fluxo operacional aprovado. Romaneios continuam compondo volumes e valores, mas não alteram esse status.
+
+Interface e indicadores:
+
+* A tabela Financeiro e os cartões mobile mostram `Baixado`, `Vencida`, `Completo`, `Cumprido` ou `A cumprir` conforme o tipo do contrato.
+* O modal de parcelas usa os rótulos `Baixado` e `Vencida` para manter a mesma nomenclatura.
+* O filtro financeiro ganhou as opções `Baixado` e `Vencida`.
+* O filtro de barter foi reduzido para `Cumprido` e `A cumprir`.
+* O KPI `Incompletos` continua contando somente contratos com informações cadastrais faltantes; contratos baixados ou vencidos não são classificados automaticamente como incompletos.
+
+Validação executada:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou normalmente `/[safraId]/financeiro` e `/[safraId]/saldos`.
+* O servidor local foi reiniciado e `/milho26/financeiro` respondeu HTTP 200.
+* Nenhuma migration adicional é necessária para esta atualização.

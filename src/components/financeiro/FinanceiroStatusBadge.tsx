@@ -10,7 +10,9 @@ const statusConfig: Record<StatusFinanceiro, { label: string; className: string;
   tributos_pendentes: { label: 'Tributos pendentes', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300', icon: AlertTriangle },
   competencia_pendente: { label: 'Competência pendente', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300', icon: CalendarClock },
   inconsistente: { label: 'Inconsistente', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', icon: AlertTriangle },
-  completo: { label: 'Completo', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', icon: CheckCircle2 },
+  completo: { label: 'Completo', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300', icon: CheckCircle2 },
+  baixado: { label: 'Baixado', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', icon: CheckCircle2 },
+  vencido: { label: 'Vencida', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', icon: CalendarClock },
 };
 
 export default function FinanceiroStatusBadge({ status, compact = false }: { status: StatusFinanceiro; compact?: boolean }) {
