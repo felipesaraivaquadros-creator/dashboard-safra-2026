@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -12,6 +12,7 @@ import {
   FileWarning,
   LayoutDashboard,
   Loader2,
+  Printer,
   ReceiptText,
   Search,
   WalletCards,
@@ -96,7 +97,15 @@ export default function FinanceiroPage() {
   const [month, setMonth] = useState('todos');
   const [editingContract, setEditingContract] = useState<ContratoFinanceiroResumo | null>(null);
   const [receivingContractId, setReceivingContractId] = useState<string | null>(null);
+  const [reportDate, setReportDate] = useState('');
   const contractsSectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    setReportDate(new Intl.DateTimeFormat('pt-BR', {
+      dateStyle: 'long',
+      timeStyle: 'short',
+    }).format(new Date()));
+  }, []);
 
   const salesSummaries = useMemo(() => summaries.filter((item) => (
     item.tipoContrato === 'venda'
@@ -106,6 +115,12 @@ export default function FinanceiroPage() {
   )), [summaries]);
   const salesKpiSummaries = useMemo(() => summaries.filter((item) => (
     item.tipoContrato === 'venda' || item.tipoContrato === 'misto'
+  )), [summaries]);
+  const globalFinancialSummaries = useMemo(() => summaries.filter((item) => (
+    item.tipoContrato !== 'barter'
+  )), [summaries]);
+  const saleOnlySummaries = useMemo(() => summaries.filter((item) => (
+    item.tipoContrato === 'venda'
   )), [summaries]);
   const barterSummaries = useMemo(() => summaries.filter((item) => (
     item.tipoContrato === 'barter' || item.tipoContrato === 'misto'
@@ -138,8 +153,8 @@ export default function FinanceiroPage() {
   const filteredMonthly = useMemo(() => buildMonthlyFinancials(filtered, deliveries), [filtered, deliveries]);
   const receivingContract = summaries.find((item) => item.contratoId === receivingContractId) || null;
   const salesTotals = useMemo(() => ({
-    brutoContratado: sum(salesKpiSummaries, 'brutoContratado'),
-    brutoRealizado: sum(salesKpiSummaries, 'brutoRealizado'),
+    faturamentoGlobal: sum(globalFinancialSummaries, 'brutoContratado'),
+    contratosVenda: sum(saleOnlySummaries, 'brutoContratado'),
     descontosContratados: sum(salesKpiSummaries, 'descontosContratados'),
     liquidoAReceber: roundMoney(salesKpiSummaries.reduce(
       (total, item) => total + Math.max(item.liquidoContratado - item.recebimentosRecebidos, 0),
@@ -147,7 +162,7 @@ export default function FinanceiroPage() {
     )),
     liquidoRecebido: sum(salesKpiSummaries, 'recebimentosRecebidos'),
     incompletos: salesKpiSummaries.filter((item) => item.pendencias.length > 0).length,
-  }), [salesKpiSummaries]);
+  }), [globalFinancialSummaries, salesKpiSummaries, saleOnlySummaries]);
 
   const handleViewContracts = () => {
     setView('consolidado');
@@ -158,6 +173,16 @@ export default function FinanceiroPage() {
     requestAnimationFrame(() => contractsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   };
 
+  const handlePrint = () => {
+    const root = document.documentElement;
+    const restoreDarkTheme = root.classList.contains('dark');
+    if (restoreDarkTheme) root.classList.remove('dark');
+    window.addEventListener('afterprint', () => {
+      if (restoreDarkTheme) root.classList.add('dark');
+    }, { once: true });
+    window.print();
+  };
+
   if (loading) {
     return <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 dark:bg-slate-900"><Loader2 className="mb-4 animate-spin text-purple-600" size={36} /><p className="text-xs font-black uppercase text-slate-400">Carregando financeiro...</p></div>;
   }
@@ -165,16 +190,29 @@ export default function FinanceiroPage() {
   const showSales = view === 'consolidado' || view === 'vendas';
   const showBarter = view === 'consolidado' || view === 'barter';
   const showReceipts = view === 'recebimentos';
+  const reportViewLabel = viewOptions.find((option) => option.value === view)?.label || 'Consolidado';
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 text-slate-900 dark:bg-slate-900 dark:text-slate-100 md:p-8">
-      <header className="mx-auto mb-6 flex max-w-[1400px] flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:flex-row md:items-center md:justify-between md:p-6">
+    <main className="financeiro-report min-h-screen bg-slate-50 p-4 text-slate-900 dark:bg-slate-900 dark:text-slate-100 md:p-8">
+      <header className="financeiro-app-header mx-auto mb-6 flex max-w-[1400px] flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:flex-row md:items-center md:justify-between md:p-6">
         <div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><NavigationMenu /><div><h1 className="truncate text-xl font-black uppercase italic tracking-tighter text-slate-800 dark:text-white md:text-3xl">Financeiro</h1><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Vendas, trocas, recebimentos e obrigações da safra</p></div></div><SafraSelector currentSafra={safraConfig} /></div>
-        <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-700 md:border-0 md:pt-0"><Link href={`/${safraId}/saldos`} className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-2 text-[10px] font-black uppercase text-white hover:bg-purple-700"><WalletCards size={14} /> Saldos</Link><Link href={`/${safraId}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"><ArrowLeft size={14} /> Painel</Link><ThemeToggle /></div>
+        <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-700 md:border-0 md:pt-0"><button type="button" onClick={handlePrint} className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-[10px] font-black uppercase text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300" title="Imprimir ou salvar relatório em PDF"><Printer size={14} /> Salvar PDF</button><Link href={`/${safraId}/saldos`} className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-2 text-[10px] font-black uppercase text-white hover:bg-purple-700"><WalletCards size={14} /> Saldos</Link><Link href={`/${safraId}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"><ArrowLeft size={14} /> Painel</Link><ThemeToggle /></div>
       </header>
 
-      <div className="mx-auto max-w-[1400px] space-y-6">
-        <nav className="flex overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800" aria-label="Visões financeiras">
+      <section className="financeiro-print-header hidden">
+        <div>
+          <p className="financeiro-print-kicker">Painel Safra</p>
+          <h1>Relatório Financeiro</h1>
+          <p>{safraConfig.nome} · Visão {reportViewLabel}</p>
+        </div>
+        <div className="financeiro-print-meta">
+          <p>Safra: <strong>{safraConfig.nome}</strong></p>
+          <p>Emitido em: <strong>{reportDate || '—'}</strong></p>
+        </div>
+      </section>
+
+      <div className="financeiro-report-content mx-auto max-w-[1400px] space-y-6">
+        <nav className="financeiro-print-controls flex overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800" aria-label="Visões financeiras">
           {viewOptions.map((option) => { const Icon = option.icon; return <button key={option.value} type="button" onClick={() => setView(option.value)} className={`flex min-w-max flex-1 items-center justify-center gap-2 rounded-md px-4 py-3 text-[10px] font-black uppercase transition-colors ${view === option.value ? 'bg-green-700 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'}`}><Icon size={15} /> {option.label}</button>; })}
         </nav>
 
@@ -188,15 +226,14 @@ export default function FinanceiroPage() {
 
         {showSales && (
           <>
-            <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            <section className="financeiro-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
               {[
-                { label: 'Bruto contratado', value: salesTotals.brutoContratado, icon: CircleDollarSign, color: 'text-slate-700 dark:text-slate-200' },
-                { label: 'Bruto realizado', value: salesTotals.brutoRealizado, icon: ReceiptText, color: 'text-purple-600' },
+                { label: 'Faturamento global', value: salesTotals.faturamentoGlobal, icon: CircleDollarSign, color: 'text-slate-700 dark:text-slate-200' },
+                { label: 'Contratos de venda', value: salesTotals.contratosVenda, icon: ReceiptText, color: 'text-purple-600' },
                 { label: 'Descontos previstos', value: salesTotals.descontosContratados, icon: FileWarning, color: 'text-amber-700 dark:text-amber-300' },
-                { label: 'Líquido a receber', value: salesTotals.liquidoAReceber, icon: WalletCards, color: 'text-blue-700 dark:text-blue-300' },
                 { label: 'Líquido recebido', value: salesTotals.liquidoRecebido, icon: CircleDollarSign, color: 'text-green-700 dark:text-green-300' },
+                { label: 'Líquido a receber', value: salesTotals.liquidoAReceber, icon: WalletCards, color: 'text-blue-700 dark:text-blue-300' },
               ].map((item) => { const Icon = item.icon; return <article key={item.label} className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="flex items-center gap-2 text-slate-400"><Icon size={16} /><p className="text-[9px] font-black uppercase">{item.label}</p></div><p className={`mt-3 text-xl font-black ${item.color}`}>{currency(item.value)}</p></article>; })}
-              <article className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"><div className="flex items-center gap-2 text-amber-700 dark:text-amber-300"><AlertTriangle size={16} /><p className="text-[9px] font-black uppercase">Incompletos</p></div><p className="mt-3 text-xl font-black text-amber-800 dark:text-amber-200">{salesTotals.incompletos}</p></article>
             </section>
             {view === 'vendas' && <section className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800"><div className="mb-4"><h2 className="text-xs font-black uppercase text-slate-700 dark:text-slate-200">Descontos por tipo</h2><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Valores previstos, sem interferência dos filtros</p></div><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">{TIPOS_DESCONTO.map((type) => <div key={type} className="border-l-4 border-amber-500 pl-3"><p className="text-[9px] font-black uppercase text-slate-400">{type}</p><p className="mt-1 text-sm font-black text-slate-700 dark:text-slate-200">{currency(roundMoney(salesKpiSummaries.reduce((total, item) => total + item.descontosPorTipo[type], 0)))}</p></div>)}</div></section>}
           </>
@@ -234,8 +271,8 @@ export default function FinanceiroPage() {
 
         {view === 'vendas' && <section className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800 md:p-6"><div className="mb-5"><h2 className="text-xs font-black uppercase text-slate-700 dark:text-slate-200">Financeiro realizado por mês</h2><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Calculado pela data dos romaneios vinculados aos contratos</p></div><FinanceiroChart data={filteredMonthly} /></section>}
 
-        <section ref={contractsSectionRef} className="scroll-mt-4 space-y-4">
-          <div className={`grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800 ${view === 'barter' ? 'md:grid-cols-[minmax(0,1fr)_220px]' : 'md:grid-cols-[minmax(0,1fr)_220px_200px]'}`}>
+        <section ref={contractsSectionRef} className="financeiro-contracts-section scroll-mt-4 space-y-4">
+          <div className={`financeiro-print-controls grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800 ${view === 'barter' ? 'md:grid-cols-[minmax(0,1fr)_220px]' : 'md:grid-cols-[minmax(0,1fr)_220px_200px]'}`}>
             <label className="relative"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs font-bold dark:border-slate-700 dark:bg-slate-900" placeholder={view === 'barter' ? 'Buscar contrato, número ou fornecedor' : 'Buscar contrato ou número'} /></label>
             {view === 'barter' ? <select value={barterStatus} onChange={(event) => setBarterStatus(event.target.value as BarterStatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todos os cumprimentos</option>{Object.entries(STATUS_ENTREGA_BARTER_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : <><select value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900">{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><select value={month} onChange={(event) => setMonth(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todas as competências</option>{months.map((item) => <option key={item} value={item}>{item.split('-').reverse().join('/')}</option>)}</select></>}
           </div>

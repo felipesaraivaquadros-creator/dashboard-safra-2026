@@ -1126,3 +1126,50 @@ Validação:
 * `npm run build` passou e gerou normalmente a rota `/[safraId]/financeiro`.
 * O servidor local foi reiniciado e `/milho26/financeiro` respondeu HTTP 200.
 * Nenhuma migration ou alteração no Supabase é necessária.
+
+## Atualização - nova composição de KPIs e relatório PDF - 2026-09-29
+
+Ordem final dos KPIs da tela Financeiro:
+
+1. `Faturamento global`: soma do bruto integral de todos os contratos do fluxo financeiro, cumpridos ou não. Inclui `Venda`, `Misto`, `Outro` e `Não classificado` quando possuem configuração financeira.
+2. `Contratos de venda`: soma do bruto integral somente dos contratos classificados como `Venda`, cumpridos ou não.
+3. `Descontos previstos`: mantida a soma dos descontos previstos dos contratos `Venda` e `Misto`.
+4. `Líquido recebido`: soma das baixas efetivamente realizadas nos contratos `Venda` e `Misto`.
+5. `Líquido a receber`: soma do líquido contratado menos as baixas realizadas, limitado a zero por contrato, para `Venda` e `Misto`.
+
+Separação de barter:
+
+* Barter puro continua fora de `Faturamento global`, pois seu valor econômico permanece controlado separadamente e não representa faturamento de venda em dinheiro.
+* Contratos mistos entram no faturamento global e nos descontos/líquidos por possuírem componente financeiro.
+
+KPI removido:
+
+* O cartão `Incompletos` foi removido da grade de KPIs.
+* O aviso de complementação financeira continua visível na tela para controle de qualidade dos cadastros, sem ocupar um KPI financeiro.
+
+Impressão e salvamento em PDF:
+
+* Adicionado o comando `Salvar PDF` no cabeçalho da tela Financeiro, usando o diálogo nativo de impressão do navegador.
+* O relatório é gerado em A4 paisagem e identifica safra, visão aberta e data/hora de emissão.
+* A impressão respeita a aba atual: `Consolidado`, `Vendas`, `Trocas / Barter` ou `Recebimentos`.
+* Navegação, filtros, botões de edição, seletores, ações e cartões mobile duplicados são removidos do PDF.
+* A grade de KPIs é compactada em cinco colunas no relatório.
+* Tabelas perdem a coluna de ações, usam toda a largura disponível, repetem o cabeçalho nas páginas e evitam quebrar uma linha ao meio.
+* Gráficos recebem altura própria para impressão e as seções evitam quebras de página desnecessárias.
+* Se o app estiver no tema escuro, o comando `Salvar PDF` alterna temporariamente para a aparência clara durante a impressão e restaura o tema ao fechar o diálogo.
+
+Arquivos principais:
+
+* `app/[safraId]/financeiro/page.tsx`
+* `app/globals.css`
+
+Banco de dados:
+
+* Nenhuma migration ou alteração no Supabase é necessária.
+
+Validação:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou normalmente `/[safraId]/financeiro`.
+* O servidor local foi reiniciado e `/milho26/financeiro` respondeu HTTP 200.
+* O navegador local abriu a rota, mas a sessão foi redirecionada para `/login`; nenhuma credencial foi submetida.

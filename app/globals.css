@@ -22,3 +22,180 @@ body {
   --agro-background: #172019;
   --agro-border: #35413a;
 }
+
+@page financeiro-report-page {
+  size: A4 landscape;
+  margin: 12mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #172019 !important;
+    font-size: 9pt;
+  }
+
+  .financeiro-report,
+  .financeiro-report * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .financeiro-report {
+    page: financeiro-report-page;
+    min-height: auto !important;
+    background: #ffffff !important;
+    color: #172019 !important;
+    padding: 0 !important;
+  }
+
+  .financeiro-app-header,
+  .financeiro-print-controls,
+  .financeiro-report button,
+  .financeiro-report [class~="md:hidden"] {
+    display: none !important;
+  }
+
+  .financeiro-print-header {
+    display: flex !important;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 12px;
+    padding-bottom: 9px;
+    border-bottom: 2px solid #14532d;
+  }
+
+  .financeiro-print-header h1 {
+    margin: 2px 0;
+    color: #172019;
+    font-size: 20pt;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .financeiro-print-header p {
+    margin: 0;
+    color: #4a574e;
+    font-size: 8pt;
+    font-weight: 700;
+  }
+
+  .financeiro-print-header .financeiro-print-kicker {
+    color: #15803d;
+    font-size: 7pt;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .financeiro-print-meta {
+    text-align: right;
+  }
+
+  .financeiro-report-content {
+    max-width: none !important;
+  }
+
+  .financeiro-report-content > * {
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .financeiro-report-content > section:not(.financeiro-contracts-section) {
+    break-inside: avoid-page;
+  }
+
+  .financeiro-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    break-inside: avoid-page;
+  }
+
+  .financeiro-kpi-grid article {
+    min-width: 0;
+    padding: 9px !important;
+    border: 1px solid #c4d1c7 !important;
+    border-top: 3px solid #15803d !important;
+    border-radius: 2px !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  .financeiro-kpi-grid article svg {
+    display: none;
+  }
+
+  .financeiro-kpi-grid article p:first-of-type {
+    color: #647268 !important;
+    font-size: 6.5pt !important;
+  }
+
+  .financeiro-kpi-grid article p:last-of-type {
+    margin-top: 5px !important;
+    color: #172019 !important;
+    font-size: 12pt !important;
+    line-height: 1.15 !important;
+  }
+
+  .financeiro-report .rounded-lg,
+  .financeiro-report .rounded-2xl {
+    border-radius: 2px !important;
+    box-shadow: none !important;
+  }
+
+  .financeiro-report .h-80,
+  .financeiro-report .recharts-responsive-container {
+    height: 220px !important;
+  }
+
+  .financeiro-contracts-section [class~="md:block"]:has(table) {
+    display: block !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  .financeiro-report table {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: collapse !important;
+    table-layout: auto;
+    font-size: 6.5pt !important;
+  }
+
+  .financeiro-report thead {
+    display: table-header-group;
+  }
+
+  .financeiro-report tr {
+    break-inside: avoid;
+  }
+
+  .financeiro-report th,
+  .financeiro-report td {
+    padding: 5px 4px !important;
+    border-bottom: 1px solid #dde7df !important;
+    color: #35413a !important;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  .financeiro-report th {
+    background: #eef4ef !important;
+    color: #35413a !important;
+    font-size: 6pt !important;
+  }
+
+  .financeiro-report table th:last-child,
+  .financeiro-report table td:last-child {
+    display: none !important;
+  }
+
+  .financeiro-report a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+}
