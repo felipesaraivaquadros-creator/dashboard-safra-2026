@@ -2,14 +2,14 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeftRight, ArrowRight, CircleDollarSign } from 'lucide-react';
+import { ArrowRight, CircleDollarSign } from 'lucide-react';
 import { useFinanceiroData } from '../../lib/useFinanceiroData';
 import FinanceiroChart from './FinanceiroChart';
 
 const currency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function FinanceiroResumoDashboard({ safraId }: { safraId: string }) {
-  const { loading, schemaReady, receiptsReady, barterReady, summaries, monthly, totals } = useFinanceiroData(safraId);
+  const { loading, schemaReady, barterReady, summaries, monthly, financialKpis } = useFinanceiroData(safraId);
   if (loading) return <div className="h-56 animate-pulse rounded-2xl bg-white dark:bg-slate-800" />;
 
   const financialConfigured = summaries.some((summary) => summary.financeiro);
@@ -29,15 +29,15 @@ export default function FinanceiroResumoDashboard({ safraId }: { safraId: string
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div><h2 className="flex items-center gap-2 text-xs font-black uppercase text-slate-700 dark:text-slate-200"><CircleDollarSign size={17} className="text-green-600" /> Financeiro da Safra</h2><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Valores realizados pelas entregas vinculadas</p></div>
+        <div><h2 className="flex items-center gap-2 text-xs font-black uppercase text-slate-700 dark:text-slate-200"><CircleDollarSign size={17} className="text-green-600" /> Financeiro da Safra</h2><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Posição global dos contratos e recebimentos da safra</p></div>
         <Link href={`/${safraId}/financeiro`} className="inline-flex items-center gap-1 text-[10px] font-black uppercase text-purple-600 hover:text-purple-700">Ver detalhes <ArrowRight size={13} /></Link>
       </div>
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <div><p className="text-[8px] font-black uppercase text-slate-400">Bruto realizado</p><p className="mt-1 truncate text-xs font-black text-slate-800 dark:text-white">{currency(totals.brutoRealizado)}</p></div>
-        <div><p className="text-[8px] font-black uppercase text-amber-600">Descontos</p><p className="mt-1 truncate text-xs font-black text-amber-700 dark:text-amber-300">{currency(totals.descontosRealizados)}</p></div>
-        <div><p className="text-[8px] font-black uppercase text-green-600">Líquido realizado</p><p className="mt-1 truncate text-xs font-black text-green-700 dark:text-green-300">{currency(totals.liquidoRealizado)}</p></div>
-        {receiptsReady && <div><p className="text-[8px] font-black uppercase text-green-600">Recebido</p><p className="mt-1 truncate text-xs font-black text-green-700 dark:text-green-300">{currency(totals.recebimentosRecebidos)}</p></div>}
-        {barterReady && barterConfigured && <div><p className="flex items-center gap-1 text-[8px] font-black uppercase text-amber-600"><ArrowLeftRight size={11} /> Saldo barter</p><p className="mt-1 truncate text-xs font-black text-amber-700 dark:text-amber-300">{totals.barterSaldoSacas.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} sc</p></div>}
+      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="min-w-0"><p className="text-[8px] font-black uppercase text-slate-400">Faturamento global</p><p className="mt-1 break-words text-xs font-black leading-tight text-slate-800 dark:text-white">{currency(financialKpis.faturamentoGlobal)}</p></div>
+        <div className="min-w-0"><p className="text-[8px] font-black uppercase text-purple-600">Contratos de venda</p><p className="mt-1 break-words text-xs font-black leading-tight text-purple-700 dark:text-purple-300">{currency(financialKpis.contratosVenda)}</p></div>
+        <div className="min-w-0"><p className="text-[8px] font-black uppercase text-amber-600">Descontos previstos</p><p className="mt-1 break-words text-xs font-black leading-tight text-amber-700 dark:text-amber-300">{currency(financialKpis.descontosPrevistos)}</p></div>
+        <div className="min-w-0"><p className="text-[8px] font-black uppercase text-green-600">Líquido recebido</p><p className="mt-1 break-words text-xs font-black leading-tight text-green-700 dark:text-green-300">{currency(financialKpis.liquidoRecebido)}</p></div>
+        <div className="min-w-0"><p className="text-[8px] font-black uppercase text-blue-600">Líquido a receber</p><p className="mt-1 break-words text-xs font-black leading-tight text-blue-700 dark:text-blue-300">{currency(financialKpis.liquidoAReceber)}</p></div>
       </div>
       {financialConfigured && <FinanceiroChart data={monthly.slice(-6)} compact />}
     </section>

@@ -207,6 +207,38 @@ export const useFinanceiroData = (safraId: string) => {
     summaries.filter((item) => item.tipoContrato !== 'barter'),
   ), [summaries]);
 
+  const financialKpis = useMemo(() => {
+    const globalFinancialSummaries = summaries.filter((item) => item.tipoContrato !== 'barter');
+    const saleOnlySummaries = summaries.filter((item) => item.tipoContrato === 'venda');
+    const salesKpiSummaries = summaries.filter((item) => (
+      item.tipoContrato === 'venda' || item.tipoContrato === 'misto'
+    ));
+
+    return {
+      faturamentoGlobal: roundMoney(globalFinancialSummaries.reduce(
+        (total, item) => total + item.brutoContratado,
+        0,
+      )),
+      contratosVenda: roundMoney(saleOnlySummaries.reduce(
+        (total, item) => total + item.brutoContratado,
+        0,
+      )),
+      descontosPrevistos: roundMoney(salesKpiSummaries.reduce(
+        (total, item) => total + item.descontosContratados,
+        0,
+      )),
+      liquidoRecebido: roundMoney(salesKpiSummaries.reduce(
+        (total, item) => total + item.recebimentosRecebidos,
+        0,
+      )),
+      liquidoAReceber: roundMoney(salesKpiSummaries.reduce(
+        (total, item) => total + Math.max(item.liquidoContratado - item.recebimentosRecebidos, 0),
+        0,
+      )),
+      incompletos: salesKpiSummaries.filter((item) => item.pendencias.length > 0).length,
+    };
+  }, [summaries]);
+
   const totals = useMemo(() => {
     const financialSummaries = summaries.filter((item) => (
       item.tipoContrato === 'venda' || item.tipoContrato === 'misto'
@@ -271,6 +303,7 @@ export const useFinanceiroData = (safraId: string) => {
     summaries,
     monthly,
     receiptsMonthly,
+    financialKpis,
     totals,
     refresh,
   };

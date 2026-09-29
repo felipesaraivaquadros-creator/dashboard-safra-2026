@@ -1173,3 +1173,34 @@ Validação:
 * `npm run build` passou e gerou normalmente `/[safraId]/financeiro`.
 * O servidor local foi reiniciado e `/milho26/financeiro` respondeu HTTP 200.
 * O navegador local abriu a rota, mas a sessão foi redirecionada para `/login`; nenhuma credencial foi submetida.
+
+## Atualização - integração dos KPIs do Dashboard e Financeiro - 2026-09-29
+
+Problema corrigido:
+
+* O resumo financeiro do Dashboard ainda usava os indicadores antigos de valores realizados por romaneios.
+* A tela Financeiro já utilizava a nova composição global, por isso os números exibidos nas duas telas divergiam.
+
+Fonte única dos KPIs:
+
+* `useFinanceiroData` agora calcula e fornece o objeto compartilhado `financialKpis`.
+* O Dashboard e a tela Financeiro consomem diretamente esse mesmo objeto, eliminando fórmulas duplicadas.
+* Os cinco indicadores integrados são `Faturamento global`, `Contratos de venda`, `Descontos previstos`, `Líquido recebido` e `Líquido a receber`.
+* O escopo de cada indicador permanece exatamente o documentado na atualização anterior.
+* O gráfico mensal continua representando o financeiro realizado por romaneios; ele é uma visão temporal complementar e não altera os KPIs globais.
+
+Arquivos principais:
+
+* `src/lib/useFinanceiroData.ts`
+* `src/components/financeiro/FinanceiroResumoDashboard.tsx`
+* `app/[safraId]/financeiro/page.tsx`
+
+Banco de dados:
+
+* Nenhuma migration ou alteração no Supabase é necessária.
+
+Validação:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou normalmente as rotas `/[safraId]` e `/[safraId]/financeiro`.
+* As duas rotas responderam HTTP 200 no servidor local.

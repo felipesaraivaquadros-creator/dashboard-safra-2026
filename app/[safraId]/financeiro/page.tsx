@@ -69,10 +69,6 @@ const barterStatusClasses: Record<StatusEntregaBarter, string> = {
   cumprido: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
 };
 
-const sum = (items: ContratoFinanceiroResumo[], key: keyof ContratoFinanceiroResumo) => roundMoney(
-  items.reduce((total, item) => total + Number(item[key] || 0), 0),
-);
-
 export default function FinanceiroPage() {
   const params = useParams();
   const safraId = params.safraId as string;
@@ -87,6 +83,7 @@ export default function FinanceiroPage() {
     summaries,
     deliveries,
     receiptsMonthly,
+    financialKpis,
     totals,
     refresh,
   } = useFinanceiroData(safraId);
@@ -115,12 +112,6 @@ export default function FinanceiroPage() {
   )), [summaries]);
   const salesKpiSummaries = useMemo(() => summaries.filter((item) => (
     item.tipoContrato === 'venda' || item.tipoContrato === 'misto'
-  )), [summaries]);
-  const globalFinancialSummaries = useMemo(() => summaries.filter((item) => (
-    item.tipoContrato !== 'barter'
-  )), [summaries]);
-  const saleOnlySummaries = useMemo(() => summaries.filter((item) => (
-    item.tipoContrato === 'venda'
   )), [summaries]);
   const barterSummaries = useMemo(() => summaries.filter((item) => (
     item.tipoContrato === 'barter' || item.tipoContrato === 'misto'
@@ -152,18 +143,6 @@ export default function FinanceiroPage() {
 
   const filteredMonthly = useMemo(() => buildMonthlyFinancials(filtered, deliveries), [filtered, deliveries]);
   const receivingContract = summaries.find((item) => item.contratoId === receivingContractId) || null;
-  const salesTotals = useMemo(() => ({
-    faturamentoGlobal: sum(globalFinancialSummaries, 'brutoContratado'),
-    contratosVenda: sum(saleOnlySummaries, 'brutoContratado'),
-    descontosContratados: sum(salesKpiSummaries, 'descontosContratados'),
-    liquidoAReceber: roundMoney(salesKpiSummaries.reduce(
-      (total, item) => total + Math.max(item.liquidoContratado - item.recebimentosRecebidos, 0),
-      0,
-    )),
-    liquidoRecebido: sum(salesKpiSummaries, 'recebimentosRecebidos'),
-    incompletos: salesKpiSummaries.filter((item) => item.pendencias.length > 0).length,
-  }), [globalFinancialSummaries, salesKpiSummaries, saleOnlySummaries]);
-
   const handleViewContracts = () => {
     setView('consolidado');
     setSearch('');
@@ -222,17 +201,17 @@ export default function FinanceiroPage() {
         {!fulfillmentReady && <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"><AlertTriangle size={20} className="mt-0.5 shrink-0" /><div><p className="text-sm font-black uppercase">Cumprimento por alocação aguardando banco</p><p className="mt-1 text-xs font-bold">Execute `docs/supabase_cumprimento_por_alocacao.sql` para que os contratos alocados em Saldos apareçam como cumpridos.</p></div></div>}
         {schemaReady && !receiptsReady && showReceipts && <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"><AlertTriangle size={20} className="mt-0.5 shrink-0" /><p className="text-xs font-bold">Execute `docs/supabase_recebimentos_contratos.sql` para habilitar parcelas e baixas.</p></div>}
         {classificationReady && totals.contratosNaoClassificados > 0 && <div className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-900/20 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2 text-amber-800 dark:text-amber-300"><FileWarning size={18} /><p className="text-xs font-black uppercase">{totals.contratosNaoClassificados} contrato(s) antigos aguardam classificação manual</p></div><button type="button" onClick={handleViewContracts} className="text-[10px] font-black uppercase text-amber-800 underline dark:text-amber-300">Ver contratos</button></div>}
-        {showSales && salesTotals.incompletos > 0 && schemaReady && <div className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-900/20 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2 text-amber-800 dark:text-amber-300"><FileWarning size={18} /><p className="text-xs font-black uppercase">{salesTotals.incompletos} contrato(s) precisam de complementação financeira</p></div><button type="button" onClick={handleViewContracts} className="text-[10px] font-black uppercase text-amber-800 underline dark:text-amber-300">Ver contratos</button></div>}
+        {showSales && financialKpis.incompletos > 0 && schemaReady && <div className="flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-900/20 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-2 text-amber-800 dark:text-amber-300"><FileWarning size={18} /><p className="text-xs font-black uppercase">{financialKpis.incompletos} contrato(s) precisam de complementação financeira</p></div><button type="button" onClick={handleViewContracts} className="text-[10px] font-black uppercase text-amber-800 underline dark:text-amber-300">Ver contratos</button></div>}
 
         {showSales && (
           <>
             <section className="financeiro-kpi-grid grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
               {[
-                { label: 'Faturamento global', value: salesTotals.faturamentoGlobal, icon: CircleDollarSign, color: 'text-slate-700 dark:text-slate-200' },
-                { label: 'Contratos de venda', value: salesTotals.contratosVenda, icon: ReceiptText, color: 'text-purple-600' },
-                { label: 'Descontos previstos', value: salesTotals.descontosContratados, icon: FileWarning, color: 'text-amber-700 dark:text-amber-300' },
-                { label: 'Líquido recebido', value: salesTotals.liquidoRecebido, icon: CircleDollarSign, color: 'text-green-700 dark:text-green-300' },
-                { label: 'Líquido a receber', value: salesTotals.liquidoAReceber, icon: WalletCards, color: 'text-blue-700 dark:text-blue-300' },
+                { label: 'Faturamento global', value: financialKpis.faturamentoGlobal, icon: CircleDollarSign, color: 'text-slate-700 dark:text-slate-200' },
+                { label: 'Contratos de venda', value: financialKpis.contratosVenda, icon: ReceiptText, color: 'text-purple-600' },
+                { label: 'Descontos previstos', value: financialKpis.descontosPrevistos, icon: FileWarning, color: 'text-amber-700 dark:text-amber-300' },
+                { label: 'Líquido recebido', value: financialKpis.liquidoRecebido, icon: CircleDollarSign, color: 'text-green-700 dark:text-green-300' },
+                { label: 'Líquido a receber', value: financialKpis.liquidoAReceber, icon: WalletCards, color: 'text-blue-700 dark:text-blue-300' },
               ].map((item) => { const Icon = item.icon; return <article key={item.label} className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="flex items-center gap-2 text-slate-400"><Icon size={16} /><p className="text-[9px] font-black uppercase">{item.label}</p></div><p className={`mt-3 text-xl font-black ${item.color}`}>{currency(item.value)}</p></article>; })}
             </section>
             {view === 'vendas' && <section className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800"><div className="mb-4"><h2 className="text-xs font-black uppercase text-slate-700 dark:text-slate-200">Descontos por tipo</h2><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Valores previstos, sem interferência dos filtros</p></div><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">{TIPOS_DESCONTO.map((type) => <div key={type} className="border-l-4 border-amber-500 pl-3"><p className="text-[9px] font-black uppercase text-slate-400">{type}</p><p className="mt-1 text-sm font-black text-slate-700 dark:text-slate-200">{currency(roundMoney(salesKpiSummaries.reduce((total, item) => total + item.descontosPorTipo[type], 0)))}</p></div>)}</div></section>}
