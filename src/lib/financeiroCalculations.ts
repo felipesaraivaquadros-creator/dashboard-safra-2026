@@ -19,6 +19,16 @@ export const normalizeContractNumber = (value: unknown) => String(value || '')
 
 export const roundMoney = (value: number) => Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
 
+export const isContractFinanciallyFulfilled = (summary: ContratoFinanceiroResumo) => {
+  if (summary.tipoContrato === 'barter') {
+    return summary.barterStatusEntrega === 'cumprido';
+  }
+  if (summary.tipoContrato === 'misto') {
+    return summary.status === 'baixado' && summary.barterStatusEntrega === 'cumprido';
+  }
+  return summary.status === 'baixado';
+};
+
 export const getMonthKey = (value: string | null | undefined) => {
   if (!value) return '';
   const match = String(value).match(/^(\d{4})-(\d{2})/);

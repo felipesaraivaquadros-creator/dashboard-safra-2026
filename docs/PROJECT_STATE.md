@@ -1226,3 +1226,42 @@ Validação:
 * `npx tsc --noEmit --pretty false` passou sem erros.
 * `npm run build` passou e gerou normalmente as rotas `/[safraId]` e `/[safraId]/financeiro`.
 * Dashboard e Financeiro responderam HTTP 200 no servidor local.
+
+## Atualização - contratos pendentes e cumpridos no Dashboard - 2026-09-29
+
+Problema corrigido:
+
+* O bloco `Contratos` do Dashboard separava `Pendentes` e `Cumpridos` apenas pelo volume encontrado nos romaneios.
+* A regra antiga também forçava determinadas safras anteriores como 100% cumpridas, sem consultar o status financeiro ou a alocação em Saldos.
+
+Nova regra de classificação:
+
+* `Venda`, `Outro` e `Não classificado`: cumprido somente quando o status financeiro for `Baixado`.
+* `Barter`: cumprido quando o status físico da troca for `Cumprido`, inclusive por alocação em Saldos.
+* `Misto`: cumprido somente quando o financeiro estiver `Baixado` e a obrigação barter estiver `Cumprida`.
+* Status `Completo` significa cadastro sem pendências, mas permanece na aba `Pendentes` enquanto não houver baixa.
+* Status `Vencida`, configurações incompletas e contratos não configurados permanecem em `Pendentes`.
+
+Interface e dados:
+
+* Os cartões exibem o status financeiro e, para barter/misto, o status da obrigação física.
+* As abas mostram a quantidade de contratos em cada situação.
+* O volume entregue usa o mesmo resumo financeiro, incluindo cumprimento por alocação, evitando barra física incompatível com o status.
+* O Dashboard passou a carregar `useFinanceiroData` uma única vez e compartilha o resultado entre o resumo financeiro e o bloco de contratos.
+
+Arquivos principais:
+
+* `app/[safraId]/page.tsx`
+* `src/components/ContractSection.tsx`
+* `src/components/financeiro/FinanceiroResumoDashboard.tsx`
+* `src/lib/financeiroCalculations.ts`
+
+Banco de dados:
+
+* Nenhuma migration ou alteração no Supabase é necessária.
+
+Validação:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou normalmente a rota `/[safraId]`.
+* O servidor local foi reiniciado e `/milho26` respondeu HTTP 200.

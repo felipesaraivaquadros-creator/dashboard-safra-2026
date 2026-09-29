@@ -8,8 +8,13 @@ import FinanceiroChart from './FinanceiroChart';
 
 const currency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-export default function FinanceiroResumoDashboard({ safraId }: { safraId: string }) {
-  const { loading, schemaReady, barterReady, summaries, monthly, financialKpis } = useFinanceiroData(safraId);
+interface FinanceiroResumoDashboardProps {
+  safraId: string;
+  financeiroData: ReturnType<typeof useFinanceiroData>;
+}
+
+export default function FinanceiroResumoDashboard({ safraId, financeiroData }: FinanceiroResumoDashboardProps) {
+  const { loading, schemaReady, barterReady, summaries, monthly, financialKpis } = financeiroData;
   if (loading) return <div className="h-56 animate-pulse rounded-2xl bg-white dark:bg-slate-800" />;
 
   const financialConfigured = summaries.some((summary) => summary.financeiro);

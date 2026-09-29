@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useDataProcessing } from '../../src/lib/useDataProcessing';
+import { useFinanceiroData } from '../../src/lib/useFinanceiroData';
 import KpiSection, { ProductivityModal } from '../../src/components/KpiSection';
 import ChartSection from '../../src/components/ChartSection';
 import ContractSection from '../../src/components/ContractSection';
@@ -40,6 +41,7 @@ export default function Dashboard() {
     getCorFazenda,
     getCorArmazem,
   } = useDataProcessing(safraId);
+  const financeiroData = useFinanceiroData(safraId);
 
   const [showModalProd, setShowModalProd] = useState(false);
   const [showModalUmid, setShowModalUmid] = useState(false);
@@ -70,7 +72,7 @@ export default function Dashboard() {
     setFazendaFiltro(talhao.fazenda);
   };
 
-  if (loading) {
+  if (loading || financeiroData.loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
         <Loader2 className="w-10 h-10 text-purple-600 animate-spin mb-4" />
@@ -158,7 +160,7 @@ export default function Dashboard() {
             setShowModalVolume={setShowModalVolume}
           />
 
-          <FinanceiroResumoDashboard safraId={safraId} />
+          <FinanceiroResumoDashboard safraId={safraId} financeiroData={financeiroData} />
 
           <ChartSection
             chartFazendas={chartFazendas}
@@ -175,7 +177,11 @@ export default function Dashboard() {
           />
         </div>
 
-        <ContractSection contratosProcessados={contratosProcessados} romaneiosCount={romaneiosCount} />
+        <ContractSection
+          contratosProcessados={contratosProcessados}
+          financeiroSummaries={financeiroData.summaries}
+          romaneiosCount={romaneiosCount}
+        />
       </div>
 
       <ProductivityModal 

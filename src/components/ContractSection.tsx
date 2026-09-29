@@ -1,22 +1,69 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FileText, ChevronDown, ChevronUp, Truck } from 'lucide-react';
 import { ProcessedContract } from '../data/types';
+import {
+  ContratoFinanceiroResumo,
+  STATUS_ENTREGA_BARTER_LABELS,
+} from '../data/financeiroTypes';
+import { isContractFinanciallyFulfilled } from '../lib/financeiroCalculations';
+import FinanceiroStatusBadge from './financeiro/FinanceiroStatusBadge';
+
+type DashboardContract = ProcessedContract & {
+  financeiroResumo: ContratoFinanceiroResumo | null;
+};
 
 interface ContractSectionProps {
   contratosProcessados: {
     pendentes: ProcessedContract[];
     cumpridos: ProcessedContract[];
   };
+  financeiroSummaries: ContratoFinanceiroResumo[];
   romaneiosCount: number; 
 }
 
-export default function ContractSection({ contratosProcessados, romaneiosCount }: ContractSectionProps) {
+const barterStatusClasses = {
+  a_cumprir: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  cumprido: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+};
+
+export default function ContractSection({ contratosProcessados, financeiroSummaries, romaneiosCount }: ContractSectionProps) {
   const [contratoExpandido, setContratoExpandido] = useState<string | null>(null);
   const [abaContratos, setAbaContratos] = useState<'pendentes' | 'cumpridos'>('pendentes');
 
-  const contratosAtivos = contratosProcessados[abaContratos];
+  const contratosPorStatus = useMemo(() => {
+    const summaryById = new Map(financeiroSummaries.map((summary) => [summary.contratoId, summary]));
+    const allContracts = Array.from(new Map(
+      [...contratosProcessados.pendentes, ...contratosProcessados.cumpridos]
+        .map((contract) => [contract.db_id || contract.id, contract]),
+    ).values());
+
+    const enriched: DashboardContract[] = allContracts.map((contract) => {
+      const financeiroResumo = contract.db_id ? summaryById.get(contract.db_id) || null : null;
+      const cumprido = financeiroResumo?.volumeEntregue ?? contract.cumprido;
+      const aCumprir = Math.max(contract.contratado - cumprido, 0);
+      const porcentagem = contract.contratado > 0
+        ? Math.min((cumprido / contract.contratado) * 100, 100)
+        : (cumprido > 0 ? 100 : 0);
+
+      return {
+        ...contract,
+        cumprido: Number(cumprido.toFixed(2)),
+        aCumprir: Number(aCumprir.toFixed(2)),
+        porcentagem: porcentagem.toFixed(1),
+        isConcluido: financeiroResumo ? isContractFinanciallyFulfilled(financeiroResumo) : false,
+        financeiroResumo,
+      };
+    });
+
+    return {
+      pendentes: enriched.filter((contract) => !contract.isConcluido).sort((a, b) => b.cumprido - a.cumprido),
+      cumpridos: enriched.filter((contract) => contract.isConcluido).sort((a, b) => b.cumprido - a.cumprido),
+    };
+  }, [contratosProcessados, financeiroSummaries]);
+
+  const contratosAtivos = contratosPorStatus[abaContratos];
 
   const toggleExpand = (id: string) => {
     setContratoExpandido(contratoExpandido === id ? null : id);
@@ -37,19 +84,21 @@ export default function ContractSection({ contratosProcessados, romaneiosCount }
             onClick={() => setAbaContratos('pendentes')} 
             className={`flex-1 py-2 text-[10px] font-black uppercase rounded-md transition-all ${abaContratos === 'pendentes' ? 'bg-white dark:bg-slate-800 text-purple-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300'}`}
           >
-            Pendentes
+            Pendentes <span className="ml-1 opacity-70">({contratosPorStatus.pendentes.length})</span>
           </button>
           <button 
             onClick={() => setAbaContratos('cumpridos')} 
             className={`flex-1 py-2 text-[10px] font-black uppercase rounded-md transition-all ${abaContratos === 'cumpridos' ? 'bg-white dark:bg-slate-800 text-green-600 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300'}`}
           >
-            Cumpridos
+            Cumpridos <span className="ml-1 opacity-70">({contratosPorStatus.cumpridos.length})</span>
           </button>
         </div>
       </div>
       <div className="overflow-y-auto p-4 space-y-3 flex-1 bg-slate-50/20 dark:bg-slate-900/20">
         {contratosAtivos.length === 0 && (
-          <div className="text-center py-10 text-slate-400 text-xs font-bold uppercase italic">Nenhum contrato pendente.</div>
+          <div className="text-center py-10 text-slate-400 text-xs font-bold uppercase italic">
+            {abaContratos === 'pendentes' ? 'Nenhum contrato pendente.' : 'Nenhum contrato cumprido.'}
+          </div>
         )}
         {contratosAtivos.map((c) => {
           const isEx = contratoExpandido === c.id;
@@ -63,6 +112,18 @@ export default function ContractSection({ contratosProcessados, romaneiosCount }
                 <div className="flex-1 min-w-0">
                   <p className={`text-xs font-black uppercase tracking-tight truncate ${isEx ? 'text-purple-700 dark:text-purple-400' : 'text-slate-700 dark:text-slate-200'}`}>{c.nome}</p>
                   <span className="text-[9px] font-bold text-slate-300">ID: {c.id}</span>
+                  {c.financeiroResumo && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {c.financeiroResumo.tipoContrato !== 'barter' && (
+                        <FinanceiroStatusBadge status={c.financeiroResumo.status} compact />
+                      )}
+                      {(c.financeiroResumo.tipoContrato === 'barter' || c.financeiroResumo.tipoContrato === 'misto') && (
+                        <span className={`rounded px-2 py-1 text-[8px] font-black uppercase ${barterStatusClasses[c.financeiroResumo.barterStatusEntrega]}`}>
+                          {STATUS_ENTREGA_BARTER_LABELS[c.financeiroResumo.barterStatusEntrega]}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {isEx ? <ChevronUp size={16} className="text-purple-400" /> : <ChevronDown size={16} className="text-slate-300" />}
               </div>
