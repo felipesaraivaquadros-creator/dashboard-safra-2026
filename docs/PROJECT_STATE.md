@@ -1092,3 +1092,37 @@ Validação executada:
 * `npm run build` passou e gerou normalmente `/[safraId]/financeiro` e `/[safraId]/saldos`.
 * O servidor local foi reiniciado e `/milho26/financeiro` respondeu HTTP 200.
 * Nenhuma migration adicional é necessária para esta atualização.
+
+## Atualização - KPIs financeiros de vendas - 2026-09-29
+
+Escopo dos KPIs:
+
+* Os KPIs financeiros passam a considerar somente contratos classificados como `Venda` ou `Misto`.
+* Contratos `Misto` entram porque possuem componente financeiro de venda além da obrigação de barter.
+* Contratos `Barter`, `Outro` e `Não classificado` não entram nos valores dos KPIs de venda.
+* Registros antigos `Outro` e `Não classificado` continuam visíveis nas listas para revisão, sem contaminar os totais financeiros.
+
+Fórmulas aplicadas:
+
+* `Bruto contratado` = soma do valor bruto contratado dos contratos de venda/mistos.
+* `Bruto realizado` = soma do valor bruto correspondente ao volume entregue/cumprido dos contratos de venda/mistos.
+* `Descontos previstos` = soma dos descontos calculados sobre o valor contratado dos contratos de venda/mistos.
+* `Líquido a receber` = soma de `máximo(líquido contratado - baixas realizadas, zero)` por contrato.
+* `Líquido recebido` = soma de todas as baixas efetivamente registradas nos contratos de venda/mistos.
+* Baixas parciais reduzem `Líquido a receber` e aumentam `Líquido recebido` pelo mesmo valor.
+* Contratos integralmente baixados contribuem com zero em `Líquido a receber`.
+
+Interface:
+
+* Adicionado o KPI `Líquido recebido` na tela Financeiro.
+* A grade passou a comportar seis cartões em telas largas, incluindo o cartão de contratos incompletos.
+* O detalhamento `Descontos por tipo` usa o mesmo escopo de contratos de venda/mistos.
+* Os totais financeiros usados no resumo macro do Dashboard também foram restringidos a venda/misto.
+* Busca e filtros continuam sem alterar os KPIs globais da safra.
+
+Validação:
+
+* `npx tsc --noEmit --pretty false` passou sem erros.
+* `npm run build` passou e gerou normalmente a rota `/[safraId]/financeiro`.
+* O servidor local foi reiniciado e `/milho26/financeiro` respondeu HTTP 200.
+* Nenhuma migration ou alteração no Supabase é necessária.

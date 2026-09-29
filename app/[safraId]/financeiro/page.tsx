@@ -104,6 +104,9 @@ export default function FinanceiroPage() {
     || item.tipoContrato === 'outro'
     || item.tipoContrato === 'nao_classificado'
   )), [summaries]);
+  const salesKpiSummaries = useMemo(() => summaries.filter((item) => (
+    item.tipoContrato === 'venda' || item.tipoContrato === 'misto'
+  )), [summaries]);
   const barterSummaries = useMemo(() => summaries.filter((item) => (
     item.tipoContrato === 'barter' || item.tipoContrato === 'misto'
   )), [summaries]);
@@ -135,12 +138,16 @@ export default function FinanceiroPage() {
   const filteredMonthly = useMemo(() => buildMonthlyFinancials(filtered, deliveries), [filtered, deliveries]);
   const receivingContract = summaries.find((item) => item.contratoId === receivingContractId) || null;
   const salesTotals = useMemo(() => ({
-    brutoContratado: sum(salesSummaries, 'brutoContratado'),
-    brutoRealizado: sum(salesSummaries, 'brutoRealizado'),
-    descontosContratados: sum(salesSummaries, 'descontosContratados'),
-    liquidoContratado: sum(salesSummaries, 'liquidoContratado'),
-    incompletos: salesSummaries.filter((item) => item.pendencias.length > 0).length,
-  }), [salesSummaries]);
+    brutoContratado: sum(salesKpiSummaries, 'brutoContratado'),
+    brutoRealizado: sum(salesKpiSummaries, 'brutoRealizado'),
+    descontosContratados: sum(salesKpiSummaries, 'descontosContratados'),
+    liquidoAReceber: roundMoney(salesKpiSummaries.reduce(
+      (total, item) => total + Math.max(item.liquidoContratado - item.recebimentosRecebidos, 0),
+      0,
+    )),
+    liquidoRecebido: sum(salesKpiSummaries, 'recebimentosRecebidos'),
+    incompletos: salesKpiSummaries.filter((item) => item.pendencias.length > 0).length,
+  }), [salesKpiSummaries]);
 
   const handleViewContracts = () => {
     setView('consolidado');
@@ -181,16 +188,17 @@ export default function FinanceiroPage() {
 
         {showSales && (
           <>
-            <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
               {[
                 { label: 'Bruto contratado', value: salesTotals.brutoContratado, icon: CircleDollarSign, color: 'text-slate-700 dark:text-slate-200' },
                 { label: 'Bruto realizado', value: salesTotals.brutoRealizado, icon: ReceiptText, color: 'text-purple-600' },
                 { label: 'Descontos previstos', value: salesTotals.descontosContratados, icon: FileWarning, color: 'text-amber-700 dark:text-amber-300' },
-                { label: 'Líquido a receber', value: salesTotals.liquidoContratado, icon: WalletCards, color: 'text-green-700 dark:text-green-300' },
+                { label: 'Líquido a receber', value: salesTotals.liquidoAReceber, icon: WalletCards, color: 'text-blue-700 dark:text-blue-300' },
+                { label: 'Líquido recebido', value: salesTotals.liquidoRecebido, icon: CircleDollarSign, color: 'text-green-700 dark:text-green-300' },
               ].map((item) => { const Icon = item.icon; return <article key={item.label} className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="flex items-center gap-2 text-slate-400"><Icon size={16} /><p className="text-[9px] font-black uppercase">{item.label}</p></div><p className={`mt-3 text-xl font-black ${item.color}`}>{currency(item.value)}</p></article>; })}
               <article className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"><div className="flex items-center gap-2 text-amber-700 dark:text-amber-300"><AlertTriangle size={16} /><p className="text-[9px] font-black uppercase">Incompletos</p></div><p className="mt-3 text-xl font-black text-amber-800 dark:text-amber-200">{salesTotals.incompletos}</p></article>
             </section>
-            {view === 'vendas' && <section className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800"><div className="mb-4"><h2 className="text-xs font-black uppercase text-slate-700 dark:text-slate-200">Descontos por tipo</h2><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Valores previstos, sem interferência dos filtros</p></div><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">{TIPOS_DESCONTO.map((type) => <div key={type} className="border-l-4 border-amber-500 pl-3"><p className="text-[9px] font-black uppercase text-slate-400">{type}</p><p className="mt-1 text-sm font-black text-slate-700 dark:text-slate-200">{currency(roundMoney(salesSummaries.reduce((total, item) => total + item.descontosPorTipo[type], 0)))}</p></div>)}</div></section>}
+            {view === 'vendas' && <section className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800"><div className="mb-4"><h2 className="text-xs font-black uppercase text-slate-700 dark:text-slate-200">Descontos por tipo</h2><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Valores previstos, sem interferência dos filtros</p></div><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">{TIPOS_DESCONTO.map((type) => <div key={type} className="border-l-4 border-amber-500 pl-3"><p className="text-[9px] font-black uppercase text-slate-400">{type}</p><p className="mt-1 text-sm font-black text-slate-700 dark:text-slate-200">{currency(roundMoney(salesKpiSummaries.reduce((total, item) => total + item.descontosPorTipo[type], 0)))}</p></div>)}</div></section>}
           </>
         )}
 

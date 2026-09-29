@@ -208,7 +208,9 @@ export const useFinanceiroData = (safraId: string) => {
   ), [summaries]);
 
   const totals = useMemo(() => {
-    const financialSummaries = summaries.filter((item) => item.tipoContrato !== 'barter');
+    const financialSummaries = summaries.filter((item) => (
+      item.tipoContrato === 'venda' || item.tipoContrato === 'misto'
+    ));
     const discountsByType = Object.fromEntries(TIPOS_DESCONTO.map((type) => [type, 0])) as Record<TipoDesconto, number>;
     financialSummaries.forEach((summary) => {
       TIPOS_DESCONTO.forEach((type) => {
