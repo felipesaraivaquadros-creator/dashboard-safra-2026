@@ -1,5 +1,47 @@
 # PROJECT_STATE.md
 
+## Primeira entrega - Central de Contratos e Despesas (30/09/2026)
+
+Pedido aprovado: implantar a proposta em docs/PROPOSTA_CONTRATOS_DESPESAS.md.
+O usuario confirmou que pode enviar PDFs de cada banco para refinamento. Foram solicitados
+modelos anonimizados, mantendo layout, datas, valores e indicadores D/C. Ainda nao recebidos.
+
+Primeira entrega implementada no codigo:
+- /[safraId]/contratos: KPIs globais, abas por tipo, busca, filtros, detalhes, cadastro/edicao,
+  arquivamento/restauracao, exclusao protegida e exportacao CSV.
+- Arrendamento adicionado sem receita de venda: dinheiro, graos ou ambos, arrendador,
+  fazenda/area opcionais e confirmacao manual de pagamento. Graos cumprem por alocacao existente.
+- /[safraId]/despesas: PDFs digitais no navegador com PDF.js local; valores em centavos,
+  revisao obrigatoria, motivo de inclusao/exclusao, estornos vinculados ao debito, arquivos privados,
+  rascunho/finalizacao, historico versionado e reabertura, filtros e exportacao.
+- Migracoes novas: docs/supabase_central_contratos.sql e docs/supabase_despesas.sql.
+  NAO executadas no Supabase real. A primeira depende das migracoes anteriores de financeiro/barter/cumprimento.
+- Despesas usa RLS por auth.uid(), bucket privado despesas-extratos e RPC atomico com controle
+  de versao. Nenhum extrato enviado a IA externa. Nenhum lancamento/baixa gerado no financeiro.
+- Arquivo repetido no mesmo lote bloqueado por SHA-256. Sobreposicoes entre arquivos viram
+  suspeitas para revisao, nao exclusao automatica. Historico nao soma relatorios sobrepostos.
+- PDF digitalizado (sem texto), ambiguidades, paginas incompletas e revisoes pendentes bloqueiam
+  finalizacao. Texto extraido fica disponivel para conferencias e correcao manual.
+
+Etapas posteriores, NAO implementadas nesta primeira entrega:
+- OCR e adaptadores especificos de bancos: dependem dos PDFs de exemplo e testes reais.
+- Regras reutilizaveis com previa de impacto, categorias, IA opcional, rateio multi-safra.
+- Estornos de periodos/analises anteriores (nesta versao o debito deve estar na mesma analise).
+- Consolidacao canonica entre analises, exclusao/retencao de arquivos e interface de versoes antigas.
+  As versoes anteriores sao preservadas no banco, mas a tela reabre a ultima versao.
+- Campos extraidos com multiplas colunas monetarias nunca escolhem um valor por adivinhacao.
+
+Validacao: test:contracts, test:despesas, test:despesas-sql, TypeScript e build passaram.
+Playwright/Edge: filtro/detalhe de contratos, PDF sintetico real, revisao, estorno,
+gravacao/reabertura simulada e telas 1440/390/320 px sem transbordamento; capturas
+desktop/mobile e tema escuro inspecionadas. Nenhuma escrita de teste no Supabase real.
+Servidor local em http://localhost:3000. Rotas /milho26/contratos e /milho26/despesas.
+Guia de ativacao: docs/IMPLANTACAO_CONTRATOS_DESPESAS.md.
+As duas migracoes ainda precisam ser executadas pelo usuario no Supabase.
+Nao confundir push do codigo com migracao do banco ou confirmacao do deploy Vercel.
+Aviso preexistente do gerenciador: Next 14.1.0 possui alerta de seguranca; atualizar
+em tarefa propria com testes completos, sem misturar a alteracao de framework nesta entrega.
+
 ## Projeto
 
 Painel Safra
@@ -1265,3 +1307,41 @@ Validação:
 * `npx tsc --noEmit --pretty false` passou sem erros.
 * `npm run build` passou e gerou normalmente a rota `/[safraId]`.
 * O servidor local foi reiniciado e `/milho26` respondeu HTTP 200.
+
+## Histórico da proposta aprovada - Contratos e Despesas - 2026-09-30
+
+Pedido atual:
+
+* O usuário solicitou um esboço antes de autorizar a implantação de duas novas telas: gestão de Contratos e análise de Despesas por extratos PDF.
+* Escopo detalhado salvo em `docs/PROPOSTA_CONTRATOS_DESPESAS.md`.
+* Na etapa inicial foi entregue apenas a proposta. O usuário aprovou em seguida; consulte a primeira entrega no topo deste arquivo para o estado atual.
+
+Contratos:
+
+* Centralizar cadastro, edição, exclusão controlada e consulta dos contratos existentes, mantendo os vínculos com Saldos e Financeiro.
+* KPIs, busca e abas por Venda, Barter, Misto, Arrendamento, Outros e Não classificados.
+* Arrendamento ainda exige um novo tipo e regras próprias; obrigações de pagamento não podem alimentar receitas de venda.
+* Proposta de arquivamento para contratos com movimentações vinculadas, preservando o histórico.
+
+Despesas:
+
+* Upload de um ou mais PDFs, leitura, tratamento de números/data/débito-crédito, revisão e análise persistida por safra.
+* Lista de pagamentos decrescente por valor, agrupamento por favorecido e gasto líquido após devoluções vinculadas.
+* Separar entradas, transferências próprias, aplicações, estornos, agendamentos e possíveis duplicidades; manter decisões e origem por arquivo/página.
+* Sem criar contas a pagar, conciliação ou baixas no módulo Financeiro.
+* Proposta híbrida: leitura de texto, OCR para imagens e IA como apoio; valores e totais sujeitos a validação determinística.
+* Confirmar a safra, sem inferi-la apenas da data; identificar a mesma transação entre PDFs e análises sobrepostos.
+* Arquivos privados e resultados versionados no Supabase. Serviços externos e custos ainda serão definidos antes da ativação.
+
+Esboço visual:
+
+* Produzido um esboço interativo na conversa, com dados fictícios e sem acesso ao banco.
+* Verificados busca, tipos, estados, agrupamento por favorecido, tratamento da pendência e finalização simulada.
+* Verificação em 1024, 390 e 320 pixels sem transbordamento horizontal; capturas desktop e mobile inspecionadas.
+* A demonstração não lê PDFs reais. A implantação precisará de amostras dos bancos usados pelo usuário para validar os leitores.
+
+Próximos passos após aprovação:
+
+1. Tela Contratos e adequação do tipo Arrendamento.
+2. Leitura e revisão dos extratos reais em Despesas.
+3. Persistência privada, prevenção de duplicidade, histórico e exportação, completando o fluxo operacional.

@@ -1,0 +1,57 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const ts=require('typescript');
+const {PGlite}=require('@electric-sql/pglite');
+function loadTs(file) {
+  const compiled=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+  const mod={exports:{}};
+  new Function('exports','require','module',compiled)(mod.exports,id=>id.startsWith('.')?loadTs(path.resolve(path.dirname(file),id+'.ts')):require(id),mod);
+  return mod.exports;
+}
+const calc=loadTs(path.join(__dirname,'../src/lib/financeiroCalculations.ts'));
+const contract={id:'test',safra_id:'milho26',nome:'Teste',numero:'1',volume_total:1000,tipo_contrato:'venda'};
+const finance={contrato_id:'test',status_preco:'fixado',preco_saca:60,tributos_revisados:true,competencia:'2026-09-01',contratos_descontos:[]};
+const sale=calc.buildFinancialSummary({contract,finance,deliveredVolume:0});
+assert.equal(sale.brutoContratado,60000);
+assert.equal(calc.isContractFinanciallyFulfilled(sale),false);
+const rent=calc.buildFinancialSummary({contract:{...contract,tipo_contrato:'arrendamento',volume_total:0,arrendamento_valor:25000,arrendamento_pago_em:'2026-09-20'},finance,deliveredVolume:0});
+assert.equal(rent.brutoContratado,0);
+assert.equal(rent.financeiro,null,'Old sale finance must not become rental revenue');
+assert.equal(calc.isContractFinanciallyFulfilled(rent),true);
+assert.equal(calc.isContractFinanciallyFulfilled({...rent,arrendamentoPagoEm:null}),false);
+assert.equal(calc.isContractFinanciallyFulfilled({...rent,volumeContratado:100,cumpridoPorAlocacao:false}),false);
+assert.equal(calc.isContractFinanciallyFulfilled({...rent,volumeContratado:100,cumpridoPorAlocacao:true}),true);
+assert.equal(calc.isContractFinanciallyFulfilled({...rent,arrendamentoValor:0,volumeContratado:0}),false);
+const barter=calc.buildFinancialSummary({contract:{...contract,tipo_contrato:'barter'},finance:null,deliveredVolume:1000});
+assert.equal(calc.isContractFinanciallyFulfilled(barter),false,'Barter remains tied to allocation');
+assert.equal(calc.isContractFinanciallyFulfilled({...barter,barterStatusEntrega:'cumprido'}),true);
+(async()=>{
+  const db=new PGlite();
+  await db.exec(`
+    CREATE ROLE authenticated; CREATE ROLE anon;
+    CREATE SCHEMA auth;
+    CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT '11111111-1111-4111-8111-111111111111'::uuid $$;
+    CREATE TABLE public.fazendas(id uuid PRIMARY KEY);
+    CREATE TABLE public.contratos(id uuid PRIMARY KEY,safra_id text,volume_total numeric,tipo_contrato text, forma_liquidacao text,
+      CONSTRAINT contratos_tipo_contrato_check CHECK(tipo_contrato IN ('venda','barter','misto','outro','nao_classificado')));
+    CREATE TABLE public.romaneios(id uuid,contrato_id uuid REFERENCES public.contratos(id) ON DELETE SET NULL);
+    CREATE TABLE public.contratos_financeiros(id uuid,contrato_id uuid REFERENCES public.contratos(id) ON DELETE CASCADE);
+    CREATE TABLE public.contratos_barter(id uuid,contrato_id uuid REFERENCES public.contratos(id) ON DELETE CASCADE);
+    CREATE TABLE public.contratos_cumprimentos(id uuid,contrato_id uuid REFERENCES public.contratos(id) ON DELETE CASCADE);
+  `);
+  const sql=fs.readFileSync(path.join(__dirname,'../docs/supabase_central_contratos.sql'),'utf8');
+  await db.exec(sql);await db.exec(sql);
+  const id='22222222-2222-4222-8222-222222222222';
+  await db.query("INSERT INTO public.contratos(id,safra_id,tipo_contrato) VALUES($1,'milho26','arrendamento')",[id]);
+  await assert.rejects(()=>db.query("SELECT public.excluir_contrato_sem_historico($1,'milho25')",[id]),/nesta safra/);
+  await db.query("INSERT INTO public.romaneios(contrato_id) VALUES($1)",[id]);
+  await assert.rejects(()=>db.query("SELECT public.excluir_contrato_sem_historico($1,'milho26')",[id]),/historico/);
+  await db.query("UPDATE public.contratos SET arquivado_em=now() WHERE id=$1",[id]);
+  assert.equal((await db.query('SELECT * FROM public.romaneios')).rows.length,1);
+  await db.query('DELETE FROM public.romaneios WHERE contrato_id=$1',[id]);
+  await db.query("SELECT public.excluir_contrato_sem_historico($1,'milho26')",[id]);
+  assert.equal((await db.query('SELECT * FROM public.contratos')).rows.length,0);
+  await db.close();
+  console.log('Contratos: arrendamento isolado de receita, cumprimentos, migracao e exclusao protegida OK.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

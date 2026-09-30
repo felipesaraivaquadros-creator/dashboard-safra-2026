@@ -91,6 +91,11 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
   const [financeExpanded, setFinanceExpanded] = useState(false);
   const [financeId, setFinanceId] = useState<string | null>(null);
   const [armazens, setArmazens] = useState<any[]>([]);
+  const [centralReady, setCentralReady] = useState(false);
+  const [loadingCentral, setLoadingCentral] = useState(true);
+  const [fazendas, setFazendas] = useState<any[]>([]);
+  const [extra, setExtra] = useState({ contraparte: '', arrendamento_valor: 0, arrendamento_pago_em: '',
+    arrendamento_observacoes: '', arrendamento_fazenda_id: '', arrendamento_area_ha: '' });
   const [discounts, setDiscounts] = useState<ContratoDesconto[]>([]);
   const [tipoContrato, setTipoContrato] = useState<TipoContrato>(editData?.tipo_contrato || editData?.tipoContrato || 'nao_classificado');
   const [formaLiquidacao, setFormaLiquidacao] = useState<FormaLiquidacao>(editData?.forma_liquidacao || editData?.formaLiquidacao || 'nao_definida');
@@ -114,6 +119,27 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
     armazem_id: editData?.armazem_id || '',
     grupo: editData?.grupo || '',
   });
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const query = supabase.from('contratos').select('contraparte, arquivado_em, arrendamento_valor, arrendamento_pago_em, arrendamento_observacoes, arrendamento_fazenda_id, arrendamento_area_ha').eq('safra_id', safraId);
+      const { data, error } = await (editData?.id ? query.eq('id', editData.id) : query.limit(0));
+      const farms = await supabase.from('fazendas').select('id,nome').order('nome');
+      if (!active) return;
+      setCentralReady(!error);
+      setLoadingCentral(false);
+      setFazendas(farms.data || []);
+      if (data?.[0]) {
+        const row = data[0];
+        setExtra({ contraparte: row.contraparte || '', arrendamento_valor: Number(row.arrendamento_valor) || 0,
+          arrendamento_pago_em: row.arrendamento_pago_em || '', arrendamento_observacoes: row.arrendamento_observacoes || '',
+          arrendamento_fazenda_id: row.arrendamento_fazenda_id || '', arrendamento_area_ha: row.arrendamento_area_ha == null ? '' : String(row.arrendamento_area_ha) });
+      }
+    };
+    load();
+    return () => { active = false; };
+  }, [safraId, editData?.id]);
 
   useEffect(() => {
     const fetchRelevantArmazens = async () => {
@@ -345,6 +371,7 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
       venda: 'financeira',
       barter: 'fisica',
       misto: 'mista',
+      arrendamento: 'financeira',
       outro: 'nao_definida',
     };
     setFormaLiquidacao(suggested[nextType]);
@@ -355,6 +382,10 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
     setLoading(true);
 
     try {
+      if (tipoContrato === 'arrendamento' && !centralReady) throw new Error('Execute docs/supabase_central_contratos.sql.');
+      if (tipoContrato === 'arrendamento' && (!extra.contraparte.trim() || (extra.arrendamento_valor <= 0 && formData.volume_total <= 0))) {
+        throw new Error('Informe o arrendador e ao menos uma obrigação: valor em dinheiro ou volume de grãos.');
+      }
       if (classificationAvailable && !editData?.id && tipoContrato === 'nao_classificado') {
         throw new Error('Escolha o tipo do novo contrato.');
       }
@@ -367,18 +398,29 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
 
       const payload: any = {
         ...formData,
+        armazem_id: formData.armazem_id || null,
         safra_id: safraId,
         grupo: formData.grupo || armazens.find((item) => item.id === formData.armazem_id)?.grupo || null,
       };
+      if (centralReady) {
+        Object.assign(payload, extra, {
+          contraparte: extra.contraparte.trim() || null,
+          arrendamento_pago_em: extra.arrendamento_pago_em || null,
+          arrendamento_fazenda_id: extra.arrendamento_fazenda_id || null,
+          arrendamento_area_ha: extra.arrendamento_area_ha ? Number(extra.arrendamento_area_ha) : null,
+        });
+      }
       if (classificationAvailable) {
         payload.tipo_contrato = tipoContrato;
         payload.forma_liquidacao = formaLiquidacao;
+        if (tipoContrato === 'arrendamento') payload.forma_liquidacao = formData.volume_total > 0
+          ? extra.arrendamento_valor > 0 ? 'mista' : 'fisica' : 'financeira';
         payload.tipo_outro_descricao = tipoContrato === 'outro' ? tipoOutroDescricao.trim() : null;
       }
 
       let contractId = editData?.id as string | undefined;
       if (contractId) {
-        const { error } = await supabase.from('contratos').update(payload).eq('id', contractId);
+        const { error } = await supabase.from('contratos').update(payload).eq('id', contractId).eq('safra_id', safraId);
         if (error) throw error;
       } else {
         const { data, error } = await supabase.from('contratos').insert([payload]).select('id').single();
@@ -387,7 +429,7 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
       }
 
       let financeSaved = false;
-      const financialContract = !classificationAvailable || tipoContrato !== 'barter';
+      const financialContract = !classificationAvailable || (tipoContrato !== 'barter' && tipoContrato !== 'arrendamento');
       if (financeEnabled && financeAvailable && financialContract && contractId) {
         try {
           await saveFinance(contractId);
@@ -517,10 +559,32 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
             </section>
 
             <section className="border-t border-slate-200 pt-5 dark:border-slate-700">
-              {classificationAvailable && tipoContrato === 'barter' ? (
+              {centralReady && <div className="mb-5 grid gap-4 sm:grid-cols-2">
+                <label className="text-xs font-bold">Contraparte / arrendador
+                  <input value={extra.contraparte} onChange={e => setExtra({ ...extra, contraparte: e.target.value })} className="mt-2 w-full rounded-lg border bg-transparent p-3 dark:border-slate-600" />
+                </label>
+                {tipoContrato === 'arrendamento' && <>
+                  <label className="text-xs font-bold">Obrigação em dinheiro (R$)
+                    <input type="number" min="0" step="0.01" value={extra.arrendamento_valor} onChange={e => setExtra({ ...extra, arrendamento_valor: Number(e.target.value) })} className="mt-2 w-full rounded-lg border bg-transparent p-3 dark:border-slate-600" />
+                  </label>
+                  <label className="text-xs font-bold">Fazenda
+                    <select value={extra.arrendamento_fazenda_id} onChange={e => setExtra({ ...extra, arrendamento_fazenda_id: e.target.value })} className="mt-2 w-full rounded-lg border bg-white p-3 dark:bg-slate-900 dark:border-slate-600"><option value="">Não informada</option>{fazendas.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}</select>
+                  </label>
+                  <label className="text-xs font-bold">Área arrendada (ha)
+                    <input type="number" min="0.0001" step="0.0001" value={extra.arrendamento_area_ha} onChange={e => setExtra({ ...extra, arrendamento_area_ha: e.target.value })} className="mt-2 w-full rounded-lg border bg-transparent p-3 dark:border-slate-600" />
+                  </label>
+                  <label className="text-xs font-bold">Pagamento integral confirmado em
+                    <input type="date" disabled={extra.arrendamento_valor <= 0} value={extra.arrendamento_pago_em} onChange={e => setExtra({ ...extra, arrendamento_pago_em: e.target.value })} className="mt-2 w-full rounded-lg border bg-transparent p-3 dark:border-slate-600" />
+                  </label>
+                  <label className="text-xs font-bold">Referência / observações do pagamento
+                    <input value={extra.arrendamento_observacoes} onChange={e => setExtra({ ...extra, arrendamento_observacoes: e.target.value })} className="mt-2 w-full rounded-lg border bg-transparent p-3 dark:border-slate-600" />
+                  </label>
+                </>}
+              </div>}
+              {classificationAvailable && (tipoContrato === 'barter' || tipoContrato === 'arrendamento') ? (
                 <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
                   <CircleDollarSign size={18} className="mt-0.5 shrink-0" />
-                  <p className="text-xs font-bold">Contrato com liquidação física. O financeiro de venda fica separado; qualquer configuração anterior é preservada no banco.</p>
+                  <p className="text-xs font-bold">{tipoContrato === 'arrendamento' ? 'Obrigação de arrendamento: dinheiro e/ou grãos. Não compõe receitas de venda.' : 'Contrato com liquidação física. O financeiro de venda fica separado; qualquer configuração anterior é preservada no banco.'}</p>
                 </div>
               ) : loadingFinance ? (
                 <div className="flex items-center gap-2 py-3 text-xs font-bold text-slate-400"><Loader2 size={16} className="animate-spin" /> Verificando módulo financeiro...</div>
@@ -640,7 +704,7 @@ export default function ContratoForm({ safraId, onClose, onSuccess, editData }: 
             )}
 
             <div className="border-t border-slate-200 pt-5 dark:border-slate-700">
-              <button disabled={loading} type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 py-4 text-xs font-black uppercase text-white shadow-md transition-colors hover:bg-purple-700 disabled:opacity-50">
+              <button disabled={loading || loadingFinance || loadingClassification || loadingCentral} type="submit" className="flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 py-4 text-xs font-black uppercase text-white shadow-md transition-colors hover:bg-purple-700 disabled:opacity-50">
                 {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                 {editData ? 'Salvar Alterações' : 'Cadastrar Contrato'}
               </button>

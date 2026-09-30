@@ -115,7 +115,7 @@ export default function SaldoPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir este contrato?")) return;
-    const { error } = await supabase.from('contratos').delete().eq('id', id);
+    const { error } = await supabase.rpc('excluir_contrato_sem_historico', { p_id: id, p_safra_id: safraId });
     if (error) showError("Erro ao excluir: " + error.message);
     else {
       showSuccess("Contrato excluído!");

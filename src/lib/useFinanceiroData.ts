@@ -31,7 +31,7 @@ export const useFinanceiroData = (safraId: string) => {
       const [contractsResult, deliveriesResult] = await Promise.all([
         supabase
           .from('contratos')
-          .select('id, safra_id, nome, numero, volume_total, armazem_id, grupo, created_at, armazens(nome)')
+          .select('*, armazens(nome)')
           .eq('safra_id', safraId)
           .order('created_at', { ascending: false }),
         supabase
@@ -200,11 +200,11 @@ export const useFinanceiroData = (safraId: string) => {
   }, [contracts, finances, barters, fulfillments, deliveries, receivables]);
 
   const monthly = useMemo(() => buildMonthlyFinancials(
-    summaries.filter((item) => item.tipoContrato !== 'barter'),
+    summaries.filter((item) => item.tipoContrato !== 'barter' && item.tipoContrato !== 'arrendamento'),
     deliveries,
   ), [summaries, deliveries]);
   const receiptsMonthly = useMemo(() => buildMonthlyReceipts(
-    summaries.filter((item) => item.tipoContrato !== 'barter'),
+    summaries.filter((item) => item.tipoContrato !== 'barter' && item.tipoContrato !== 'arrendamento'),
   ), [summaries]);
 
   const financialKpis = useMemo(() => {

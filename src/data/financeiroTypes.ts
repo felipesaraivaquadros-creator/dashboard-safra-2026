@@ -2,7 +2,7 @@ export type StatusPreco = 'a_fixar' | 'fixado';
 export type TipoDesconto = 'SENAR' | 'FETHAB' | 'FUNRURAL' | 'IAGRO' | 'COOP' | 'OUTRO';
 export type MetodoDesconto = 'percentual' | 'por_saca' | 'valor_fixo';
 export type StatusRecebivel = 'em_aberto' | 'parcial' | 'pago' | 'vencido';
-export type TipoContrato = 'nao_classificado' | 'venda' | 'barter' | 'misto' | 'outro';
+export type TipoContrato = 'nao_classificado' | 'venda' | 'barter' | 'misto' | 'arrendamento' | 'outro';
 export type FormaLiquidacao = 'nao_definida' | 'financeira' | 'fisica' | 'mista';
 export type ResponsavelFrete = 'produtor' | 'comprador' | 'compartilhado' | 'outro';
 export type ModalidadeCpr = 'nao_aplicavel' | 'fisica' | 'financeira';
@@ -109,6 +109,10 @@ export interface ContratoRecebivel {
 }
 
 export interface ContratoFinanceiroResumo {
+  arquivado?: boolean;
+  contraparte?: string | null;
+  arrendamentoValor?: number;
+  arrendamentoPagoEm?: string | null;
   contratoId: string;
   safraId: string;
   nome: string;
@@ -180,6 +184,7 @@ export const TIPO_CONTRATO_LABELS: Record<TipoContrato, string> = {
   venda: 'Venda',
   barter: 'Troca / Barter',
   misto: 'Misto',
+  arrendamento: 'Arrendamento',
   outro: 'Outro',
 };
 

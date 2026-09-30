@@ -20,6 +20,11 @@ export const normalizeContractNumber = (value: unknown) => String(value || '')
 export const roundMoney = (value: number) => Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
 
 export const isContractFinanciallyFulfilled = (summary: ContratoFinanceiroResumo) => {
+  if (summary.tipoContrato === 'arrendamento') {
+    const hasObligation = summary.volumeContratado > 0 || (summary.arrendamentoValor || 0) > 0;
+    return hasObligation && (summary.volumeContratado <= 0 || summary.cumpridoPorAlocacao)
+      && ((summary.arrendamentoValor || 0) <= 0 || Boolean(summary.arrendamentoPagoEm));
+  }
   if (summary.tipoContrato === 'barter') {
     return summary.barterStatusEntrega === 'cumprido';
   }
@@ -140,6 +145,8 @@ export const buildFinancialSummary = ({
   deliveredVolume,
   receivables = [],
 }: BuildSummaryInput): ContratoFinanceiroResumo => {
+  // Rent is an outgoing obligation, never a sale or a receivable.
+  if (contract.tipo_contrato === 'arrendamento') { finance = null; receivables = []; barter = null; }
   const contractedVolume = Number(contract.volume_total) || 0;
   const deliveredByWaybills = Math.max(Number(deliveredVolume) || 0, 0);
   const fulfilledByAllocation = fulfillment?.ativo === true;
@@ -200,6 +207,10 @@ export const buildFinancialSummary = ({
 
   return {
     contratoId: contract.id,
+    arquivado: Boolean(contract.arquivado_em),
+    contraparte: contract.contraparte || null,
+    arrendamentoValor: Number(contract.arrendamento_valor) || 0,
+    arrendamentoPagoEm: contract.arrendamento_pago_em || null,
     safraId: contract.safra_id,
     nome: contract.nome,
     numero: String(contract.numero || ''),

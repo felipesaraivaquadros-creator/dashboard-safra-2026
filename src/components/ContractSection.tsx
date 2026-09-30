@@ -114,7 +114,7 @@ export default function ContractSection({ contratosProcessados, financeiroSummar
                   <span className="text-[9px] font-bold text-slate-300">ID: {c.id}</span>
                   {c.financeiroResumo && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      {c.financeiroResumo.tipoContrato !== 'barter' && (
+                      {c.financeiroResumo.tipoContrato !== 'barter' && c.financeiroResumo.tipoContrato !== 'arrendamento' && (
                         <FinanceiroStatusBadge status={c.financeiroResumo.status} compact />
                       )}
                       {(c.financeiroResumo.tipoContrato === 'barter' || c.financeiroResumo.tipoContrato === 'misto') && (

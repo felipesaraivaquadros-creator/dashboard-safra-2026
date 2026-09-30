@@ -119,7 +119,7 @@ export default function FinanceiroPage() {
   const activeSummaries = useMemo(() => {
     if (view === 'vendas' || view === 'recebimentos') return salesSummaries;
     if (view === 'barter') return barterSummaries;
-    return summaries;
+    return summaries.filter((item) => item.tipoContrato !== 'arrendamento');
   }, [view, summaries, salesSummaries, barterSummaries]);
   const months = useMemo(() => Array.from(new Set(
     activeSummaries.map((item) => getMonthKey(item.competencia)).filter(Boolean),

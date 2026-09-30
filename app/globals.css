@@ -29,6 +29,14 @@ body {
 }
 
 @media print {
+  .management-report,
+  .management-report * {
+    color: #172019 !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+  }
+  .management-report { min-height: auto !important; }
+  .management-report article { break-inside: avoid; font-size: 9pt; }
   html,
   body {
     background: #ffffff !important;

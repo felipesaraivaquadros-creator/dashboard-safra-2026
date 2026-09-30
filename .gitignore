@@ -8,3 +8,5 @@ build
 .dyad/
 tsconfig.tsbuildinfo
 .codex-dev.log
+# Generated local PDF.js browser assets
+/public/pdfjs/
