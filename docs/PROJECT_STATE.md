@@ -39,6 +39,10 @@ Servidor local em http://localhost:3000. Rotas /milho26/contratos e /milho26/des
 Guia de ativacao: docs/IMPLANTACAO_CONTRATOS_DESPESAS.md.
 As duas migracoes ainda precisam ser executadas pelo usuario no Supabase.
 Nao confundir push do codigo com migracao do banco ou confirmacao do deploy Vercel.
+Codigo salvo no commit local 26cc235. Duas tentativas de git push origin main falharam
+com "Could not resolve host: github.com"; Resolve-DnsName tambem expirou.
+Publicacao no GitHub/Vercel PENDENTE por DNS. Quando a rede voltar, executar
+git push origin main neste repositorio. Nao refazer a implementacao nem os commits.
 Aviso preexistente do gerenciador: Next 14.1.0 possui alerta de seguranca; atualizar
 em tarefa propria com testes completos, sem misturar a alteracao de framework nesta entrega.
 
