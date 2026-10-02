@@ -43,7 +43,13 @@ Persistencia simulada nas rotas Supabase do Playwright, nunca feita na producao.
 Teste sintetico tambem cobriu reabertura, revisao individual/lote, estorno e tema escuro.
 TypeScript e build de producao passaram. Capturas sinteticas desktop/mobile e tema
 escuro conferidas. Nenhum PDF/extrato real nem captura com dados bancarios entrou no Git.
-Publicacao sera tentada novamente; confira a anotacao de entrega abaixo antes de retomar.
+Entrega: commit 6fb7641 enviado com sucesso para origin/main em 02/10/2026.
+O push tambem incluiu os commits 26cc235 e 35ebf31 antes bloqueados por DNS.
+GitHub atualizado; deploy da Vercel NAO confirmado e migracoes reais NAO executadas.
+Servidor local reiniciado em http://localhost:3000; teste em /milho26/despesas.
+Para habilitar/atualizar a gravacao, executar docs/supabase_despesas.sql no Supabase.
+Caso a Central de Contratos ainda nao tenha sido migrada, executar tambem
+docs/supabase_central_contratos.sql, conforme o guia de implantacao.
 OCR continua pendente; estes seis arquivos possuem texto extraivel.
 Continuam pendentes regras reutilizaveis, consolidacao entre analises e rateio multi-safra.
 
@@ -89,8 +95,9 @@ As duas migracoes ainda precisam ser executadas pelo usuario no Supabase.
 Nao confundir push do codigo com migracao do banco ou confirmacao do deploy Vercel.
 Codigo salvo no commit local 26cc235. Duas tentativas de git push origin main falharam
 com "Could not resolve host: github.com"; Resolve-DnsName tambem expirou.
-Publicacao no GitHub/Vercel PENDENTE por DNS. Quando a rede voltar, executar
-git push origin main neste repositorio. Nao refazer a implementacao nem os commits.
+Situacao daquela entrega: publicacao ficou pendente por DNS. RESOLVIDO em 02/10/2026:
+push confirmado com o refinamento descrito no topo. Nao refazer os commits.
+Publicacao Vercel nao foi verificada pelo agente.
 Aviso preexistente do gerenciador: Next 14.1.0 possui alerta de seguranca; atualizar
 em tarefa propria com testes completos, sem misturar a alteracao de framework nesta entrega.
 
