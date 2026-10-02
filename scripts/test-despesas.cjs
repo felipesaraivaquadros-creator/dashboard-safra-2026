@@ -1,12 +1,6 @@
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const path = require('node:path');
-const ts = require('typescript');
-const source = fs.readFileSync(path.join(__dirname,'../src/lib/despesasEngine.ts'),'utf8');
-const compiled = ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
-const mod = {exports:{}};
-new Function('exports','require','module',compiled)(mod.exports,require,mod);
-const e = mod.exports;
+const e = require('./load-ts.cjs')(path.join(__dirname,'../src/lib/despesasEngine.ts'));
 assert.equal(e.parseBRMoney('3.517,85'),351785);
 assert.equal(e.parseBRMoney('529,00'),52900);
 assert.equal(e.parseBRMoney('6,65'),665);

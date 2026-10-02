@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Check, Download, Edit2, FileUp, Loader2, Plus, Printer, Save, Search, X } from 'lucide-react';
 import ManagementShell, { commandClass, fieldClass, MetricStrip } from '../../../src/components/ManagementShell';
-import { ExpenseDraft, ExpenseMovement, expenseTotals, markPossibleDuplicates, parseBRMoney, parseStatementLines, validateExpenseDraft } from '../../../src/lib/despesasEngine';
+import { ExpenseDraft, ExpenseMovement, expenseTotals, markPossibleDuplicates, parseBRMoney, parseStatementDocument, reviewableSuggestions, validateExpenseDraft } from '../../../src/lib/despesasEngine';
+import { formatBRCents } from '../../../src/lib/statementFormat';
 import { readStatementPdf } from '../../../src/lib/readStatementPdf';
 import { previousExpenseMovements, saveExpenseDraft } from '../../../src/lib/despesasRepository';
 import { supabase } from '../../../src/integrations/supabase/client';
@@ -33,6 +34,7 @@ export default function DespesasPage() {
   const [from,setFrom] = useState('');
   const [to,setTo] = useState('');
   const [source,setSource] = useState('');
+  const [batchOpen,setBatchOpen] = useState(false);
   const files = useRef(new Map<string,File>());
   const input = useRef<HTMLInputElement>(null);
   const loadHistory = async () => {
@@ -50,22 +52,33 @@ export default function DespesasPage() {
   const importFiles = async (selected: FileList|null) => {
     if (!selected?.length) return;
     if (draft.documents.length+selected.length>10) { showError('Limite de 10 arquivos por análise.'); return; }
-    if (!draft.account.trim()) { showError('Informe banco, agência e conta antes de importar.'); return; }
     setBusy('Lendo PDFs...'); setError('');
     let documents = [...draft.documents], movements = [...draft.movements];
+    let account=draft.account.trim().toUpperCase(), periodStart=draft.periodStart, periodEnd=draft.periodEnd;
     const failures: string[] = (draft.importFailures || []).filter(message => !Array.from(selected).some(file => message.startsWith(file.name + ': ')));
     for (const file of Array.from(selected)) {
       try {
-        const doc = await readStatementPdf(file,setBusy);
+        const { document:doc, movements:parsed } = parseStatementDocument(await readStatementPdf(file,setBusy));
         if (documents.some(d => d.hash === doc.hash)) { showError(file.name + ': arquivo já adicionado.'); continue; }
-        const parsed = parseStatementLines(doc);
-        if (!parsed.length) showError(file.name + ': nenhum movimento reconhecido automaticamente. Confira o texto e o layout.');
-        const previous = await previousExpenseMovements(draft.account.trim().toUpperCase(),parsed);
+        const existingKey=documents.find(d=>d.statement?.accountKey)?.statement?.accountKey;
+        if (existingKey && doc.statement?.accountKey && existingKey!==doc.statement.accountKey) {
+          throw new Error('Conta diferente: ' + doc.statement.accountLabel + '. Use uma análise separada para esta conta.');
+        }
+        if (doc.statement?.accountLabel && !documents.length) account=doc.statement.accountLabel;
+        if (!account) throw new Error('Conta não identificada. Informe banco, agência e conta e tente novamente.');
+        if (!parsed.length && !doc.statement?.emptyStatement) showError(file.name + ': nenhum movimento reconhecido automaticamente. Confira o texto e o layout.');
+        const previous = await previousExpenseMovements(account,parsed);
         movements = [...movements,...markPossibleDuplicates(parsed,[...movements,...previous])];
         documents.push(doc); files.current.set(doc.hash,file);
+        if (doc.statement?.periodStart) periodStart=periodStart && periodStart<doc.statement.periodStart ? periodStart : doc.statement.periodStart;
+        if (doc.statement?.periodEnd) periodEnd=periodEnd && periodEnd>doc.statement.periodEnd ? periodEnd : doc.statement.periodEnd;
       } catch (e:any) { failures.push(file.name + ': ' + e.message); }
     }
-    update({ documents,movements, importFailures:failures, account:draft.account.trim().toUpperCase() }); setTab('revisao');
+    const statement=documents.length===1 ? documents[0].statement : undefined;
+    update({ documents,movements, importFailures:failures, account,periodStart,periodEnd,
+      opening:statement?.openingCents!=null?formatBRCents(statement.openingCents):'',
+      closing:statement?.closingCents!=null?formatBRCents(statement.closingCents):'',
+    }); setTab('revisao');
     setError(failures.join('\n')); setBusy('');
     if (input.current) input.current.value='';
   };
@@ -97,6 +110,12 @@ export default function DespesasPage() {
   const filtered = draft.movements.filter(m => (!from || m.date>=from) && (!to || m.date<=to) && [m.description,m.beneficiary].join(' ').toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')));
   const totals = expenseTotals(draft.movements);
   const rows = filtered.filter(m => tab==='revisao' || m.decision==='incluir' || m.decision==='estorno').sort((a,b)=>b.cents-a.cents || b.date.localeCompare(a.date));
+  const batch=reviewableSuggestions(draft,new Set(filtered.map(m=>m.id)));
+  const confirmBatch = () => {
+    const ids=new Set(batch.map(m=>m.id)), at=new Date().toISOString();
+    update({movements:draft.movements.map(m=>ids.has(m.id)?{...m,reviewed:true,reviewedAt:at,reviewMethod:'lote',reason:m.reason+' Confirmado em lote.'}:m)});
+    setBatchOpen(false);
+  };
   const grouped = Array.from(filtered.filter(m=>m.reviewed && m.decision==='incluir').reduce((map,m)=>{
     const key=m.beneficiary.trim() || 'Beneficiário não confirmado'; map.set(key,(map.get(key)||0)+m.cents); return map;
   },new Map<string,number>())).sort((a,b)=>b[1]-a[1]);
@@ -110,13 +129,13 @@ export default function DespesasPage() {
     const cents=parseBRMoney(amount);
     if (cents===null || cents<=0 || !edit.date || !edit.reason.trim()) { showError('Confirme data, valor brasileiro positivo e motivo.'); return; }
     if (edit.direction==='indefinido' || edit.decision==='revisar') { showError('Defina débito/crédito e a decisão.'); return; }
-    const row={...edit,cents,reviewed:true};
+    const row: ExpenseMovement={...edit,cents,reviewed:true,reviewedAt:new Date().toISOString(),reviewMethod:'individual'};
     update({movements:draft.movements.some(m=>m.id===row.id)?draft.movements.map(m=>m.id===row.id?row:m):[...draft.movements,row]}); setEdit(null);
   };
   return <ManagementShell safraId={safraId} title="Despesas" actions={<>
     <button disabled={!!busy} className={commandClass} onClick={newAnalysis}><Plus size={16} /> Nova análise</button>
     <button disabled={!!busy || !ready} className={commandClass} onClick={()=>save(false)}><Save size={16} /> Salvar rascunho</button>
-    <button disabled={!!busy || !ready || !draft.movements.length} className={commandClass+' bg-green-700 text-white'} onClick={()=>save(true)}><Check size={16} /> Finalizar</button>
+    <button disabled={!!busy || !ready || !draft.documents.length} className={commandClass+' bg-green-700 text-white'} onClick={()=>save(true)}><Check size={16} /> Finalizar</button>
   </>}>
     <div className="hidden print:block"><h1 className="text-xl font-bold">Despesas · {draft.title}</h1><p>{safraId} · {draft.account} · {dateLabel(draft.periodStart)} a {dateLabel(draft.periodEnd)} · Versão {version} · {dirty?'Não salvo':savedStatus || 'Rascunho'}</p></div>
     {error && <p role="alert" className="whitespace-pre-line border-l-4 border-amber-500 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200">{error}</p>}
@@ -125,7 +144,7 @@ export default function DespesasPage() {
     {busy && <p role="status" className="flex items-center gap-2 text-sm"><Loader2 size={18} className="animate-spin" />{busy}</p>}
     <fieldset disabled={!!busy} className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4 print:hidden">
       <label className="text-xs font-semibold">Título da análise<input className={fieldClass+' mt-2 w-full'} value={draft.title} onChange={e=>update({title:e.target.value})} /></label>
-      <label className="text-xs font-semibold">Banco / agência / conta<input list="expense-accounts" disabled={draft.documents.length>0} className={fieldClass+' mt-2 w-full'} value={draft.account} onChange={e=>update({account:e.target.value})} /><datalist id="expense-accounts">{Array.from(new Set(history.map(h=>h.conta))).map(c=><option key={c} value={c} />)}</datalist></label>
+      <label className="text-xs font-semibold">Banco / agência / conta<input list="expense-accounts" disabled={draft.documents.length>0} placeholder="Detectada no PDF" className={fieldClass+' mt-2 w-full'} value={draft.account} onChange={e=>update({account:e.target.value})} /><datalist id="expense-accounts">{Array.from(new Set(history.map(h=>h.conta))).map(c=><option key={c} value={c} />)}</datalist></label>
       <label className="text-xs font-semibold">Início do período<input type="date" className={fieldClass+' mt-2 w-full'} value={draft.periodStart} onChange={e=>update({periodStart:e.target.value})} /></label>
       <label className="text-xs font-semibold">Fim do período<input type="date" className={fieldClass+' mt-2 w-full'} value={draft.periodEnd} onChange={e=>update({periodEnd:e.target.value})} /></label>
     </fieldset>
@@ -141,11 +160,18 @@ export default function DespesasPage() {
       {!history.length && <p className="py-10 text-center text-slate-500">Nenhuma análise salva nesta safra.</p>}
       {history.map(h=><div key={h.id} className="flex flex-wrap items-center justify-between gap-3 py-4"><div><h2 className="font-semibold">{h.titulo}</h2><p className="text-xs text-slate-500">{h.conta} · {h.status} · v{h.versao} · {new Date(h.updated_at).toLocaleDateString('pt-BR')}</p></div><button disabled={!!busy} className={commandClass} onClick={()=>open(h.id)}>Abrir análise</button></div>)}
     </section> : <>
-      <div className="flex flex-wrap items-center gap-3 print:hidden"><label className="flex min-w-0 flex-1 items-center gap-2"><Search size={18} /><input aria-label="Buscar movimentos" className={fieldClass+' w-full'} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Histórico ou beneficiário" /></label><input aria-label="Filtrar a partir de" type="date" className={fieldClass} value={from} onChange={e=>setFrom(e.target.value)} /><input aria-label="Filtrar até" type="date" className={fieldClass} value={to} onChange={e=>setTo(e.target.value)} /><button className={commandClass} title="Exportar CSV" onClick={exportRows}><Download size={16}/></button><button className={commandClass} title="Imprimir relatório" onClick={()=>window.print()}><Printer size={16}/></button></div>
+      <div className="flex flex-wrap items-center gap-3 print:hidden"><label className="flex min-w-0 basis-full items-center gap-2 sm:flex-1 sm:basis-64"><Search size={18} className="shrink-0" /><input aria-label="Buscar movimentos" className={fieldClass+' w-full'} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Histórico ou beneficiário" /></label><input aria-label="Filtrar a partir de" type="date" className={fieldClass} value={from} onChange={e=>setFrom(e.target.value)} /><input aria-label="Filtrar até" type="date" className={fieldClass} value={to} onChange={e=>setTo(e.target.value)} /><button className={commandClass} title="Exportar CSV" onClick={exportRows}><Download size={16}/></button><button className={commandClass} title="Imprimir relatório" onClick={()=>window.print()}><Printer size={16}/></button></div>
       {(from || to || search) && <p className="text-xs text-slate-500">Filtro da lista: {dateLabel(from)} a {dateLabel(to)} {search} · KPIs do período completo.</p>}
       {tab==='revisao' && <section className="space-y-4 print:hidden">
+        <button disabled={!!busy || !batch.length} className={commandClass} title="Confirmar sugestões dos arquivos conferidos" onClick={()=>setBatchOpen(true)}><Check size={16}/> Confirmar sugestões ({batch.length})</button>
         {draft.documents.map(doc=><div key={doc.id} className="border-b pb-4 dark:border-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="break-words text-sm font-semibold">{doc.name}</p>{doc.warnings.map(w=><p key={w} className="text-xs text-amber-700">{w}</p>)}</div><button className={commandClass} onClick={()=>setSource(source===doc.id?'':doc.id)}>Texto extraído</button></div>
+          {doc.statement && <div className="mt-2 space-y-1 text-xs text-slate-500 dark:text-slate-300">
+            <p className="break-words">{doc.statement.accountLabel || doc.statement.bankLabel}</p>
+            <p>{doc.statement.emptyStatement ? 'Extrato sem movimentação' : doc.statement.transactionCount+' movimentos'} · {doc.statement.balanceMatches===true?'Leitura: saldos conferem':doc.statement.balanceMatches===false?'Saldos divergentes':'Saldos não disponíveis'}</p>
+            {doc.statement.futureCount>0 && <p>{doc.statement.futureCount} {doc.statement.futureCount===1?'lançamento futuro':'lançamentos futuros'} fora da análise de despesas.</p>}
+            {!doc.statement.periodStart && <p className="text-amber-700 dark:text-amber-300">Período inicial não declarado no PDF. Confirme acima.</p>}
+          </div>}
           {source===doc.id && <pre className="my-3 max-h-80 overflow-auto whitespace-pre-wrap break-words bg-slate-50 p-4 text-xs dark:bg-slate-800">{doc.lines.map(l=>`[p.${l.page} linha ${l.line}] ${l.text}`).join('\n')}</pre>}
           <label className="mt-3 flex items-start gap-2 text-sm"><input className="mt-1" type="checkbox" disabled={!!busy || doc.warnings.length>0} checked={doc.verified} onChange={e=>update({documents:draft.documents.map(d=>d.id===doc.id?{...d,verified:e.target.checked}:d)})} />Conferi as páginas, a conta, o período e todos os movimentos deste arquivo.</label>
           <button disabled={!!busy} className={commandClass+' mt-3'} onClick={()=>beginEdit({id:doc.id+':manual:'+crypto.randomUUID(),documentId:doc.id,page:1,line:0,raw:'Correção manual vinculada ao arquivo',date:'',description:'',beneficiary:'',cents:0,direction:'indefinido',decision:'revisar',reason:'',refundOf:'',reviewed:false})}><Plus size={14}/> Movimento não identificado</button>
@@ -160,6 +186,17 @@ export default function DespesasPage() {
         </article>)}
       </section>}
     </>}
+    {batchOpen && <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 p-3">
+      <section role="dialog" aria-modal="true" aria-label="Revisão em lote" className="max-h-[94vh] w-full max-w-lg space-y-5 overflow-auto rounded-lg bg-white p-6 dark:bg-slate-900">
+        <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-bold">Revisão em lote</h2><button title="Fechar" onClick={()=>setBatchOpen(false)}><X size={20}/></button></div>
+        <dl className="space-y-4 text-sm">
+          <div><dt className="text-slate-500">Saídas a incluir ({batch.filter(m=>m.direction==='debito').length})</dt><dd className="font-semibold">{money(batch.filter(m=>m.direction==='debito').reduce((s,m)=>s+m.cents,0))}</dd></div>
+          <div><dt className="text-slate-500">Entradas a excluir ({batch.filter(m=>m.direction==='credito').length})</dt><dd className="font-semibold">{money(batch.filter(m=>m.direction==='credito').reduce((s,m)=>s+m.cents,0))}</dd></div>
+          <div><dt className="text-slate-500">Continuam em revisão</dt><dd className="font-semibold">{totals.reviewCount-batch.length} {totals.reviewCount-batch.length===1?'movimento':'movimentos'}</dd></div>
+        </dl>
+        <div className="flex flex-wrap justify-end gap-2"><button className={commandClass} onClick={()=>setBatchOpen(false)}>Cancelar</button><button disabled={!!busy || !batch.length} className={commandClass+' bg-green-700 text-white'} onClick={confirmBatch}><Check size={16}/> Confirmar {batch.length} {batch.length===1?'movimento':'movimentos'}</button></div>
+      </section>
+    </div>}
     {edit && <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 p-3">
       <section role="dialog" aria-modal="true" aria-label="Revisar movimento" className="max-h-[94vh] w-full max-w-2xl space-y-4 overflow-auto rounded-lg bg-white p-5 dark:bg-slate-900">
         <div className="flex justify-between"><h2 className="text-lg font-bold">Revisar movimento</h2><button title="Fechar" onClick={()=>setEdit(null)}><X size={20}/></button></div>

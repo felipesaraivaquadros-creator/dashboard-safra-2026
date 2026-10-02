@@ -6,6 +6,8 @@
 2. Execute docs/supabase_central_contratos.sql no SQL Editor do Supabase.
    Requer as tabelas das migracoes anteriores de contratos financeiros, barter e cumprimento.
 3. Execute docs/supabase_despesas.sql.
+   Reexecute mesmo se ja aplicou a primeira versao: a atualizacao de 02/10/2026
+   substitui a funcao de gravacao, valida saldos por arquivo e aceita extratos vazios comprovados.
 4. Entre no app autenticado e abra /milho26/contratos ou /milho26/despesas.
    As mesmas rotas funcionam com os identificadores das demais safras.
 
@@ -34,7 +36,7 @@ Cada analise pertence ao usuario autenticado do app e a uma safra, com uma conta
 bancaria confirmada. Use outra analise para outra conta. A troca de conta do Codex
 nao muda a propriedade no Supabase; trocar o usuario de login do app muda.
 
-Fluxo: titulo/conta/periodo, um ou mais PDFs, revisao dos movimentos e de cada
+Fluxo: titulo, um ou mais PDFs, confirmar conta/periodo, revisao dos movimentos e de cada
 arquivo, salvar rascunho ou finalizar. O arquivo original e privado no Storage.
 O texto original e preservado junto das correcoes na analise. Cada gravacao gera
 uma versao imutavel; a tela abre a ultima. Concorrencia entre abas e detectada.
@@ -45,14 +47,29 @@ Limites: 20 MB/arquivo, 100 paginas/arquivo, 10 arquivos/analise, 10 mil movimen
 por analise. A lista de historico mostra as 100 analises recentes da safra.
 
 Regras desta versao:
-- Leitura generica de linhas com data dd/mm/aaaa, um valor monetario brasileiro e
-  indicador D/C ou valor negativo. Duas colunas monetarias exigem correcao humana.
+- Leitores para os layouts digitais fornecidos de Sicredi, Banco do Brasil, Cresol
+  e Sicoob. Reconstrucao por coordenadas para historicos multilinha e colunas de valor/saldo.
+  Sinais (+)/(-), +/- R$ e C/D tratados em centavos. Datas dd/mm usam somente o ano
+  do periodo declarado, nunca o ano corrente por adivinhacao.
+- Conta e periodo detectados no PDF. Documentos de contas diferentes nao se misturam.
+  No BB sem periodo inicial declarado, e necessario preencher essa data manualmente.
+- Leitura generica conservadora permanece para outros modelos com data dd/mm/aaaa,
+  um valor monetario brasileiro e D/C ou sinal negativo. Colunas ambiguas exigem revisao.
+- Saldos, limites de credito, resumos e lancamentos futuros nao viram despesas.
+  Extratos sem movimentos so podem ser finalizados se a ausencia for comprovada
+  pelo layout e pelos saldos. Nao equivale a aceitar uma falha de extracao como gasto zero.
 - Sugestoes para pagamentos, tarifas, juros, entradas, aplicacoes e agendamentos.
   PIX/TED por si so nao prova despesa nem transferencia propria. Saques e estornos
   exigem validacao. Beneficiario nao e inventado a partir de uma descricao parcial.
 - KPIs consideram apenas decisoes revisadas. Pendencias permanecem fora do gasto confirmado.
-- Saldo inicial/final opcional permite conferencia aritmetica, nao conciliacao contabil.
-  Informar ambos; havendo divergencia, finalizacao e bloqueada.
+- Confirmacao em lote exige arquivo conferido, saldos consistentes e confirmacao
+  explicita do usuario em um resumo. Respeita os filtros da lista. Possiveis duplicidades,
+  estornos/debitos vinculados ainda pendentes e transferencias ambiguas ficam para revisao
+  individual. Data e metodo da revisao ficam registrados. Nao ha aprovacao automatica.
+- Saldos do documento sao comparados aos movimentos em centavos, inclusive apos edicoes;
+  saldos diarios/sequenciais disponiveis tambem sao conferidos na leitura.
+  Saldos gerais opcionais devem ser informados em conjunto. Divergencias bloqueiam
+  finalizacao tanto no app quanto na funcao SQL. Isto nao e conciliacao contabil.
 - Estorno de credito deve apontar debito incluido da mesma analise. Estornos
   parciais sao aceitos, mas a soma nao pode ultrapassar o debito.
 - Arquivos identicos no lote sao bloqueados por SHA-256. Possiveis sobreposicoes
@@ -65,10 +82,13 @@ Regras desta versao:
 
 ## Limitacoes e proximas etapas
 
-Enviar PDFs anonimizados de cada banco, mantendo estrutura, datas, valores e D/C.
-O teste sintetico nao comprova compatibilidade com layouts reais.
+Seis PDFs reais validados localmente: Sicredi 279 movimentos efetivos e 2 futuros;
+BB 4 e 0; Cresol 13; Sicoob 0 e 38. Total 334 movimentos, dois extratos vazios,
+todos com saldo consistente. Testes no navegador simularam gravacao; nenhum desses
+PDFs foi enviado a producao nem incorporado ao Git. Fixtures no repositorio sao ficticias.
+Isso valida os modelos recebidos, nao todos os layouts possiveis desses bancos.
 
-1. Adaptadores por banco (incluindo colunas de saldo e historico em varias linhas).
+1. Novos layouts devem receber testes com amostras; nao presumir compatibilidade.
 2. OCR de paginas digitalizadas e avaliacao de confianca. Hoje paginas sem texto
    bloqueiam a finalizacao; solicite extrato digital ao banco.
 3. Regras reutilizaveis com previa de impacto e categorias confirmadas.
@@ -81,11 +101,15 @@ O teste sintetico nao comprova compatibilidade com layouts reais.
 
 - pnpm run test:contracts
 - pnpm run test:despesas
+- pnpm run test:bank-layouts
 - pnpm run test:despesas-sql
 - pnpm run build
 - scripts/test-management-ui.cjs: requer Playwright e Microsoft Edge.
   PLAYWRIGHT_MODULE pode apontar para o modulo Playwright do runtime local.
   Servidor local esperado na porta 3000. Todas as requisicoes Supabase sao simuladas.
+- scripts/test-bank-pdfs.cjs: recebe caminhos locais de um ou mais PDFs como argumentos.
+  Usa a mesma configuracao Playwright; bloqueia acesso externo e simula o Supabase.
+  Nao grava arquivos ou extracoes no repositorio nem imprime dados bancarios.
 
 Testes cobrem centavos, datas invalidas, multiplas colunas, suspeitas de repeticao,
 estornos, saldo, isolamento por usuario/safra, RPC atomico, controle de versao,

@@ -2,8 +2,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-function fixturePdf() {
-  const lines=['EXTRATO DE TESTE - SEM DADOS REAIS','02/09/2026 PAGAMENTO AGRO 10.000,00 D','03/09/2026 PIX RECEBIDO 3.000,00 C','04/09/2026 ESTORNO 1.000,00 C'];
+function fixturePdf(lines=['EXTRATO DE TESTE - SEM DADOS REAIS','02/09/2026 PAGAMENTO AGRO 10.000,00 D','03/09/2026 PIX RECEBIDO 3.000,00 C','04/09/2026 ESTORNO 1.000,00 C']) {
   const stream='BT /F1 12 Tf 40 800 Td '+lines.map((l,i)=>(i?'0 -24 Td ':'')+'('+l+') Tj').join('\n')+' ET';
   const objects=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>','<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>','<< /Length '+stream.length+' >>\nstream\n'+stream+'\nendstream'];
   let body='%PDF-1.4\n', offsets=[0];
@@ -99,8 +98,43 @@ function fixturePdf() {
     await page.getByRole('button',{name:'Análises salvas',exact:true}).click();
     await page.getByRole('button',{name:'Abrir análise'}).click();
     await page.getByText('Versão 1',{exact:true}).waitFor();
+    await page.locator('article').first().waitFor();
     assert.equal(await page.locator('article').count(),2);
+    await page.setViewportSize({width:1440,height:1000});
+    await page.evaluate(()=>document.documentElement.classList.remove('dark'));
+    await page.getByRole('button',{name:'Nova análise',exact:true}).click();
+    await page.getByLabel('Título da análise').fill('Modelo bancario sintetico');
+    const bankPdf=fixturePdf(['Sicredi - EXTRATO FICTICIO','Cooperativa: 0001 Conta: 00001-0','Periodo de 01/08/2026 a 31/08/2026',
+      'Data Descricao Documento Valor (R$) Saldo (R$)','SALDO ANTERIOR 100,00',
+      '01/08/2026 PAGAMENTO AGRO DEMO -10,00 90,00','02/08/2026 RECEBIMENTO PIX DEMO 5,25 95,25',
+      'Lancamentos Futuros','01/09/2026 TARIFA 9,00']);
+    await page.locator('input[type=file]').setInputFiles({name:'banco-ficticio.pdf',mimeType:'application/pdf',buffer:bankPdf});
+    await page.getByText('Leitura: saldos conferem',{exact:false}).waitFor({timeout:60000});
+    assert.equal(await page.getByLabel('Início do período').inputValue(),'2026-08-01');
+    await page.getByRole('checkbox').check();
+    await page.getByLabel('Buscar movimentos').fill('PAGAMENTO');
+    await page.getByRole('button',{name:'Confirmar sugestões (1)',exact:true}).click();
+    await page.screenshot({path:path.join(out,'despesas-batch-desktop.png'),fullPage:false});
+    for(const width of [390,320]) {
+      await page.setViewportSize({width,height:900});
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Batch overflow '+width);
+    }
+    await page.screenshot({path:path.join(out,'despesas-batch-mobile.png'),fullPage:false});
+    await page.getByRole('dialog').getByRole('button',{name:'Confirmar 1 movimento',exact:true}).click();
+    await page.getByLabel('Buscar movimentos').fill('');
+    await page.getByRole('button',{name:'Confirmar sugestões (1)',exact:true}).click();
+    await page.getByRole('dialog').getByRole('button',{name:'Confirmar 1 movimento',exact:true}).click();
+    await page.setViewportSize({width:1440,height:1000});
+    await page.screenshot({path:path.join(out,'despesas-bank-desktop.png'),fullPage:true});
+    await page.setViewportSize({width:390,height:900});
+    await page.evaluate(()=>document.documentElement.classList.add('dark'));
+    await page.screenshot({path:path.join(out,'despesas-bank-dark.png'),fullPage:true});
+    await page.getByRole('button',{name:'Finalizar',exact:true}).click();
+    await page.getByRole('button',{name:'Análises salvas',exact:true}).click();
+    await page.getByRole('button',{name:'Abrir análise',exact:true}).first().waitFor();
+    assert.equal(saved.dados.movements.filter(m=>m.reviewed && m.reviewMethod==='lote').length,2);
+    assert.equal(saved.status,'finalizada');
     assert.deepEqual(errors,[]);
-    console.log('UI: contratos, filtros, detalhe, PDF real sintetico, revisao, estorno, salvar/reabrir, desktop/mobile 320/390 e tema escuro OK. Screenshots: '+out);
+    console.log('UI: contratos, PDF sintetico generico/bancario, estorno, revisao individual/lote com filtro, salvar/reabrir, desktop/mobile 320/390 e tema escuro OK. Screenshots: '+out);
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

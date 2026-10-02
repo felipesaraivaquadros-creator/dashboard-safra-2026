@@ -1,10 +1,58 @@
 # PROJECT_STATE.md
 
+## Refinamento dos extratos bancarios - 02/10/2026
+
+Recebidos seis PDFs reais: Sicredi, dois Banco do Brasil, Cresol e dois Sicoob.
+Analise LOCAL, sem envio a servicos de IA, sem gravacao no Supabase real e sem
+adicionar originais, contas, favorecidos ou extracoes privadas ao Git.
+
+Implementado:
+- Leitores por layout em src/lib/bankStatementParser.ts; coordenadas do PDF.js
+  preservadas por src/lib/statementFormat.ts para reconstruir colunas e historicos.
+- Sicredi: separar valor/saldo, sinal negativo, ignorar secao de lancamentos futuros.
+- BB: sinais (+)/(-), historicos em linhas acima/abaixo da data, saldos com data separada.
+- Cresol: +/- R$, historico centralizado, datas decrescentes, cabecalhos/saldos repetidos.
+- Sicoob: datas dd/mm completadas somente pelo periodo declarado, C/D, detalhes PIX,
+  resumo de saldo em conta separado de limite e saldo disponivel.
+- Conferencia em centavos: saldo inicial + creditos - debitos = saldo final, com
+  validacao de saldos diarios/sequenciais disponiveis.
+- Conta e periodo detectados na importacao; contas distintas exigem analises separadas.
+- Sem movimentacao reconhecido apenas em layouts conhecidos com saldos consistentes.
+  Um modelo BB nao declara inicio de periodo: usuario precisa confirmar, sem inferir
+  a partir da data do saldo anterior.
+- Devolucao com debito de mesmo valor recebe sugestao de vinculo, nunca baixa automatica.
+- Revisao em lote, com confirmacao explicita em modal e respeito aos filtros da lista:
+  exige arquivo conferido e saldos consistentes. Mantem possiveis duplicidades, estornos,
+  debitos ligados a estornos pendentes e transferencias duvidosas para revisao individual.
+  Registra metodo/data da revisao. Nenhuma sugestao e confirmada automaticamente.
+- Busca ajustada no mobile para nao ficar comprimida entre os filtros de data.
+
+Resultado da leitura dos modelos: Sicredi 279 movimentos efetivos e 2 futuros separados;
+BB 4 e 0; Cresol 13; Sicoob 0 e 38. Total efetivo 334. Os seis saldos fecharam
+na validacao local. Dois documentos sao extratos sem movimentacao.
+
+RPC atualizado em docs/supabase_despesas.sql para permitir extrato sem movimento
+comprovado e bloquear mistura de contas/divergencia dos saldos por arquivo.
+REEXECUTAR esse SQL no Supabase; preserva dados e atualiza a funcao.
+SQL real ainda nao executado pelo agente.
+
+Testes test:despesas, test:bank-layouts, test:despesas-sql e test:contracts passaram.
+Teste ponta a ponta com os seis PDFs reais no navegador passou, inclusive confirmacao
+em lote/cancelamento, extratos vazios, separacao de contas e 320/390 px sem overflow.
+Persistencia simulada nas rotas Supabase do Playwright, nunca feita na producao.
+Teste sintetico tambem cobriu reabertura, revisao individual/lote, estorno e tema escuro.
+TypeScript e build de producao passaram. Capturas sinteticas desktop/mobile e tema
+escuro conferidas. Nenhum PDF/extrato real nem captura com dados bancarios entrou no Git.
+Publicacao sera tentada novamente; confira a anotacao de entrega abaixo antes de retomar.
+OCR continua pendente; estes seis arquivos possuem texto extraivel.
+Continuam pendentes regras reutilizaveis, consolidacao entre analises e rateio multi-safra.
+
 ## Primeira entrega - Central de Contratos e Despesas (30/09/2026)
 
 Pedido aprovado: implantar a proposta em docs/PROPOSTA_CONTRATOS_DESPESAS.md.
 O usuario confirmou que pode enviar PDFs de cada banco para refinamento. Foram solicitados
-modelos anonimizados, mantendo layout, datas, valores e indicadores D/C. Ainda nao recebidos.
+modelos anonimizados, mantendo layout, datas, valores e indicadores D/C. Recebidos depois;
+consulte o refinamento no topo deste arquivo.
 
 Primeira entrega implementada no codigo:
 - /[safraId]/contratos: KPIs globais, abas por tipo, busca, filtros, detalhes, cadastro/edicao,

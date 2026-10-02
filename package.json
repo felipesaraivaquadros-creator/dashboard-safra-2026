@@ -6,6 +6,7 @@
     "predev": "node scripts/prepare-pdf.cjs",
     "prebuild": "node scripts/prepare-pdf.cjs",
     "test:despesas": "node scripts/test-despesas.cjs",
+    "test:bank-layouts": "node scripts/test-bank-layouts.cjs",
     "test:despesas-sql": "node scripts/test-despesas-sql.cjs",
     "test:contracts": "node scripts/test-contracts.cjs",
     "dev": "next dev",

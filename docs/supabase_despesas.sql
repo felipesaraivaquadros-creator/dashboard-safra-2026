@@ -61,7 +61,7 @@ CREATE OR REPLACE FUNCTION public.salvar_analise_despesas(
 DECLARE
   uid uuid := auth.uid(); target uuid := coalesce(p_id,gen_random_uuid());
   current_version integer := 0; doc jsonb; mov jsonb; original_doc uuid;
-  debit jsonb; total_refund bigint; balance bigint := 0; amount bigint;
+  debit jsonb; total_refund bigint; balance bigint := 0; amount bigint; doc_balance numeric;
 BEGIN
   IF uid IS NULL THEN RAISE EXCEPTION 'Sessao invalida'; END IF;
   IF length(trim(coalesce(p_safra_id,'')))=0 OR length(trim(coalesce(p_dados->>'title','')))=0
@@ -76,16 +76,33 @@ BEGIN
     IF NOT FOUND THEN RAISE EXCEPTION 'Analise nao encontrada nesta safra'; END IF;
     IF current_version <> p_versao THEN RAISE EXCEPTION 'Analise alterada em outra janela. Reabra antes de salvar.'; END IF;
   END IF;
-  IF p_finalizar AND (jsonb_array_length(p_dados->'movements')=0 OR jsonb_array_length(p_dados->'documents')=0
+  IF p_finalizar AND (jsonb_array_length(p_dados->'documents')=0
     OR coalesce(p_dados->>'periodStart','')='' OR coalesce(p_dados->>'periodEnd','')=''
     OR (p_dados->>'periodStart')::date > (p_dados->>'periodEnd')::date) THEN RAISE EXCEPTION 'Periodo ou movimentos invalidos'; END IF;
   IF p_finalizar AND jsonb_array_length(coalesce(p_dados->'importFailures','[]'::jsonb))>0 THEN
     RAISE EXCEPTION 'Arquivos com falha de leitura pendentes'; END IF;
+  IF (SELECT count(DISTINCT value->'statement'->>'accountKey') FROM jsonb_array_elements(p_dados->'documents')
+    WHERE coalesce(value->'statement'->>'accountKey','')<>'')>1 THEN
+    RAISE EXCEPTION 'Contas diferentes exigem analises separadas'; END IF;
   FOR doc IN SELECT value FROM jsonb_array_elements(p_dados->'documents') LOOP
     SELECT id INTO original_doc FROM public.despesas_documentos WHERE owner_id=uid AND hash=doc->>'hash' AND storage_path=doc->>'path';
     IF NOT FOUND THEN RAISE EXCEPTION 'Arquivo nao pertence ao usuario'; END IF;
     IF p_finalizar AND (coalesce((doc->>'verified')::boolean,false)=false OR jsonb_array_length(doc->'warnings')>0) THEN
       RAISE EXCEPTION 'Arquivo incompleto ou nao conferido'; END IF;
+    IF p_finalizar AND jsonb_array_length(p_dados->'movements')=0 THEN
+      IF coalesce((doc->'statement'->>'emptyStatement')::boolean,false)=false
+        OR coalesce((doc->'statement'->>'balanceMatches')::boolean,false)=false
+        OR coalesce(doc->'statement'->>'bank','') NOT IN ('bb','sicredi','cresol','sicoob')
+        OR coalesce((doc->'statement'->>'transactionCount')::integer,-1)<>0
+        OR doc->'statement'->>'openingCents' IS NULL OR doc->'statement'->>'closingCents' IS NULL THEN
+        RAISE EXCEPTION 'Ausencia de movimentos nao comprovada'; END IF;
+    END IF;
+    IF p_finalizar AND doc->'statement'->>'openingCents' IS NOT NULL AND doc->'statement'->>'closingCents' IS NOT NULL THEN
+      SELECT coalesce(sum(CASE WHEN m->>'direction'='credito' THEN (m->>'cents')::numeric ELSE -(m->>'cents')::numeric END),0)
+        INTO doc_balance FROM jsonb_array_elements(p_dados->'movements') m WHERE m->>'documentId'=doc->>'hash';
+      IF (doc->'statement'->>'openingCents')::numeric+doc_balance<>(doc->'statement'->>'closingCents')::numeric THEN
+        RAISE EXCEPTION 'Movimentos divergem dos saldos do arquivo'; END IF;
+    END IF;
   END LOOP;
   IF (SELECT count(*) <> count(DISTINCT value->>'id') FROM jsonb_array_elements(p_dados->'movements')) THEN
     RAISE EXCEPTION 'Movimento duplicado'; END IF;

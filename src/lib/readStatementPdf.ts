@@ -1,4 +1,5 @@
 import { ExpenseDocument } from './despesasEngine';
+import { groupStatementSpans } from './statementFormat';
 
 export async function readStatementPdf(file: File, progress: (text: string) => void): Promise<ExpenseDocument> {
   if (file.size > 20 * 1024 * 1024) throw new Error('Limite de 20 MB por PDF.');
@@ -18,15 +19,12 @@ export async function readStatementPdf(file: File, progress: (text: string) => v
       progress(`${file.name}: página ${pageNumber}/${pdf.numPages}`);
       const page = await pdf.getPage(pageNumber);
       const content = await page.getTextContent();
-      const rows: Array<{ y: number; parts: Array<{ x: number; text: string }> }> = [];
+      const spans = [];
       for (const item of content.items) {
         if (!('str' in item) || !item.str.trim()) continue;
-        const y = item.transform[5], x = item.transform[4];
-        let row = rows.find(r => Math.abs(r.y-y)<2);
-        if (!row) { row = { y, parts: [] }; rows.push(row); }
-        row.parts.push({ x, text: item.str });
+        spans.push({ x:item.transform[4], y:item.transform[5], width:item.width, text:item.str });
       }
-      const lines = rows.sort((a,b)=>b.y-a.y).map((row,i) => ({ page: pageNumber, line: i+1, text: row.parts.sort((a,b)=>a.x-b.x).map(p=>p.text).join(' ') }));
+      const lines = groupStatementSpans(spans,pageNumber);
       if (!lines.length) document.warnings.push(`Página ${pageNumber} sem texto extraível: requer OCR ou extrato digital.`);
       document.lines.push(...lines);
       page.cleanup();
