@@ -37,7 +37,10 @@ Validacoes realizadas:
 - Capturas desktop/mobile 320/390 px e tema escuro conferidas; sem corte dos controles.
 Todos os testes usaram dados ficticios ou leitura local; nenhuma gravacao no Supabase real.
 Build final de producao passou, incluindo verificacao de tipos. Rota Despesas ausente
-do build; Contratos e Financeiro presentes. Publicacao no GitHub em andamento.
+do build; Contratos e Financeiro presentes.
+Entrega: commit c86ecc9 enviado com sucesso para origin/main em 05/10/2026.
+Servidor local reiniciado em http://localhost:3000; abrir /milho26/financeiro.
+Deploy Vercel nao foi verificado pelo agente. Nenhum SQL novo precisa ser executado.
 
 ## Historico abaixo (Despesas descontinuado)
 
