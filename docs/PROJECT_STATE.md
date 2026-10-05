@@ -1,5 +1,46 @@
 # PROJECT_STATE.md
 
+## Diretriz atual: Contratos permanece; Despesas removido - 05/10/2026
+
+Pedido mais recente do usuario: mostrar arrendamentos na lista do Financeiro,
+remover a implementacao de Despesas por nao atender ao uso e PRESERVAR Contratos.
+Esta secao substitui as instrucoes antigas de ativar/continuar Despesas abaixo.
+NAO reimplantar leitores bancarios, OCR ou analises de extratos sem novo pedido.
+
+Alteracoes:
+- Financeiro > Consolidado agora inclui arrendamentos da safra selecionada.
+  O filtro que excluia esse tipo foi removido.
+- Arrendamentos mostram obrigacao em dinheiro, data de pagamento e alocacao de graos,
+  com edicao pelo formulario existente. Nao sao tratados como recebimentos de venda.
+- Status da lista usa a mesma regra de Contratos: dinheiro exige pagamento confirmado;
+  graos exigem alocacao; se houver ambos, ambos precisam estar cumpridos.
+  Filtros Cumprido/A cumprir e busca por contraparte tambem funcionam.
+- KPIs de vendas/faturamento e abas Vendas/Recebimentos preservados, sem somar arrendamentos.
+- Cabecalho do Financeiro ajustado para quebra de linha em telas pequenas,
+  evitando sobreposicao do seletor de safra e corte dos botoes.
+- Central /[safraId]/contratos, cadastro/edicao/exclusao protegida, arquivamento e CSV mantidos.
+- Despesas removido da navegacao e do app: rota, leitores PDF, motor de analise,
+  persistencia client-side, testes exclusivos e dependencia PDF.js removidos.
+  Assets locais gerados tambem removidos. Rota antiga passa a retornar 404.
+- Nenhuma tabela, analise ou PDF do Supabase foi excluido. O antigo script
+  supabase_despesas.sql foi retirado do repositorio; NAO executar migracoes antigas
+  desse modulo. Codigo historico permanece recuperavel no Git.
+- Nao ha SQL novo necessario para esta correcao. A migration existente
+  docs/supabase_central_contratos.sql continua sendo a referencia para Contratos.
+
+Validacoes realizadas:
+- test:contracts: calculos de dinheiro/graos/ambos, status, SQL idempotente e exclusao protegida.
+- test:import-parser: passou com os dois arquivos originais MS Gestor/planejamento.
+- Playwright/Edge: Contratos preservados, formularios de cadastro/edicao, arrendamentos
+  no Financeiro, filtros, KPIs inalterados, isolamento entre milho26/milho25,
+  rota Despesas 404 e nenhuma chamada ao banco desse modulo.
+- Capturas desktop/mobile 320/390 px e tema escuro conferidas; sem corte dos controles.
+Todos os testes usaram dados ficticios ou leitura local; nenhuma gravacao no Supabase real.
+Build final de producao passou, incluindo verificacao de tipos. Rota Despesas ausente
+do build; Contratos e Financeiro presentes. Publicacao no GitHub em andamento.
+
+## Historico abaixo (Despesas descontinuado)
+
 ## Refinamento dos extratos bancarios - 02/10/2026
 
 Recebidos seis PDFs reais: Sicredi, dois Banco do Brasil, Cresol e dois Sicoob.

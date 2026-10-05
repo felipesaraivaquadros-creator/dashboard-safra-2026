@@ -18,7 +18,7 @@ export default function ManagementShell({ safraId, title, actions, children }: {
         <div className="flex flex-wrap items-center gap-3"><SafraSelector currentSafra={getSafraConfig(safraId)} /><ThemeToggle /></div>
       </div>
       <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 pb-4 md:px-8">
-        <nav className="flex gap-4 text-sm font-semibold text-green-700 dark:text-green-400"><Link href={`/${safraId}`}>Painel</Link><Link href={`/${safraId}/contratos`}>Contratos</Link><Link href={`/${safraId}/despesas`}>Despesas</Link><Link href={`/${safraId}/saldos`}>Saldos</Link></nav>
+        <nav className="flex flex-wrap gap-4 text-sm font-semibold text-green-700 dark:text-green-400"><Link href={`/${safraId}`}>Painel</Link><Link href={`/${safraId}/contratos`}>Contratos</Link><Link href={`/${safraId}/financeiro`}>Financeiro</Link><Link href={`/${safraId}/saldos`}>Saldos</Link></nav>
         <div className="flex flex-wrap gap-2">{actions}</div>
       </div>
     </header>

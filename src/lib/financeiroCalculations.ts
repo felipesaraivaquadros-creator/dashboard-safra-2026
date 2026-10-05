@@ -34,6 +34,13 @@ export const isContractFinanciallyFulfilled = (summary: ContratoFinanceiroResumo
   return summary.status === 'baixado';
 };
 
+export const getContractListStatus = (summary: ContratoFinanceiroResumo) => {
+  if (summary.tipoContrato === 'arrendamento') {
+    return isContractFinanciallyFulfilled(summary) ? 'cumprido' : 'a_cumprir';
+  }
+  return summary.tipoContrato === 'barter' ? summary.barterStatusEntrega : summary.status;
+};
+
 export const getMonthKey = (value: string | null | undefined) => {
   if (!value) return '';
   const match = String(value).match(/^(\d{4})-(\d{2})/);

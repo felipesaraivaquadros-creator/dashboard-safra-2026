@@ -34,13 +34,13 @@ import {
   TIPOS_DESCONTO,
 } from '../../../src/data/financeiroTypes';
 import { getSafraConfig } from '../../../src/data/safraConfig';
-import { buildMonthlyFinancials, getMonthKey, roundMoney } from '../../../src/lib/financeiroCalculations';
+import { buildMonthlyFinancials, getContractListStatus, getMonthKey, roundMoney } from '../../../src/lib/financeiroCalculations';
 import { useFinanceiroData } from '../../../src/lib/useFinanceiroData';
 
 const currency = (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const number = (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 
-type StatusFilter = StatusFinanceiro | 'todos' | 'pendentes';
+type StatusFilter = StatusFinanceiro | StatusEntregaBarter | 'todos' | 'pendentes';
 type FinanceView = 'consolidado' | 'vendas' | 'barter' | 'recebimentos';
 type BarterStatusFilter = StatusEntregaBarter | 'todos';
 
@@ -55,6 +55,8 @@ const statusOptions: Array<{ value: StatusFilter; label: string }> = [
   { value: 'completo', label: 'Completo' },
   { value: 'baixado', label: 'Baixado' },
   { value: 'vencido', label: 'Vencida' },
+  { value: 'cumprido', label: 'Cumprido' },
+  { value: 'a_cumprir', label: 'A cumprir' },
 ];
 
 const viewOptions: Array<{ value: FinanceView; label: string; icon: typeof LayoutDashboard }> = [
@@ -68,6 +70,23 @@ const barterStatusClasses: Record<StatusEntregaBarter, string> = {
   a_cumprir: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   cumprido: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
 };
+
+function ContractStatusBadge({ item }: { item: ContratoFinanceiroResumo }) {
+  const status = getContractListStatus(item);
+  if (status === 'cumprido' || status === 'a_cumprir') {
+    return <span className={`inline-block rounded px-2 py-1 text-[9px] font-black uppercase ${barterStatusClasses[status]}`}>{STATUS_ENTREGA_BARTER_LABELS[status]}</span>;
+  }
+  return <FinanceiroStatusBadge status={status} compact />;
+}
+
+function RentContractDetails({ item }: { item: ContratoFinanceiroResumo }) {
+  const value = item.arrendamentoValor || 0;
+  return <dl className="grid gap-3 text-left text-xs sm:grid-cols-3">
+    <div><dt className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-300">Obrigação em dinheiro</dt><dd className="mt-1 font-bold">{value > 0 ? currency(value) : 'Não se aplica'}</dd></div>
+    <div><dt className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-300">Pagamento em dinheiro</dt><dd className="mt-1 font-bold">{value <= 0 ? 'Não se aplica' : item.arrendamentoPagoEm ? 'Pago em ' + item.arrendamentoPagoEm.split('-').reverse().join('/') : 'Pendente'}</dd></div>
+    <div><dt className="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-300">Alocação de grãos</dt><dd className="mt-1 font-bold">{item.volumeContratado <= 0 ? 'Não se aplica' : item.cumpridoPorAlocacao ? 'Cumprida' : 'Pendente'}</dd></div>
+  </dl>;
+}
 
 export default function FinanceiroPage() {
   const params = useParams();
@@ -119,7 +138,7 @@ export default function FinanceiroPage() {
   const activeSummaries = useMemo(() => {
     if (view === 'vendas' || view === 'recebimentos') return salesSummaries;
     if (view === 'barter') return barterSummaries;
-    return summaries.filter((item) => item.tipoContrato !== 'arrendamento');
+    return summaries;
   }, [view, summaries, salesSummaries, barterSummaries]);
   const months = useMemo(() => Array.from(new Set(
     activeSummaries.map((item) => getMonthKey(item.competencia)).filter(Boolean),
@@ -130,13 +149,16 @@ export default function FinanceiroPage() {
     const matchesSearch = !term
       || item.nome.toLocaleLowerCase('pt-BR').includes(term)
       || item.numero.toLocaleLowerCase('pt-BR').includes(term)
+      || String(item.contraparte || '').toLocaleLowerCase('pt-BR').includes(term)
       || String(item.barter?.fornecedor || '').toLocaleLowerCase('pt-BR').includes(term);
     if (!matchesSearch) return false;
     if (view === 'barter') return barterStatus === 'todos' || item.barterStatusEntrega === barterStatus;
+    const listStatus = getContractListStatus(item);
     const matchesStatus = status === 'todos'
       || (status === 'pendentes'
-        ? item.pendencias.length > 0 || item.status === 'vencido'
-        : item.status === status);
+        ? (item.tipoContrato === 'arrendamento' || item.tipoContrato === 'barter'
+          ? listStatus === 'a_cumprir' : item.pendencias.length > 0 || item.status === 'vencido')
+        : listStatus === status);
     const matchesMonth = month === 'todos' || getMonthKey(item.competencia) === month;
     return matchesStatus && matchesMonth;
   }), [activeSummaries, search, status, month, view, barterStatus]);
@@ -174,8 +196,8 @@ export default function FinanceiroPage() {
   return (
     <main className="financeiro-report min-h-screen bg-slate-50 p-4 text-slate-900 dark:bg-slate-900 dark:text-slate-100 md:p-8">
       <header className="financeiro-app-header mx-auto mb-6 flex max-w-[1400px] flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 md:flex-row md:items-center md:justify-between md:p-6">
-        <div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><NavigationMenu /><div><h1 className="truncate text-xl font-black uppercase italic tracking-tighter text-slate-800 dark:text-white md:text-3xl">Financeiro</h1><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Vendas, trocas, recebimentos e obrigações da safra</p></div></div><SafraSelector currentSafra={safraConfig} /></div>
-        <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-700 md:border-0 md:pt-0"><button type="button" onClick={handlePrint} className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-[10px] font-black uppercase text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300" title="Imprimir ou salvar relatório em PDF"><Printer size={14} /> Salvar PDF</button><Link href={`/${safraId}/saldos`} className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-2 text-[10px] font-black uppercase text-white hover:bg-purple-700"><WalletCards size={14} /> Saldos</Link><Link href={`/${safraId}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"><ArrowLeft size={14} /> Painel</Link><ThemeToggle /></div>
+        <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center"><div className="flex min-w-0 items-center gap-3"><NavigationMenu /><div><h1 className="truncate text-xl font-black uppercase italic tracking-tighter text-slate-800 dark:text-white md:text-3xl">Financeiro</h1><p className="mt-1 text-[9px] font-bold uppercase text-slate-400">Vendas, trocas, recebimentos e obrigações da safra</p></div></div><SafraSelector currentSafra={safraConfig} /></div>
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-3 dark:border-slate-700 md:border-0 md:pt-0"><button type="button" onClick={handlePrint} className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-[10px] font-black uppercase text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300" title="Imprimir ou salvar relatório em PDF"><Printer size={14} /> Salvar PDF</button><Link href={`/${safraId}/saldos`} className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-2 text-[10px] font-black uppercase text-white hover:bg-purple-700"><WalletCards size={14} /> Saldos</Link><Link href={`/${safraId}`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"><ArrowLeft size={14} /> Painel</Link><ThemeToggle /></div>
       </header>
 
       <section className="financeiro-print-header hidden">
@@ -252,8 +274,8 @@ export default function FinanceiroPage() {
 
         <section ref={contractsSectionRef} className="financeiro-contracts-section scroll-mt-4 space-y-4">
           <div className={`financeiro-print-controls grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800 ${view === 'barter' ? 'md:grid-cols-[minmax(0,1fr)_220px]' : 'md:grid-cols-[minmax(0,1fr)_220px_200px]'}`}>
-            <label className="relative"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs font-bold dark:border-slate-700 dark:bg-slate-900" placeholder={view === 'barter' ? 'Buscar contrato, número ou fornecedor' : 'Buscar contrato ou número'} /></label>
-            {view === 'barter' ? <select value={barterStatus} onChange={(event) => setBarterStatus(event.target.value as BarterStatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todos os cumprimentos</option>{Object.entries(STATUS_ENTREGA_BARTER_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : <><select value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900">{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><select value={month} onChange={(event) => setMonth(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todas as competências</option>{months.map((item) => <option key={item} value={item}>{item.split('-').reverse().join('/')}</option>)}</select></>}
+            <label className="relative"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><input aria-label="Buscar contratos no financeiro" value={search} onChange={(event) => setSearch(event.target.value)} className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs font-bold dark:border-slate-700 dark:bg-slate-900" placeholder={view === 'barter' ? 'Buscar contrato, número ou fornecedor' : 'Buscar contrato ou número'} /></label>
+            {view === 'barter' ? <select value={barterStatus} onChange={(event) => setBarterStatus(event.target.value as BarterStatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todos os cumprimentos</option>{Object.entries(STATUS_ENTREGA_BARTER_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select> : <><select aria-label="Status dos contratos" value={status} onChange={(event) => setStatus(event.target.value as StatusFilter)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900">{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><select value={month} onChange={(event) => setMonth(event.target.value)} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><option value="todos">Todas as competências</option>{months.map((item) => <option key={item} value={item}>{item.split('-').reverse().join('/')}</option>)}</select></>}
           </div>
 
           {view === 'barter' ? (
@@ -263,8 +285,25 @@ export default function FinanceiroPage() {
             </>
           ) : (
             <>
-              <div className="hidden overflow-x-auto rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 md:block"><table className="w-full min-w-[1400px] text-left"><thead className="border-b border-slate-200 bg-slate-50 text-[9px] font-black uppercase text-slate-400 dark:border-slate-700 dark:bg-slate-900/40"><tr><th className="px-4 py-3">Contrato</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Status financeiro</th><th className="px-4 py-3">Competência</th><th className="px-4 py-3 text-right">Entregue / contratado</th><th className="px-4 py-3 text-right">Preço/sc</th><th className="px-4 py-3 text-right">Bruto</th><th className="px-4 py-3 text-right">Líquido</th><th className="px-4 py-3 text-right">Recebido</th><th className="px-4 py-3 text-right">Em aberto</th><th className="px-4 py-3"></th></tr></thead><tbody className="divide-y divide-slate-100 text-xs dark:divide-slate-700">{filtered.map((item) => <tr key={item.contratoId} className="hover:bg-slate-50 dark:hover:bg-slate-700/30"><td className="px-4 py-3"><p className="font-black uppercase text-slate-700 dark:text-slate-200">{item.nome}</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">{item.numero || 'S/N'} {item.armazem ? `· ${item.armazem}` : ''}</p></td><td className="px-4 py-3"><span className="rounded bg-green-100 px-2 py-1 text-[9px] font-black uppercase text-green-700 dark:bg-green-900/30 dark:text-green-300">{TIPO_CONTRATO_LABELS[item.tipoContrato]}</span></td><td className="px-4 py-3">{item.tipoContrato === 'barter' ? <span className={`rounded px-2 py-1 text-[9px] font-black uppercase ${barterStatusClasses[item.barterStatusEntrega]}`}>{STATUS_ENTREGA_BARTER_LABELS[item.barterStatusEntrega]}</span> : <FinanceiroStatusBadge status={item.status} compact />}</td><td className="px-4 py-3 font-bold text-slate-500">{item.competencia ? getMonthKey(item.competencia).split('-').reverse().join('/') : '—'}</td><td className="px-4 py-3 text-right font-bold text-slate-500">{number(item.volumeEntregue)} / {number(item.volumeContratado)} sc</td><td className="px-4 py-3 text-right font-black">{item.precoSaca ? currency(item.precoSaca) : '—'}</td><td className="px-4 py-3 text-right font-black">{currency(item.brutoContratado)}</td><td className="px-4 py-3 text-right font-black text-green-700 dark:text-green-300">{currency(item.liquidoContratado)}</td><td className="px-4 py-3 text-right font-black text-green-700 dark:text-green-300">{currency(item.recebimentosRecebidos)}</td><td className="px-4 py-3 text-right font-black text-amber-700 dark:text-amber-300">{currency(item.recebimentosEmAberto)}</td><td className="px-4 py-3 text-right"><div className="flex justify-end gap-1"><button type="button" onClick={() => setReceivingContractId(item.contratoId)} disabled={!receiptsReady || !item.financeiro?.id || item.tipoContrato === 'barter'} className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-green-100 text-green-700 hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-35 dark:bg-green-900/30 dark:text-green-300" title={item.financeiro?.id ? 'Recebimentos e baixas' : 'Configure o financeiro primeiro'}><ReceiptText size={15} /></button><button type="button" onClick={() => setEditingContract(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300" title="Editar contrato"><Edit2 size={15} /></button></div></td></tr>)}{filtered.length === 0 && <tr><td colSpan={11} className="px-4 py-12 text-center text-xs font-bold uppercase text-slate-400">Nenhum contrato encontrado</td></tr>}</tbody></table></div>
-              <div className="grid grid-cols-1 gap-3 md:hidden">{filtered.map((item) => <article key={item.contratoId} className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-black uppercase">{item.nome}</p><p className="mt-1 text-[9px] font-bold text-slate-400">{TIPO_CONTRATO_LABELS[item.tipoContrato]} · {item.numero || 'S/N'}</p></div>{item.tipoContrato === 'barter' ? <span className={`rounded px-2 py-1 text-[8px] font-black uppercase ${barterStatusClasses[item.barterStatusEntrega]}`}>{STATUS_ENTREGA_BARTER_LABELS[item.barterStatusEntrega]}</span> : <FinanceiroStatusBadge status={item.status} compact />}</div><div className="mt-4 grid grid-cols-2 gap-3 text-right"><div><p className="text-[8px] font-black uppercase text-slate-400">Líquido previsto</p><p className="mt-1 text-xs font-black">{currency(item.liquidoContratado)}</p></div><div><p className="text-[8px] font-black uppercase text-green-600">Recebido</p><p className="mt-1 text-xs font-black text-green-700 dark:text-green-300">{currency(item.recebimentosRecebidos)}</p></div></div><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setReceivingContractId(item.contratoId)} disabled={!receiptsReady || !item.financeiro?.id || item.tipoContrato === 'barter'} className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-2.5 text-[10px] font-black uppercase text-white disabled:opacity-35"><ReceiptText size={14} /> Recebimentos</button><button type="button" onClick={() => setEditingContract(item)} className="flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-3 py-2.5 text-[10px] font-black uppercase text-white"><Edit2 size={14} /> Editar</button></div></article>)}</div>
+              <div className="hidden overflow-x-auto rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 md:block"><table className="w-full min-w-[1400px] text-left"><thead className="border-b border-slate-200 bg-slate-50 text-[9px] font-black uppercase text-slate-400 dark:border-slate-700 dark:bg-slate-900/40"><tr><th className="px-4 py-3">Contrato</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Competência</th><th className="px-4 py-3 text-right">Entregue / contratado</th><th className="px-4 py-3 text-right">Preço/sc</th><th className="px-4 py-3 text-right">Bruto</th><th className="px-4 py-3 text-right">Líquido</th><th className="px-4 py-3 text-right">Recebido</th><th className="px-4 py-3 text-right">Em aberto</th><th className="px-4 py-3"></th></tr></thead><tbody className="divide-y divide-slate-100 text-xs dark:divide-slate-700">{filtered.map((item) => item.tipoContrato === 'arrendamento' ? (
+                <tr key={item.contratoId} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                  <td className="px-4 py-3"><p className="font-black uppercase text-slate-700 dark:text-slate-200">{item.nome}</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">{item.numero || 'S/N'} · {item.contraparte || 'Arrendador não informado'}</p></td>
+                  <td className="px-4 py-3 font-bold">Arrendamento</td>
+                  <td className="px-4 py-3"><ContractStatusBadge item={item} /></td>
+                  <td className="px-4 py-3">—</td>
+                  <td className="px-4 py-3 text-right font-bold">{number(item.volumeEntregue)} / {number(item.volumeContratado)} sc</td>
+                  <td colSpan={5} className="px-4 py-3"><RentContractDetails item={item} /></td>
+                  <td className="px-4 py-3 text-right"><button type="button" onClick={() => setEditingContract(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300" title="Editar arrendamento"><Edit2 size={15} /></button></td>
+                </tr>
+              ) : <tr key={item.contratoId} className="hover:bg-slate-50 dark:hover:bg-slate-700/30"><td className="px-4 py-3"><p className="font-black uppercase text-slate-700 dark:text-slate-200">{item.nome}</p><p className="mt-0.5 text-[9px] font-bold text-slate-400">{item.numero || 'S/N'} {item.armazem ? `· ${item.armazem}` : ''}</p></td><td className="px-4 py-3"><span className="rounded bg-green-100 px-2 py-1 text-[9px] font-black uppercase text-green-700 dark:bg-green-900/30 dark:text-green-300">{TIPO_CONTRATO_LABELS[item.tipoContrato]}</span></td><td className="px-4 py-3"><ContractStatusBadge item={item} /></td><td className="px-4 py-3 font-bold text-slate-500">{item.competencia ? getMonthKey(item.competencia).split('-').reverse().join('/') : '—'}</td><td className="px-4 py-3 text-right font-bold text-slate-500">{number(item.volumeEntregue)} / {number(item.volumeContratado)} sc</td><td className="px-4 py-3 text-right font-black">{item.precoSaca ? currency(item.precoSaca) : '—'}</td><td className="px-4 py-3 text-right font-black">{currency(item.brutoContratado)}</td><td className="px-4 py-3 text-right font-black text-green-700 dark:text-green-300">{currency(item.liquidoContratado)}</td><td className="px-4 py-3 text-right font-black text-green-700 dark:text-green-300">{currency(item.recebimentosRecebidos)}</td><td className="px-4 py-3 text-right font-black text-amber-700 dark:text-amber-300">{currency(item.recebimentosEmAberto)}</td><td className="px-4 py-3 text-right"><div className="flex justify-end gap-1"><button type="button" onClick={() => setReceivingContractId(item.contratoId)} disabled={!receiptsReady || !item.financeiro?.id || item.tipoContrato === 'barter'} className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-green-100 text-green-700 hover:bg-green-200 disabled:cursor-not-allowed disabled:opacity-35 dark:bg-green-900/30 dark:text-green-300" title={item.financeiro?.id ? 'Recebimentos e baixas' : 'Configure o financeiro primeiro'}><ReceiptText size={15} /></button><button type="button" onClick={() => setEditingContract(item)} className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300" title="Editar contrato"><Edit2 size={15} /></button></div></td></tr>)}{filtered.length === 0 && <tr><td colSpan={11} className="px-4 py-12 text-center text-xs font-bold uppercase text-slate-400">Nenhum contrato encontrado</td></tr>}</tbody></table></div>
+              <div className="grid grid-cols-1 gap-3 md:hidden">{filtered.map((item) => item.tipoContrato === 'arrendamento' ? (
+                <article key={item.contratoId} className="min-w-0 space-y-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="break-words text-xs font-black uppercase">{item.nome}</p><p className="mt-1 text-[9px] font-bold text-slate-400">Arrendamento · {item.numero || 'S/N'}</p><p className="mt-1 break-words text-xs">{item.contraparte || 'Arrendador não informado'}</p></div><ContractStatusBadge item={item} /></div>
+                  <p className="text-xs font-bold">{number(item.volumeEntregue)} / {number(item.volumeContratado)} sc entregues / contratadas</p>
+                  <RentContractDetails item={item} />
+                  <button type="button" onClick={() => setEditingContract(item)} className="flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-3 py-2.5 text-[10px] font-black uppercase text-white"><Edit2 size={14} /> Editar arrendamento</button>
+                </article>
+              ) : <article key={item.contratoId} className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-black uppercase">{item.nome}</p><p className="mt-1 text-[9px] font-bold text-slate-400">{TIPO_CONTRATO_LABELS[item.tipoContrato]} · {item.numero || 'S/N'}</p></div><ContractStatusBadge item={item} /></div><div className="mt-4 grid grid-cols-2 gap-3 text-right"><div><p className="text-[8px] font-black uppercase text-slate-400">Líquido previsto</p><p className="mt-1 text-xs font-black">{currency(item.liquidoContratado)}</p></div><div><p className="text-[8px] font-black uppercase text-green-600">Recebido</p><p className="mt-1 text-xs font-black text-green-700 dark:text-green-300">{currency(item.recebimentosRecebidos)}</p></div></div><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setReceivingContractId(item.contratoId)} disabled={!receiptsReady || !item.financeiro?.id || item.tipoContrato === 'barter'} className="flex items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-2.5 text-[10px] font-black uppercase text-white disabled:opacity-35"><ReceiptText size={14} /> Recebimentos</button><button type="button" onClick={() => setEditingContract(item)} className="flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-3 py-2.5 text-[10px] font-black uppercase text-white"><Edit2 size={14} /> Editar</button></div></article>)}</div>
             </>
           )}
         </section>

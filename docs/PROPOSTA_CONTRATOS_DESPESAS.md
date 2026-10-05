@@ -1,4 +1,8 @@
 # Proposta: Contratos e Despesas
+ATUALIZACAO 05/10/2026: o usuario cancelou o modulo Despesas. Somente Contratos permanece.
+As secoes de Despesas abaixo sao historicas, nao sao autorizacao para reimplementacao.
+Consulte a diretriz mais recente no inicio de PROJECT_STATE.md.
+
 Data: 30/09/2026
 Status: aprovado pelo usuario. Implantacao incremental iniciada em 30/09/2026.
 Este documento registra o escopo-alvo; consulte PROJECT_STATE.md e IMPLANTACAO_CONTRATOS_DESPESAS.md

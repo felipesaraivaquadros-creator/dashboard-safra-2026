@@ -23,6 +23,11 @@ assert.equal(calc.isContractFinanciallyFulfilled({...rent,arrendamentoPagoEm:nul
 assert.equal(calc.isContractFinanciallyFulfilled({...rent,volumeContratado:100,cumpridoPorAlocacao:false}),false);
 assert.equal(calc.isContractFinanciallyFulfilled({...rent,volumeContratado:100,cumpridoPorAlocacao:true}),true);
 assert.equal(calc.isContractFinanciallyFulfilled({...rent,arrendamentoValor:0,volumeContratado:0}),false);
+assert.equal(calc.getContractListStatus(rent),'cumprido');
+assert.equal(calc.getContractListStatus({...rent,arrendamentoPagoEm:null}),'a_cumprir');
+assert.equal(calc.getContractListStatus({...rent,volumeContratado:100,cumpridoPorAlocacao:false}),'a_cumprir');
+assert.equal(calc.getContractListStatus({...rent,arrendamentoValor:0,arrendamentoPagoEm:null,volumeContratado:100,cumpridoPorAlocacao:true}),'cumprido');
+assert.equal(calc.getContractListStatus(sale),'completo','Sales retain their financial status');
 const barter=calc.buildFinancialSummary({contract:{...contract,tipo_contrato:'barter'},finance:null,deliveredVolume:1000});
 assert.equal(calc.isContractFinanciallyFulfilled(barter),false,'Barter remains tied to allocation');
 assert.equal(calc.isContractFinanciallyFulfilled({...barter,barterStatusEntrega:'cumprido'}),true);
